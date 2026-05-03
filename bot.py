@@ -16,6 +16,13 @@ COINS = {
     'binancecoin':  ('BNB', '🔶'),
     'ripple':       ('XRP', '💧'),
 }
+COIN_NAMES = {
+    'BTC': 'bitcoin',
+    'ETH': 'ethereum',
+    'SOL': 'solana',
+    'BNB': 'binance',
+    'XRP': 'ripple',
+}
 
 def get_prices():
     ids = ','.join(COINS.keys())
