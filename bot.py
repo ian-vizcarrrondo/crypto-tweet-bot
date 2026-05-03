@@ -81,7 +81,7 @@ def format_change(change):
     icon = '🟢' if change >= 0 else '🔴'
     return f'{icon} {change:+.1f}%'
 
-def build_tweet(coin_id, ticker, emoji, price_data):
+def build_tweet(ticker, emoji, price_data):
     price = price_data.get('usd', 0)
     change = price_data.get('usd_24h_change')
     price_str = f'${price:,.2f}' if price < 1000 else f'${price:,.0f}'
@@ -101,13 +101,10 @@ def build_tweet(coin_id, ticker, emoji, price_data):
 def main():
     prices = get_prices()
     for coin_id, (ticker, emoji) in COINS.items():
-        if coin_id in prices:
-            tweet = build_tweet(coin_id, ticker, emoji, prices[coin_id])
+        if ticker in prices:
+            tweet = build_tweet(ticker, emoji, prices[ticker])
             try:
                 client.create_tweet(text=tweet)
                 print(f'✅ Tweeted {ticker}')
             except Exception as e:
                 print(f'❌ {ticker} failed: {e}')
-
-if __name__ == '__main__':
-    main()
