@@ -25,12 +25,29 @@ COIN_NAMES = {
 }
 
 def get_prices():
-    ids = ','.join(COINS.keys())
-    url = (
-        f'https://api.coingecko.com/api/v3/simple/price'
-        f'?ids={ids}&vs_currencies=usd&include_24hr_change=true'
-    )
-    return requests.get(url).json()
+    ids = {
+        'bitcoin': 'BTC',
+        'ethereum': 'ETH',
+        'solana': 'SOL',
+        'binance-coin': 'BNB',
+        'xrp': 'XRP',
+    }
+    result = {}
+    try:
+        url = 'https://api.coincap.io/v2/assets'
+        params = {'ids': ','.join(ids.keys())}
+        data = requests.get(url, params=params, timeout=10).json()
+        for asset in data.get('data', []):
+            coin_id = asset['id']
+            if coin_id in ids:
+                ticker = ids[coin_id]
+                result[ticker] = {
+                    'usd': float(asset.get('priceUsd', 0)),
+                    'usd_24h_change': float(asset.get('changePercent24Hr', 0))
+                }
+    except Exception as e:
+        print(f'Price fetch error: {e}')
+    return result
 
 def get_news(ticker):
     feeds = {
