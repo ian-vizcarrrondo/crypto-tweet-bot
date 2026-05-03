@@ -26,16 +26,27 @@ def get_prices():
     return requests.get(url).json()
 
 def get_news(ticker):
-    token = os.environ['NEWSDATA_TOKEN']
-    url = (
-        f'https://newsdata.io/api/1/news'
-        f'?apikey={token}&q={ticker}&language=en&category=business,technology'
-    )
+    feeds = {
+        'BTC': 'https://feeds.feedburner.com/CoinDesk',
+        'ETH': 'https://feeds.feedburner.com/CoinDesk',
+        'SOL': 'https://feeds.feedburner.com/CoinDesk',
+        'BNB': 'https://feeds.feedburner.com/CoinDesk',
+        'XRP': 'https://feeds.feedburner.com/CoinDesk',
+    }
     try:
-        data = requests.get(url).json()
-        articles = data.get('results', [])
-        if articles:
-            return articles[0].get('title', ''), articles[0].get('link', '')
+        import xml.etree.ElementTree as ET
+        url = feeds.get(ticker, 'https://feeds.feedburner.com/CoinDesk')
+        response = requests.get(url, timeout=5)
+        root = ET.fromstring(response.content)
+        items = root.findall('.//item')
+        for item in items:
+            title = item.findtext('title', '')
+            link = item.findtext('link', '')
+            desc = (title + ' ' + item.findtext('description', '')).lower()
+            if ticker.lower() in desc or COIN_NAMES.get(ticker, '').lower() in desc:
+                return title, link
+        if items:
+            return items[0].findtext('title', ''), items[0].findtext('link', '')
     except:
         pass
     return '', ''
