@@ -11,12 +11,20 @@ client = tweepy.Client(
 )
 
 COINS = [
-    ('bitcoin',     'BTC', '₿'),
-    ('ethereum',    'ETH', 'Ξ'),
-    ('solana',      'SOL', '◎'),
-    ('binance-coin','BNB', '🔶'),
-    ('xrp',         'XRP', '💧'),
+    ('BTC', '₿'),
+    ('ETH', 'Ξ'),
+    ('SOL', '◎'),
+    ('BNB', '🔶'),
+    ('XRP', '💧'),
 ]
+
+BINANCE_SYMBOLS = {
+    'BTC': 'BTCUSDT',
+    'ETH': 'ETHUSDT',
+    'SOL': 'SOLUSDT',
+    'BNB': 'BNBUSDT',
+    'XRP': 'XRPUSDT',
+}
 
 COIN_NAMES = {
     'BTC': 'bitcoin',
@@ -26,17 +34,17 @@ COIN_NAMES = {
     'XRP': 'ripple',
 }
 
-def get_price(coin_id):
+def get_price(ticker):
     try:
-        url = f'https://api.coincap.io/v2/assets/{coin_id}'
+        symbol = BINANCE_SYMBOLS.get(ticker)
+        url = f'https://api.binance.com/api/v3/ticker/24hr?symbol={symbol}'
         data = requests.get(url, timeout=10).json()
-        asset = data.get('data', {})
         return {
-            'usd': float(asset.get('priceUsd', 0)),
-            'usd_24h_change': float(asset.get('changePercent24Hr', 0))
+            'usd': float(data.get('lastPrice', 0)),
+            'usd_24h_change': float(data.get('priceChangePercent', 0))
         }
     except Exception as e:
-        print(f'Price error for {coin_id}: {e}')
+        print(f'Price error for {ticker}: {e}')
         return None
 
 def get_news(ticker):
@@ -64,9 +72,9 @@ def format_change(change):
     return f'{icon} {change:+.1f}%'
 
 def main():
-    for coin_id, ticker, emoji in COINS:
+    for ticker, emoji in COINS:
         print(f'Processing {ticker}...')
-        price_data = get_price(coin_id)
+        price_data = get_price(ticker)
         if not price_data:
             print(f'⚠️ No price data for {ticker}')
             continue
@@ -85,7 +93,7 @@ def main():
                 headline = headline[:max_len] + '...'
             tweet += f'📰 "{headline}"\n{link}'
 
-        print(f'Tweet preview: {tweet[:50]}...')
+        print(f'Tweet preview: {tweet[:60]}...')
 
         try:
             client.create_tweet(text=tweet)
