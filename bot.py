@@ -26,15 +26,18 @@ def get_prices():
     return requests.get(url).json()
 
 def get_news(ticker):
-    token = os.environ['CRYPTOPANIC_TOKEN']
+    token = os.environ['NEWSDATA_TOKEN']
     url = (
-        f'https://cryptopanic.com/api/v1/posts/'
-        f'?auth_token={token}&currencies={ticker}&filter=hot&limit=1'
+        f'https://newsdata.io/api/1/news'
+        f'?apikey={token}&q={ticker}&language=en&category=business,technology'
     )
-    data = requests.get(url).json()
-    results = data.get('results', [])
-    if results:
-        return results[0].get('title', ''), results[0].get('url', '')
+    try:
+        data = requests.get(url).json()
+        articles = data.get('results', [])
+        if articles:
+            return articles[0].get('title', ''), articles[0].get('link', '')
+    except:
+        pass
     return '', ''
 
 def format_change(change):
