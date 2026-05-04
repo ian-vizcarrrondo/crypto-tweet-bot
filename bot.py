@@ -30,11 +30,12 @@ def get_news():
 
 def send_message(text):
     url = f'https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage'
-    requests.post(url, data={
+    response = requests.post(url, data={
         'chat_id': TELEGRAM_CHAT_ID,
         'text': text,
         'disable_web_page_preview': True
     })
+    print(f"Telegram response: {response.status_code} — {response.text}")
 
 def main():
     prices = get_prices()
