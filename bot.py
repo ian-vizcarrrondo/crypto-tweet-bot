@@ -5,21 +5,23 @@ import feedparser
 TELEGRAM_TOKEN = os.environ['TELEGRAM_TOKEN']
 TELEGRAM_CHAT_ID = os.environ['TELEGRAM_CHAT_ID']
 
-COINS = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'BNBUSDT', 'XRPUSDT']
-SYMBOLS = {
-    'BTCUSDT': '₿ #BTC',
-    'ETHUSDT': 'Ξ #ETH',
-    'SOLUSDT': '◎ #SOL',
-    'BNBUSDT': '🔶 #BNB',
-    'XRPUSDT': '💧 #XRP'
+COINS = {
+    'bitcoin':      '₿ #BTC',
+    'ethereum':     'Ξ #ETH',
+    'solana':       '◎ #SOL',
+    'binancecoin':  '🔶 #BNB',
+    'ripple':       '💧 #XRP'
 }
 
-def get_price(symbol):
-    url = f'https://api.binance.com/api/v3/ticker/24hr'
-    r = requests.get(url, params={'symbol': symbol})
-    data = r.json()
-    print(f"Response for {symbol}: {data}")
-    return data
+def get_prices():
+    ids = ','.join(COINS.keys())
+    url = 'https://api.coingecko.com/api/v3/simple/price'
+    r = requests.get(url, params={
+        'ids': ids,
+        'vs_currencies': 'usd',
+        'include_24hr_change': 'true'
+    })
+    return r.json()
 
 def get_news():
     feed = feedparser.parse('https://www.coindesk.com/arc/outboundfeeds/rss/')
@@ -35,14 +37,14 @@ def send_message(text):
     })
 
 def main():
+    prices = get_prices()
     lines = []
-    for symbol in COINS:
-        data = get_price(symbol)
-        price = float(data['lastPrice'])
-        change = float(data['priceChangePercent'])
+    for coin_id, label in COINS.items():
+        data = prices[coin_id]
+        price = data['usd']
+        change = data['usd_24h_change']
         arrow = '🟢' if change >= 0 else '🔴'
         sign = '+' if change >= 0 else ''
-        label = SYMBOLS[symbol]
         lines.append(f"{label} — ${price:,.2f}\n24h: {arrow} {sign}{change:.1f}%")
 
     title, link = get_news()
