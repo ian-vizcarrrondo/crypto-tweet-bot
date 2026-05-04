@@ -8,9 +8,12 @@ COINS = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'BNBUSDT', 'XRPUSDT']
 SYMBOLS = {'BTCUSDT': '₿ #BTC', 'ETHUSDT': 'Ξ #ETH', 'SOLUSDT': '◎ #SOL', 'BNBUSDT': '🔶 #BNB', 'XRPUSDT': '💧 #XRP'}
 
 def get_prices():
-    url = 'https://api.binance.com/api/v3/ticker/24hr'
-    r = requests.get(url, params={'symbols': str(COINS).replace("'", '"')})
-    return r.json()
+    results = []
+    for coin in COINS:
+        url = f'https://api.binance.com/api/v3/ticker/24hr?symbol={coin}'
+        r = requests.get(url)
+        results.append(r.json())
+    return results
 
 def get_news():
     feed = feedparser.parse('https://www.coindesk.com/arc/outboundfeeds/rss/')
