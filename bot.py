@@ -1,105 +1,42 @@
-import tweepy
 import requests
-import os
-import xml.etree.ElementTree as ET
+import feedparser
 
-client = tweepy.Client(
-    consumer_key=os.environ['TWITTER_API_KEY'],
-    consumer_secret=os.environ['TWITTER_API_SECRET'],
-    access_token=os.environ['TWITTER_ACCESS_TOKEN'],
-    access_token_secret=os.environ['TWITTER_ACCESS_TOKEN_SECRET']
-)
+TELEGRAM_TOKEN = __import__('os').environ['TELEGRAM_TOKEN']
+TELEGRAM_CHAT_ID = __import__('os').environ['TELEGRAM_CHAT_ID']
 
-COINS = [
-    ('BTC', '₿'),
-    ('ETH', 'Ξ'),
-    ('SOL', '◎'),
-    ('BNB', '🔶'),
-    ('XRP', '💧'),
-]
+COINS = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'BNBUSDT', 'XRPUSDT']
+SYMBOLS = {'BTCUSDT': '₿ #BTC', 'ETHUSDT': 'Ξ #ETH', 'SOLUSDT': '◎ #SOL', 'BNBUSDT': '🔶 #BNB', 'XRPUSDT': '💧 #XRP'}
 
-BINANCE_SYMBOLS = {
-    'BTC': 'BTCUSDT',
-    'ETH': 'ETHUSDT',
-    'SOL': 'SOLUSDT',
-    'BNB': 'BNBUSDT',
-    'XRP': 'XRPUSDT',
-}
+def get_prices():
+    url = 'https://api.binance.com/api/v3/ticker/24hr'
+    r = requests.get(url, params={'symbols': str(COINS).replace("'", '"')})
+    return r.json()
 
-COIN_NAMES = {
-    'BTC': 'bitcoin',
-    'ETH': 'ethereum',
-    'SOL': 'solana',
-    'BNB': 'binance',
-    'XRP': 'ripple',
-}
+def get_news():
+    feed = feedparser.parse('https://www.coindesk.com/arc/outboundfeeds/rss/')
+    entry = feed.entries[0]
+    return entry.title, entry.link
 
-def get_price(ticker):
-    try:
-        symbol = BINANCE_SYMBOLS.get(ticker)
-        url = f'https://api.binance.com/api/v3/ticker/24hr?symbol={symbol}'
-        data = requests.get(url, timeout=10).json()
-        return {
-            'usd': float(data.get('lastPrice', 0)),
-            'usd_24h_change': float(data.get('priceChangePercent', 0))
-        }
-    except Exception as e:
-        print(f'Price error for {ticker}: {e}')
-        return None
-
-def get_news(ticker):
-    try:
-        url = 'https://feeds.feedburner.com/CoinDesk'
-        response = requests.get(url, timeout=5)
-        root = ET.fromstring(response.content)
-        items = root.findall('.//item')
-        keyword = COIN_NAMES.get(ticker, ticker).lower()
-        for item in items:
-            title = item.findtext('title', '')
-            link = item.findtext('link', '')
-            if keyword in title.lower() or ticker.lower() in title.lower():
-                return title, link
-        if items:
-            return items[0].findtext('title', ''), items[0].findtext('link', '')
-    except Exception as e:
-        print(f'News error: {e}')
-    return '', ''
-
-def format_change(change):
-    if change is None:
-        return '—'
-    icon = '🟢' if change >= 0 else '🔴'
-    return f'{icon} {change:+.1f}%'
+def send_message(text):
+    url = f'https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage'
+    requests.post(url, data={'chat_id': TELEGRAM_CHAT_ID, 'text': text, 'disable_web_page_preview': True})
 
 def main():
-    for ticker, emoji in COINS:
-        print(f'Processing {ticker}...')
-        price_data = get_price(ticker)
-        if not price_data:
-            print(f'⚠️ No price data for {ticker}')
-            continue
-
-        price = price_data['usd']
-        change = price_data['usd_24h_change']
-        price_str = f'${price:,.2f}' if price < 1000 else f'${price:,.0f}'
-
-        headline, link = get_news(ticker)
-
-        tweet = f'{emoji} #{ticker} — {price_str}\n24h: {format_change(change)}\n\n'
-
-        if headline and link:
-            max_len = 275 - len(tweet) - len(link) - 5
-            if len(headline) > max_len:
-                headline = headline[:max_len] + '...'
-            tweet += f'📰 "{headline}"\n{link}'
-
-        print(f'Tweet preview: {tweet[:60]}...')
-
-        try:
-            client.create_tweet(text=tweet)
-            print(f'✅ Tweeted {ticker}')
-        except Exception as e:
-            print(f'❌ {ticker} failed: {e}')
+    prices = get_prices()
+    lines = []
+    for coin in prices:
+        symbol = SYMBOLS[coin['symbol']]
+        price = float(coin['lastPrice'])
+        change = float(coin['priceChangePercent'])
+        arrow = '🟢' if change >= 0 else '🔴'
+        sign = '+' if change >= 0 else ''
+        lines.append(f"{symbol} — ${price:,.2f}\n24h: {arrow} {sign}{change:.1f}%")
+    
+    title, link = get_news()
+    news_line = f"\n📰 {title}\n{link}"
+    
+    message = '\n\n'.join(lines) + '\n' + news_line
+    send_message(message)
 
 if __name__ == '__main__':
     main()
