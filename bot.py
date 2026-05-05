@@ -44,6 +44,20 @@ def get_fear_greed():
     except:
         return None
 
+def get_news(count=6):
+    try:
+        feed = feedparser.parse('https://www.coindesk.com/arc/outboundfeeds/rss/')
+        news = []
+        for entry in feed.entries[:count]:
+            news.append({
+                'title': entry.title,
+                'link': entry.link,
+                'published': entry.get('published', '')
+            })
+        return news
+    except:
+        return []
+
 def get_news_for_coin(ticker, name):
     feed = feedparser.parse('https://www.coindesk.com/arc/outboundfeeds/rss/')
     for entry in feed.entries[:20]:
@@ -56,7 +70,7 @@ def send_message(chat_id, text):
     r = requests.post(url, data={'chat_id': chat_id, 'text': text, 'disable_web_page_preview': True})
     print(f"Telegram: {r.status_code}")
 
-def write_json(main_data, meme_data, fng):
+def write_json(main_data, meme_data, fng, news):
     def format_coin(coin, info):
         return {
             'id': coin['id'],
@@ -76,6 +90,7 @@ def write_json(main_data, meme_data, fng):
     output = {
         'updated': datetime.now(timezone.utc).isoformat(),
         'fear_greed': fng,
+        'news': news,
         'main_coins': [format_coin(c, info_map[c['id']]) for c in main_data if c['id'] in info_map],
         'meme_coins': [format_coin(c, info_map[c['id']]) for c in meme_data if c['id'] in info_map],
     }
@@ -87,8 +102,9 @@ def main():
     main_data = get_prices(MAIN_COINS)
     meme_data = get_prices(MEME_COINS)
     fng = get_fear_greed()
+    news = get_news()
 
-    write_json(main_data, meme_data, fng)
+    write_json(main_data, meme_data, fng, news)
 
     top = max(main_data, key=lambda x: float(x.get('price_change_percentage_24h_in_currency') or 0))
     top_info = next(c for c in MAIN_COINS if c['id'] == top['id'])
