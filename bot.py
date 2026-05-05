@@ -5,51 +5,66 @@ import feedparser
 TELEGRAM_TOKEN = os.environ['TELEGRAM_TOKEN']
 TELEGRAM_CHAT_ID = os.environ['TELEGRAM_CHAT_ID']
 
-COINS = {
-    'bitcoin':      '₿ #BTC',
-    'ethereum':     'Ξ #ETH',
-    'solana':       '◎ #SOL',
-    'binancecoin':  '🔶 #BNB',
-    'ripple':       '💧 #XRP'
-}
+COINS = [
+    {'id': 'bitcoin',        'label': '₿ #BTC',   'ticker': 'BTC',  'name': 'bitcoin'},
+    {'id': 'ethereum',       'label': 'Ξ #ETH',   'ticker': 'ETH',  'name': 'ethereum'},
+    {'id': 'solana',         'label': '◎ #SOL',   'ticker': 'SOL',  'name': 'solana'},
+    {'id': 'binancecoin',    'label': '🔶 #BNB',  'ticker': 'BNB',  'name': 'BNB'},
+    {'id': 'ripple',         'label': '💧 #XRP',  'ticker': 'XRP',  'name': 'XRP'},
+    {'id': 'dogecoin',       'label': '🐶 #DOGE', 'ticker': 'DOGE', 'name': 'dogecoin'},
+    {'id': 'avalanche-2',    'label': '🔺 #AVAX', 'ticker': 'AVAX', 'name': 'avalanche'},
+    {'id': 'chainlink',      'label': '🔗 #LINK', 'ticker': 'LINK', 'name': 'chainlink'},
+    {'id': 'polkadot',       'label': '⚫ #DOT',  'ticker': 'DOT',  'name': 'polkadot'},
+    {'id': 'matic-network',  'label': '🟣 #POL',  'ticker': 'POL',  'name': 'polygon'},
+]
 
 def get_prices():
-    ids = ','.join(COINS.keys())
-    url = 'https://api.coingecko.com/api/v3/simple/price'
-    r = requests.get(url, params={
+    ids = ','.join(c['id'] for c in COINS)
+    r = requests.get('https://api.coingecko.com/api/v3/simple/price', params={
         'ids': ids,
         'vs_currencies': 'usd',
         'include_24hr_change': 'true'
     })
     return r.json()
 
-def get_news():
+def get_news_for_coin(ticker, name):
     feed = feedparser.parse('https://www.coindesk.com/arc/outboundfeeds/rss/')
-    entry = feed.entries[0]
-    return entry.title, entry.link
+    search_terms = [ticker.lower(), name.lower()]
+    for entry in feed.entries[:20]:
+        title_lower = entry.title.lower()
+        if any(term in title_lower for term in search_terms):
+            return entry.title, entry.link
+    return feed.entries[0].title, feed.entries[0].link
 
 def send_message(text):
     url = f'https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage'
-    response = requests.post(url, data={
+    r = requests.post(url, data={
         'chat_id': TELEGRAM_CHAT_ID,
         'text': text,
         'disable_web_page_preview': True
     })
-    print(f"Telegram response: {response.status_code} — {response.text}")
+    print(f"Telegram response: {r.status_code} — {r.text}")
 
 def main():
     prices = get_prices()
     lines = []
-    for coin_id, label in COINS.items():
-        data = prices[coin_id]
-        price = data['usd']
-        change = data['usd_24h_change']
+    top_gainer = None
+    top_change = -999
+
+    for coin in COINS:
+        data = prices.get(coin['id'], {})
+        price = data.get('usd', 0)
+        change = data.get('usd_24h_change', 0)
         arrow = '🟢' if change >= 0 else '🔴'
         sign = '+' if change >= 0 else ''
-        lines.append(f"{label} — ${price:,.2f}\n24h: {arrow} {sign}{change:.1f}%")
+        lines.append(f"{coin['label']} — ${price:,.2f}\n24h: {arrow} {sign}{change:.1f}%")
+        if change > top_change:
+            top_change = change
+            top_gainer = coin
 
-    title, link = get_news()
-    news_line = f"\n📰 {title}\n{link}"
+    title, link = get_news_for_coin(top_gainer['ticker'], top_gainer['name'])
+    sign = '+' if top_change >= 0 else ''
+    news_line = f"\n📰 Top mover: {top_gainer['label']} ({sign}{top_change:.1f}%)\n{title}\n{link}"
 
     message = '\n\n'.join(lines) + '\n' + news_line
     send_message(message)
