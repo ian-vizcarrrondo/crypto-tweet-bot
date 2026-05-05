@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coin Detail • CryptoDoggy</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #0a0a14; color: #e8e8f0; font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; }
+        a { color: inherit; }
+        .header { background: linear-gradient(135deg, #1a0a2e 0%, #0d1a2e 100%); border-bottom: 2px solid #f5a623; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+        .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+        .brand-emoji { font-size: 38px; }
+        .brand h1 { font-size: 23px; font-weight: 900; background: linear-gradient(135deg, #f5a623, #ff6b6b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .brand p { font-size: 12px; color: #888; margin-top: 3px; }
+        .back-link { color: #f5a623; text-decoration: none; font-size: 13px; font-weight: 800; }
+        .page { max-width: 1180px; margin: 0 auto; padding: 24px; }
+        .hero { background: radial-gradient(circle at top left, rgba(245,166,35,0.18), transparent 32%), #13132a; border: 1px solid #242448; border-radius: 22px; padding: 24px; display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 22px; }
+        .coin-title { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
+        .coin-emoji { font-size: 54px; line-height: 1; }
+        .coin-title h2 { font-size: 34px; line-height: 1.05; }
+        .ticker { display: inline-flex; margin-top: 7px; color: #f5a623; background: rgba(245,166,35,0.12); border: 1px solid rgba(245,166,35,0.35); border-radius: 999px; padding: 5px 10px; font-size: 12px; font-weight: 900; letter-spacing: 1px; }
+        .description { color: #b9b9c8; font-size: 15px; line-height: 1.6; max-width: 760px; }
+        .price-panel { background: rgba(10,10,20,0.72); border: 1px solid #242448; border-radius: 18px; padding: 18px; }
+        .price-label { color: #777; font-size: 11px; letter-spacing: 1.2px; text-transform: uppercase; }
+        .price { font-size: 36px; font-weight: 900; margin: 5px 0 14px; }
+        .metric-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .metric { background: #0f0f20; border: 1px solid #1f1f3a; border-radius: 13px; padding: 12px; }
+        .metric .label { color: #666; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; }
+        .metric .value { font-size: 16px; font-weight: 900; margin-top: 5px; }
+        .green { color: #00d4aa; } .red { color: #ff4757; } .neutral { color: #888; }
+        .content-grid { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 18px; margin-top: 18px; }
+        .card { background: #13132a; border: 1px solid #1f1f3a; border-radius: 18px; padding: 20px; }
+        .card h3 { color: #f5a623; font-size: 13px; text-transform: uppercase; letter-spacing: 1.8px; margin-bottom: 14px; }
+        .card h3.blue { color: #38bdf8; } .card h3.purple { color: #a855f7; } .card h3.red-title { color: #ff6b6b; }
+        .bullet-list { display: flex; flex-direction: column; gap: 11px; list-style: none; }
+        .bullet-list li { color: #c9c9d6; line-height: 1.5; padding-left: 22px; position: relative; }
+        .bullet-list li::before { content: '•'; position: absolute; left: 4px; color: #f5a623; font-weight: 900; }
+        .chips { display: flex; flex-wrap: wrap; gap: 9px; }
+        .chip { background: #0f0f20; border: 1px solid #2b2b4b; border-radius: 999px; color: #d7d7e4; padding: 8px 11px; font-size: 12px; font-weight: 700; }
+        .chart-wrap { height: 260px; }
+        .news-list { display: flex; flex-direction: column; gap: 10px; }
+        .news-card { background: #0f0f20; border: 1px solid #242448; border-radius: 14px; padding: 14px; text-decoration: none; display: block; transition: border-color 0.2s, background 0.2s; }
+        .news-card:hover { border-color: #38bdf8; background: #15152d; }
+        .news-title { color: #f0f0f8; font-weight: 750; line-height: 1.4; font-size: 14px; }
+        .news-meta { color: #666; margin-top: 7px; font-size: 11px; }
+        .empty-news { background: rgba(56,189,248,0.1); border: 1px solid rgba(56,189,248,0.25); border-radius: 14px; color: #b7dff0; line-height: 1.5; padding: 14px; }
+        .alert-card { background: linear-gradient(135deg, rgba(245,166,35,0.18), rgba(168,85,247,0.16)); border-color: rgba(245,166,35,0.35); }
+        .alert-card p, .note { color: #bdbdca; line-height: 1.55; font-size: 14px; }
+        .btns { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+        .btn { text-decoration: none; border-radius: 999px; padding: 10px 14px; font-size: 12px; font-weight: 900; }
+        .btn.main { background: #f5a623; color: #0a0a14; } .btn.meme { background: #a855f7; color: white; } .btn.link { border: 1px solid #2d2d50; background: #0f0f20; color: #dedeeb; }
+        .footer-note { margin-top: 18px; color: #777; font-size: 12px; line-height: 1.6; text-align: center; }
+        .error-state { background: #13132a; border: 1px solid #ff4757; border-radius: 18px; padding: 22px; color: #ffb7be; line-height: 1.5; }
+        @media (max-width: 880px) { .hero, .content-grid { grid-template-columns: 1fr; } .metric-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 560px) { .page { padding: 16px; } .coin-title h2 { font-size: 27px; } .price { font-size: 30px; } .metric-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+<header class="header">
+    <a class="brand" href="index.html">
+        <div class="brand-emoji">🐶</div>
+        <div><h1>CryptoDoggy</h1><p>Coin detail context, live prices, and news</p></div>
+    </a>
+    <a class="back-link" href="index.html">← Back to dashboard</a>
+</header>
+<main class="page" id="page"><div class="error-state">🐶 Loading coin context...</div></main>
+<script>
+let detailChart = null;
+const DEFAULT_ALIASES = {
+    bitcoin: ['btc', 'bitcoin', 'satoshi'], ethereum: ['eth', 'ethereum', 'ether'], solana: ['sol', 'solana'],
+    binancecoin: ['bnb', 'binance', 'binance coin', 'bnb chain'], ripple: ['xrp', 'ripple', 'xrpl'], dogecoin: ['doge', 'dogecoin'],
+    'avalanche-2': ['avax', 'avalanche'], chainlink: ['link', 'chainlink', 'oracle'], polkadot: ['dot', 'polkadot'],
+    'matic-network': ['pol', 'polygon', 'matic'], 'shiba-inu': ['shib', 'shiba', 'shiba inu'], pepe: ['pepe'], floki: ['floki'],
+    dogwifcoin: ['wif', 'dogwifhat', 'dogwifcoin'], bonk: ['bonk']
+};
+
+function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>'"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
+}
+function escapeAttr(value) { return escapeHtml(value); }
+function formatPrice(p) {
+    p = Number(p || 0);
+    if (p >= 1000) return '$' + p.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+    if (p >= 1) return '$' + p.toFixed(2);
+    if (p >= 0.01) return '$' + p.toFixed(4);
+    if (p >= 0.0001) return '$' + p.toFixed(6);
+    return '$' + p.toFixed(8);
+}
+function formatLarge(v) {
+    v = Number(v || 0);
+    if (!v) return '—';
+    if (v >= 1e12) return '$' + (v/1e12).toFixed(2) + 'T';
+    if (v >= 1e9) return '$' + (v/1e9).toFixed(1) + 'B';
+    if (v >= 1e6) return '$' + (v/1e6).toFixed(1) + 'M';
+    return '$' + v.toLocaleString();
+}
+function cc(v) { if (v == null) return 'neutral'; return Number(v) >= 0 ? 'green' : 'red'; }
+function ct(v) { if (v == null) return '—'; return (Number(v) >= 0 ? '+' : '') + Number(v).toFixed(2) + '%'; }
+function listMarkup(items, fallback) {
+    const safeItems = Array.isArray(items) && items.length ? items : fallback;
+    return `<ul class="bullet-list">${safeItems.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul>`;
+}
+function getCoinKey(coin) {
+    return [coin.id, coin.symbol, coin.name].filter(Boolean).map(v => String(v).toLowerCase());
+}
+function getRelatedNews(coin, news) {
+    if (Array.isArray(coin.related_news) && coin.related_news.length) return coin.related_news;
+    const terms = new Set([...(DEFAULT_ALIASES[coin.id] || []), ...(coin.aliases || []), ...getCoinKey(coin)]);
+    const normalizedTerms = [...terms].map(t => String(t).toLowerCase().trim()).filter(Boolean);
+    return (news || []).filter(item => {
+        const haystack = `${item.title || ''} ${item.summary || ''}`.toLowerCase();
+        return normalizedTerms.some(term => haystack.includes(term));
+    }).slice(0, 5);
+}
+function renderNewsList(items, coin) {
+    if (!items.length) {
+        return `<div class="empty-news">No coin-specific headlines matched ${escapeHtml(coin.symbol)} right now. The bot still monitors live price moves and broader crypto news, so check alerts and the dashboard for fresh context.</div>`;
+    }
+    return `<div class="news-list">${items.map(item => `<a class="news-card" href="${escapeAttr(item.link || '#')}" target="_blank" rel="noopener"><div class="news-title">${escapeHtml(item.title)}</div><div class="news-meta">${item.published ? escapeHtml(new Date(item.published).toLocaleString()) : 'Latest related headline'}</div></a>`).join('')}</div>`;
+}
+function renderLinks(links) {
+    if (!Array.isArray(links) || !links.length) return '';
+    return `<div class="btns">${links.map(link => `<a class="btn link" href="${escapeAttr(link.url)}" target="_blank" rel="noopener">${escapeHtml(link.label)} ↗</a>`).join('')}</div>`;
+}
+function drawChart(coin) {
+    const canvas = document.getElementById('detail-chart');
+    if (!canvas || !coin.sparkline || !coin.sparkline.length || !window.Chart) return;
+    if (detailChart) detailChart.destroy();
+    const positive = (coin.change_7d || 0) >= 0;
+    const color = positive ? '#00d4aa' : '#ff4757';
+    detailChart = new Chart(canvas, {
+        type: 'line',
+        data: { labels: coin.sparkline.map((_, i) => i), datasets: [{ data: coin.sparkline, borderColor: color, borderWidth: 2, pointRadius: 0, fill: true, backgroundColor: color + '18', tension: 0.35 }] },
+        options: { responsive: true, maintainAspectRatio: false, animation: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { display: false } } }
+    });
+}
+function renderCoin(data, coin) {
+    document.title = `${coin.name} (${coin.symbol}) • CryptoDoggy`;
+    const relatedNews = getRelatedNews(coin, data.news);
+    const buyerFallback = [`Traders are watching ${coin.symbol} for liquidity, momentum, and how it reacts to broader crypto news.`, 'Compare short-term moves against 7-day trend and volume before forming a view.'];
+    const riskFallback = ['Crypto assets are volatile, and rapid moves can reverse without warning.', 'News, liquidity, leverage, and regulation can all affect price action.'];
+    const catalysts = Array.isArray(coin.catalysts) && coin.catalysts.length ? coin.catalysts : ['Market-wide risk appetite', 'Exchange liquidity', 'Social/news momentum'];
+    document.getElementById('page').innerHTML = `
+        <section class="hero">
+            <div>
+                <div class="coin-title"><div class="coin-emoji">${escapeHtml(coin.emoji || '🪙')}</div><div><h2>${escapeHtml(coin.name)}</h2><span class="ticker">${escapeHtml(coin.symbol)}</span></div></div>
+                <p class="description">${escapeHtml(coin.description || `${coin.name} is tracked by CryptoDoggy for live market moves, trend changes, and related crypto headlines.`)}</p>
+                ${renderLinks(coin.links)}
+            </div>
+            <aside class="price-panel">
+                <div class="price-label">Live tracked price</div><div class="price">${formatPrice(coin.price)}</div>
+                <div class="metric-grid">
+                    <div class="metric"><div class="label">1h</div><div class="value ${cc(coin.change_1h)}">${ct(coin.change_1h)}</div></div>
+                    <div class="metric"><div class="label">24h</div><div class="value ${cc(coin.change_24h)}">${ct(coin.change_24h)}</div></div>
+                    <div class="metric"><div class="label">7d</div><div class="value ${cc(coin.change_7d)}">${ct(coin.change_7d)}</div></div>
+                    <div class="metric"><div class="label">Market cap</div><div class="value">${formatLarge(coin.market_cap)}</div></div>
+                    <div class="metric"><div class="label">24h volume</div><div class="value">${formatLarge(coin.volume_24h)}</div></div>
+                    <div class="metric"><div class="label">Updated</div><div class="value">${escapeHtml(new Date(data.updated).toLocaleTimeString())}</div></div>
+                </div>
+            </aside>
+        </section>
+        <section class="content-grid">
+            <div>
+                <div class="card"><h3>Why buyers are watching</h3>${listMarkup(coin.bull_case, buyerFallback)}</div>
+                <div class="card" style="margin-top:18px"><h3 class="blue">Recent price action</h3><div class="chart-wrap"><canvas id="detail-chart"></canvas></div><p class="note">${escapeHtml(coin.name)} is ${ct(coin.change_24h)} over 24h and ${ct(coin.change_7d)} over 7d. Use this as educational context, not a prediction.</p></div>
+                <div class="card" style="margin-top:18px"><h3 class="red-title">Key risks</h3>${listMarkup(coin.risk_notes, riskFallback)}</div>
+                <div class="card" style="margin-top:18px"><h3 class="blue">Latest related headlines</h3>${renderNewsList(relatedNews, coin)}</div>
+            </div>
+            <aside>
+                <div class="card"><h3 class="purple">Potential catalysts</h3><div class="chips">${catalysts.map(c => `<span class="chip">${escapeHtml(c)}</span>`).join('')}</div></div>
+                <div class="card alert-card" style="margin-top:18px"><h3>Get alerts for this coin</h3><p>Follow CryptoDoggy channels for major-coin and memecoin move alerts. Alerts highlight unusual moves and headlines; they do not guarantee outcomes.</p><div class="btns"><a class="btn main" href="https://t.me/CryptoDoggyAlerts" target="_blank" rel="noopener">📈 Major alerts</a><a class="btn meme" href="https://t.me/CryptoDoggyMemes" target="_blank" rel="noopener">🐸 Meme alerts</a></div></div>
+            </aside>
+        </section>
+        <p class="footer-note">Educational context only — not financial advice. Crypto assets are volatile; always do your own research and consider your risk tolerance.</p>`;
+    drawChart(coin);
+}
+async function init() {
+    try {
+        const params = new URLSearchParams(window.location.search);
+        const requested = (params.get('id') || params.get('symbol') || '').toLowerCase();
+        const base = window.location.href.replace(/\/[^\/]*$/, '');
+        const res = await fetch(base + '/prices.json?t=' + Date.now());
+        if (!res.ok) throw new Error('prices.json not found — please run the workflow first.');
+        const data = await res.json();
+        const coins = [...(data.main_coins || []), ...(data.meme_coins || [])];
+        const coin = coins.find(c => [c.id, c.symbol, c.name].some(v => String(v || '').toLowerCase() === requested));
+        if (!coin) throw new Error('Coin not found. Open a coin from the dashboard or pass ?id=bitcoin / ?symbol=BTC.');
+        renderCoin(data, coin);
+    } catch (err) {
+        document.getElementById('page').innerHTML = `<div class="error-state">⚠️ ${escapeHtml(err.message)}</div>`;
+    }
+}
+init();
+</script>
+</body>
+</html>
