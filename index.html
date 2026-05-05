@@ -52,6 +52,7 @@
 
         .section-header { font-size: 12px; font-weight: 800; color: #f5a623; text-transform: uppercase; letter-spacing: 2px; border-left: 3px solid #f5a623; padding: 6px 12px; margin: 8px 24px 12px; }
         .section-header.purple { color: #a855f7; border-color: #a855f7; }
+        .section-header.blue { color: #38bdf8; border-color: #38bdf8; }
 
         .table-wrapper { padding: 0 24px; overflow-x: auto; margin-bottom: 20px; }
         .coin-table { width: 100%; border-collapse: collapse; }
@@ -73,6 +74,25 @@
         .mkt-cap { color: #888; font-size: 13px; }
         .rank { color: #444; font-size: 12px; }
         .sparkline-cell canvas { display: block; margin-left: auto; }
+
+        /* News section */
+        .news-grid { display: flex; flex-direction: column; gap: 10px; padding: 0 24px 24px; }
+        .news-card {
+            background: #13132a;
+            border: 1px solid #1f1f3a;
+            border-radius: 12px;
+            padding: 16px 20px;
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            text-decoration: none;
+            transition: border-color 0.2s, background 0.2s;
+        }
+        .news-card:hover { border-color: #f5a623; background: #1a1a35; }
+        .news-icon { font-size: 24px; flex-shrink: 0; margin-top: 2px; }
+        .news-content .news-title { color: #e8e8f0; font-size: 14px; font-weight: 600; line-height: 1.4; }
+        .news-content .news-meta { color: #555; font-size: 11px; margin-top: 6px; }
+        .news-arrow { color: #f5a623; font-size: 18px; margin-left: auto; flex-shrink: 0; align-self: center; }
 
         .footer { text-align: center; padding: 28px 24px; color: #333; font-size: 12px; border-top: 1px solid #13132a; margin-top: 8px; line-height: 2; }
         .footer a { color: #f5a623; text-decoration: none; }
@@ -125,8 +145,13 @@
     </div>
 </div>
 
+<div id="news-section" style="display:none">
+    <div class="section-header blue">📰 Latest Crypto News</div>
+    <div class="news-grid" id="news-grid"></div>
+</div>
+
 <div class="footer">
-    <p>Data provided by CoinGecko • Fear & Greed by Alternative.me</p>
+    <p>Data provided by CoinGecko • News by CoinDesk • Fear & Greed by Alternative.me</p>
     <p>
         📱 Join our Telegram:
         <a href="https://t.me/CryptoDoggyAlerts" target="_blank">📈 CryptoDoggyAlerts</a> &nbsp;•&nbsp;
@@ -156,7 +181,7 @@ function formatLarge(v) {
 }
 
 function cc(v) { if (v == null) return 'neutral'; return v >= 0 ? 'green' : 'red'; }
-function ct(v) { if (v == null) return '—'; return (v >= 0 ? '+' : '') + v.toFixed(2) + '%'; }
+function ct(v) { if (v == null) return '—'; return (v >= 0 ? '+' : '') + Number(v).toFixed(2) + '%'; }
 
 function fngColor(v) {
     if (v <= 25) return '#ff4757'; if (v <= 45) return '#ff8c42';
@@ -181,6 +206,7 @@ function renderTable(bodyId, coins) {
     tbody.innerHTML = '';
     coins.forEach((coin, idx) => {
         const sid = `spark-${coin.id}-${bodyId}`;
+        const price = coin.price || 0;
         const row = document.createElement('tr');
         row.innerHTML = `
             <td class="rank">${idx + 1}</td>
@@ -188,7 +214,7 @@ function renderTable(bodyId, coins) {
                 <div class="coin-emoji">${coin.emoji || '🪙'}</div>
                 <div class="coin-name-block"><div class="name">${coin.name}</div><div class="ticker">${coin.symbol}</div></div>
             </div></td>
-            <td class="price">${formatPrice(coin.price)}</td>
+            <td class="price">${formatPrice(price)}</td>
             <td class="change-cell ${cc(coin.change_1h)}">${ct(coin.change_1h)}</td>
             <td class="change-cell ${cc(coin.change_24h)}">${ct(coin.change_24h)}</td>
             <td class="change-cell ${cc(coin.change_7d)}">${ct(coin.change_7d)}</td>
@@ -200,6 +226,23 @@ function renderTable(bodyId, coins) {
             setTimeout(() => drawSparkline(sid, coin.sparkline, (coin.change_7d || 0) >= 0), 0);
         }
     });
+}
+
+function renderNews(newsItems) {
+    if (!newsItems || newsItems.length === 0) return;
+    const grid = document.getElementById('news-grid');
+    const icons = ['📰','🔥','💡','📊','🚀','⚡'];
+    grid.innerHTML = newsItems.map((item, i) => `
+        <a class="news-card" href="${item.link}" target="_blank" rel="noopener">
+            <div class="news-icon">${icons[i % icons.length]}</div>
+            <div class="news-content">
+                <div class="news-title">${item.title}</div>
+                <div class="news-meta">CoinDesk ${item.published ? '• ' + new Date(item.published).toLocaleDateString() : ''}</div>
+            </div>
+            <div class="news-arrow">→</div>
+        </a>
+    `).join('');
+    document.getElementById('news-section').style.display = 'block';
 }
 
 async function fetchAndRender() {
@@ -254,6 +297,7 @@ async function fetchAndRender() {
         document.getElementById('meme-section').style.display = 'block';
         renderTable('main-coins-body', data.main_coins);
         renderTable('meme-coins-body', data.meme_coins);
+        renderNews(data.news);
 
         const updated = new Date(data.updated);
         document.getElementById('last-updated').textContent = 'Last updated: ' + updated.toLocaleTimeString();
