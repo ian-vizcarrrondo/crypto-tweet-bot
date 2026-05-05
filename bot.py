@@ -59,15 +59,16 @@ def send_message(chat_id, text):
 def write_json(main_data, meme_data, fng):
     def format_coin(coin, info):
         return {
-            'id': coin['id'], 'name': coin['name'],
+            'id': coin['id'],
+            'name': coin['name'],
             'symbol': coin['symbol'].upper(),
             'emoji': info['emoji'],
-            'price': coin['current_price'],
-            'change_1h':  coin.get('price_change_percentage_1h_in_currency'),
-            'change_24h': coin.get('price_change_percentage_24h_in_currency'),
-            'change_7d':  coin.get('price_change_percentage_7d_in_currency'),
-            'market_cap': coin['market_cap'],
-            'volume_24h': coin['total_volume'],
+            'price': coin['current_price'] or 0,
+            'change_1h':  float(coin.get('price_change_percentage_1h_in_currency') or 0),
+            'change_24h': float(coin.get('price_change_percentage_24h_in_currency') or 0),
+            'change_7d':  float(coin.get('price_change_percentage_7d_in_currency') or 0),
+            'market_cap': coin['market_cap'] or 0,
+            'volume_24h': coin['total_volume'] or 0,
             'sparkline':  coin.get('sparkline_in_7d', {}).get('price', [])
         }
 
@@ -89,7 +90,7 @@ def main():
 
     write_json(main_data, meme_data, fng)
 
-    top = max(main_data, key=lambda x: x.get('price_change_percentage_24h_in_currency') or 0)
+    top = max(main_data, key=lambda x: float(x.get('price_change_percentage_24h_in_currency') or 0))
     top_info = next(c for c in MAIN_COINS if c['id'] == top['id'])
 
     lines = []
@@ -98,9 +99,12 @@ def main():
         if not coin: continue
         price  = coin['current_price'] or 0
         change = float(coin.get('price_change_percentage_24h_in_currency') or 0)
+        arrow  = '🟢' if change >= 0 else '🔴'
+        sign   = '+' if change >= 0 else ''
+        lines.append(f"{info['label']} — ${price:,.2f}\n24h: {arrow} {sign}{change:.1f}%")
 
     title, link = get_news_for_coin(top_info['ticker'], top_info['name'])
-    top_change = top.get('price_change_percentage_24h_in_currency', 0) or 0
+    top_change = float(top.get('price_change_percentage_24h_in_currency') or 0)
     sign = '+' if top_change >= 0 else ''
     news_line = f"\n📰 Top mover: {top_info['label']} ({sign}{top_change:.1f}%)\n{title}\n{link}"
 
