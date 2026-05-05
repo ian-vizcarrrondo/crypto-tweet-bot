@@ -96,11 +96,8 @@ def main():
     for info in MAIN_COINS:
         coin = next((c for c in main_data if c['id'] == info['id']), None)
         if not coin: continue
-        price  = coin['current_price']
-        change = coin.get('price_change_percentage_24h_in_currency', 0) or 0
-        arrow  = '🟢' if change >= 0 else '🔴'
-        sign   = '+' if change >= 0 else ''
-        lines.append(f"{info['label']} — ${price:,.2f}\n24h: {arrow} {sign}{change:.1f}%")
+        price  = coin['current_price'] or 0
+        change = float(coin.get('price_change_percentage_24h_in_currency') or 0)
 
     title, link = get_news_for_coin(top_info['ticker'], top_info['name'])
     top_change = top.get('price_change_percentage_24h_in_currency', 0) or 0
