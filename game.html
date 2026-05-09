@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎮 CryptoDoggy — Predict</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { background:#0a0a14; color:#e8e8f0; font-family:'Segoe UI',system-ui,sans-serif; min-height:100vh; }
+
+        /* NAV */
+        .site-nav { background:#06060f; border-bottom:1px solid #13132a; padding:0 24px; display:flex; align-items:center; gap:2px; }
+        .nav-brand { font-size:18px; margin-right:16px; }
+        .nav-link { padding:13px 18px; font-size:13px; font-weight:700; color:#444; text-decoration:none; border-bottom:3px solid transparent; transition:color 0.15s,border-color 0.15s; white-space:nowrap; }
+        .nav-link:hover { color:#aaa; }
+        .nav-link.active { color:#f5a623; border-bottom-color:#f5a623; }
+        .mood-bar { height:3px; background:#f5a623; }
+
+        /* LAYOUT */
+        .page { max-width:900px; margin:0 auto; padding:40px 24px; }
+        .page-title { font-size:32px; font-weight:900; text-align:center; margin-bottom:6px; }
+        .page-title span { background:linear-gradient(135deg,#f5a623,#ff6b6b); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+        .page-sub { text-align:center; color:#555; font-size:14px; margin-bottom:40px; }
+
+        /* STREAK */
+        .streak-bar { display:flex; justify-content:center; gap:24px; margin-bottom:36px; flex-wrap:wrap; }
+        .streak-card { background:#13132a; border:1px solid #1f1f3a; border-radius:14px; padding:16px 28px; text-align:center; min-width:130px; }
+        .streak-card .sc-label { font-size:10px; color:#555; text-transform:uppercase; letter-spacing:1.2px; }
+        .streak-card .sc-value { font-size:28px; font-weight:900; margin-top:4px; color:#f5a623; }
+        .streak-card.best .sc-value { color:#a855f7; }
+
+        /* COIN SELECTOR */
+        .coin-selector { display:flex; justify-content:center; gap:12px; margin-bottom:32px; flex-wrap:wrap; }
+        .coin-tab {
+            padding:10px 22px; border-radius:12px; font-size:14px; font-weight:700;
+            border:2px solid #1f1f3a; background:#13132a; color:#555; cursor:pointer; transition:all 0.15s;
+        }
+        .coin-tab.active { border-color:#f5a623; color:#f5a623; background:#1a1608; }
+        .coin-tab:hover:not(.active) { color:#aaa; border-color:#333; }
+
+        /* MAIN CARD */
+        .game-card {
+            background:#13132a; border:1px solid #1f1f3a; border-radius:20px;
+            padding:36px; text-align:center; max-width:480px; margin:0 auto 32px;
+            position:relative; overflow:hidden;
+        }
+        .game-card .gc-emoji { font-size:52px; margin-bottom:12px; }
+        .game-card .gc-name  { font-size:14px; color:#666; font-weight:600; margin-bottom:6px; }
+        .game-card .gc-price { font-size:36px; font-weight:900; margin-bottom:4px; }
+        .game-card .gc-change { font-size:14px; font-weight:700; margin-bottom:28px; }
+        .game-card .gc-change.green { color:#00d4aa; }
+        .game-card .gc-change.red   { color:#ff4757; }
+
+        /* PREDICT BUTTONS */
+        .predict-btns { display:flex; gap:16px; justify-content:center; margin-bottom:12px; }
+        .predict-btn {
+            flex:1; max-width:180px; padding:18px; border-radius:14px;
+            font-size:22px; font-weight:900; border:none; cursor:pointer;
+            transition:transform 0.1s, box-shadow 0.2s;
+        }
+        .predict-btn:active { transform:scale(0.95); }
+        .predict-btn.up {
+            background:linear-gradient(135deg,#00d4aa,#00a880);
+            color:#001a15;
+            box-shadow:0 4px 20px rgba(0,212,170,0.35);
+        }
+        .predict-btn.up:hover { box-shadow:0 6px 28px rgba(0,212,170,0.55); }
+        .predict-btn.down {
+            background:linear-gradient(135deg,#ff4757,#cc2233);
+            color:#fff;
+            box-shadow:0 4px 20px rgba(255,71,87,0.35);
+        }
+        .predict-btn.down:hover { box-shadow:0 6px 28px rgba(255,71,87,0.55); }
+        .predict-btn:disabled { opacity:0.4; cursor:not-allowed; transform:none; }
+
+        /* WAITING STATE */
+        .waiting-card {
+            background:#13132a; border:1px solid #1f1f3a; border-radius:20px;
+            padding:36px; text-align:center; max-width:480px; margin:0 auto 32px;
+        }
+        .waiting-icon { font-size:52px; margin-bottom:12px; }
+        .waiting-coin { font-size:16px; font-weight:700; margin-bottom:8px; }
+        .waiting-pred { font-size:24px; font-weight:900; margin-bottom:20px; }
+        .waiting-pred.up   { color:#00d4aa; }
+        .waiting-pred.down { color:#ff4757; }
+        .price-row { display:flex; justify-content:space-between; background:#0a0a14; border-radius:10px; padding:14px 18px; margin-bottom:12px; font-size:14px; }
+        .price-row .pr-label { color:#555; }
+        .price-row .pr-val   { font-weight:700; }
+        .countdown-wrap { margin-top:16px; }
+        .countdown-ring { font-size:48px; font-weight:900; color:#f5a623; animation:ringPulse 1s ease-in-out infinite; }
+        @keyframes ringPulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+        .countdown-label { font-size:12px; color:#555; margin-top:4px; }
+
+        /* RESULT STATE */
+        .result-card {
+            background:#13132a; border-radius:20px;
+            padding:40px 36px; text-align:center; max-width:480px; margin:0 auto 32px;
+            animation:resultPop 0.4s cubic-bezier(0.175,0.885,0.32,1.275);
+        }
+        @keyframes resultPop { from{transform:scale(0.8);opacity:0} to{transform:scale(1);opacity:1} }
+        .result-card.win  { border:2px solid #00d4aa; }
+        .result-card.loss { border:2px solid #ff4757; }
+        .result-icon { font-size:72px; margin-bottom:12px; }
+        .result-title { font-size:28px; font-weight:900; margin-bottom:8px; }
+        .result-title.win  { color:#00d4aa; }
+        .result-title.loss { color:#ff4757; }
+        .result-detail { font-size:14px; color:#888; margin-bottom:24px; line-height:1.6; }
+        .result-streak { font-size:16px; font-weight:700; margin-bottom:24px; }
+        .play-again-btn {
+            background:linear-gradient(135deg,#f5a623,#ff8c00); color:#0a0a14;
+            border:none; border-radius:12px; padding:14px 36px;
+            font-size:15px; font-weight:800; cursor:pointer; transition:transform 0.15s;
+        }
+        .play-again-btn:hover { transform:scale(1.04); }
+
+        /* HISTORY */
+        .history-section { max-width:480px; margin:0 auto; }
+        .history-title { font-size:12px; color:#555; text-transform:uppercase; letter-spacing:1.5px; margin-bottom:12px; }
+        .history-list { display:flex; flex-direction:column; gap:8px; }
+        .history-item { background:#13132a; border-radius:10px; padding:12px 16px; display:flex; align-items:center; gap:12px; font-size:13px; }
+        .history-item .hi-result { font-size:18px; }
+        .history-item .hi-info { flex:1; }
+        .history-item .hi-coin  { font-weight:700; }
+        .history-item .hi-delta { font-size:11px; color:#555; margin-top:2px; }
+        .history-item .hi-badge { font-size:11px; font-weight:700; padding:3px 9px; border-radius:20px; }
+        .history-item .hi-badge.win  { background:#00d4aa22; color:#00d4aa; }
+        .history-item .hi-badge.loss { background:#ff475722; color:#ff4757; }
+
+        /* LOADING */
+        .loading { text-align:center; padding:60px; color:#444; font-size:24px; animation:pulse 1.5s ease-in-out infinite; }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    </style>
+</head>
+<body>
+
+<nav class="site-nav">
+    <span class="nav-brand">🐶</span>
+    <a href="index.html" class="nav-link">📊 Dashboard</a>
+    <a href="game.html" class="nav-link active">🎮 Predict</a>
+    <a href="meme.html" class="nav-link">🐸 Meme Zone</a>
+</nav>
+<div class="mood-bar"></div>
+
+<div class="page">
+    <div class="page-title">🎮 <span>Up or Down?</span></div>
+    <div class="page-sub">Predict which way the market moves in 60 seconds. Build your streak.</div>
+
+    <div class="streak-bar">
+        <div class="streak-card">
+            <div class="sc-label">🔥 Current Streak</div>
+            <div class="sc-value" id="streak-current">0</div>
+        </div>
+        <div class="streak-card best">
+            <div class="sc-label">👑 Best Streak</div>
+            <div class="sc-value" id="streak-best">0</div>
+        </div>
+        <div class="streak-card">
+            <div class="sc-label">📊 Win Rate</div>
+            <div class="sc-value" id="win-rate">—</div>
+        </div>
+    </div>
+
+    <div class="coin-selector" id="coin-selector"></div>
+    <div id="game-area"><div class="loading">🐶 Loading prices...</div></div>
+    <div class="history-section" id="history-section" style="display:none">
+        <div class="history-title">Recent Predictions</div>
+        <div class="history-list" id="history-list"></div>
+    </div>
+</div>
+
+<script>
+const COINS = [
+    { id:'bitcoin',  symbol:'BTC', name:'Bitcoin',  emoji:'₿' },
+    { id:'ethereum', symbol:'ETH', name:'Ethereum', emoji:'Ξ' },
+    { id:'solana',   symbol:'SOL', name:'Solana',   emoji:'◎' },
+    { id:'dogecoin', symbol:'DOGE', name:'Dogecoin', emoji:'🐶' },
+];
+const STORAGE_KEY = 'cryptodoggy_game';
+const CG_URL = 'https://api.coingecko.com/api/v3/simple/price';
+
+let selectedCoin = COINS[0];
+let livePrices = {};
+let gameState = null; // null | 'waiting' | 'result'
+let waitCountdown = 60;
+let waitInterval = null;
+let pendingPrediction = null;
+
+function loadStorage() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch { return {}; }
+}
+function saveStorage(data) { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+
+function getStats() {
+    const s = loadStorage();
+    return {
+        streak: s.streak || 0,
+        best: s.best || 0,
+        wins: s.wins || 0,
+        total: s.total || 0,
+        history: s.history || [],
+        pending: s.pending || null,
+    };
+}
+
+async function fetchPrices() {
+    const ids = COINS.map(c => c.id).join(',');
+    const r = await fetch(`${CG_URL}?ids=${ids}&vs_currencies=usd&include_24hr_change=true`);
+    return r.json();
+}
+
+function formatPrice(p) {
+    if (p >= 1000) return '$' + p.toLocaleString('en-US', {minimumFractionDigits:2,maximumFractionDigits:2});
+    if (p >= 1)    return '$' + p.toFixed(4);
+    return '$' + p.toFixed(6);
+}
+
+function renderCoinSelector() {
+    document.getElementById('coin-selector').innerHTML = COINS.map(c => `
+        <div class="coin-tab ${c.id === selectedCoin.id ? 'active' : ''}" onclick="selectCoin('${c.id}')">
+            ${c.emoji} ${c.symbol}
+        </div>`).join('');
+}
+
+function selectCoin(id) {
+    if (gameState === 'waiting') return;
+    selectedCoin = COINS.find(c => c.id === id);
+    renderCoinSelector();
+    renderPredict();
+}
+
+function renderStats() {
+    const s = getStats();
+    document.getElementById('streak-current').textContent = s.streak;
+    document.getElementById('streak-best').textContent = s.best;
+    document.getElementById('win-rate').textContent = s.total > 0 ? Math.round((s.wins/s.total)*100) + '%' : '—';
+}
+
+function renderPredict() {
+    const price = livePrices[selectedCoin.id]?.usd || 0;
+    const change24 = livePrices[selectedCoin.id]?.usd_24h_change || 0;
+    const cls = change24 >= 0 ? 'green' : 'red';
+    const sign = change24 >= 0 ? '▲' : '▼';
+    document.getElementById('game-area').innerHTML = `
+        <div class="game-card">
+            <div class="gc-emoji">${selectedCoin.emoji}</div>
+            <div class="gc-name">${selectedCoin.name}</div>
+            <div class="gc-price">${formatPrice(price)}</div>
+            <div class="gc-change ${cls}">${sign} ${Math.abs(change24).toFixed(2)}% (24h)</div>
+            <div class="predict-btns">
+                <button class="predict-btn up" onclick="predict('up')">📈 UP</button>
+                <button class="predict-btn down" onclick="predict('down')">📉 DOWN</button>
+            </div>
+            <div style="font-size:12px;color:#444">Will ${selectedCoin.symbol} be higher in 60 seconds?</div>
+        </div>`;
+    gameState = null;
+}
+
+function predict(direction) {
+    const price = livePrices[selectedCoin.id]?.usd;
+    if (!price) return;
+    pendingPrediction = { coinId: selectedCoin.id, direction, priceAt: price, ts: Date.now() };
+    gameState = 'waiting';
+    renderWaiting();
+    startWaitCountdown();
+}
+
+function renderWaiting() {
+    const p = pendingPrediction;
+    const coin = COINS.find(c => c.id === p.coinId);
+    const dirLabel = p.direction === 'up' ? '📈 GOING UP' : '📉 GOING DOWN';
+    const dirCls   = p.direction === 'up' ? 'up' : 'down';
+    document.getElementById('game-area').innerHTML = `
+        <div class="waiting-card">
+            <div class="waiting-icon">${coin.emoji}</div>
+            <div class="waiting-coin">${coin.name} (${coin.symbol})</div>
+            <div class="waiting-pred ${dirCls}">You called: ${dirLabel}</div>
+            <div class="price-row">
+                <span class="pr-label">Price when you called it</span>
+                <span class="pr-val">${formatPrice(p.priceAt)}</span>
+            </div>
+            <div class="price-row">
+                <span class="pr-label">Current price</span>
+                <span class="pr-val" id="current-price-display">Fetching...</span>
+            </div>
+            <div class="countdown-wrap">
+                <div class="countdown-ring" id="wait-countdown">60</div>
+                <div class="countdown-label">seconds until result</div>
+            </div>
+        </div>`;
+}
+
+function startWaitCountdown() {
+    waitCountdown = 60;
+    if (waitInterval) clearInterval(waitInterval);
+    waitInterval = setInterval(async () => {
+        waitCountdown--;
+        const el = document.getElementById('wait-countdown');
+        if (el) el.textContent = waitCountdown;
+
+        // Update live price display
+        try {
+            const fresh = await fetchPrices();
+            livePrices = fresh;
+            const priceEl = document.getElementById('current-price-display');
+            if (priceEl && fresh[pendingPrediction.coinId]) {
+                priceEl.textContent = formatPrice(fresh[pendingPrediction.coinId].usd);
+            }
+        } catch {}
+
+        if (waitCountdown <= 0) {
+            clearInterval(waitInterval);
+            evaluatePrediction();
+        }
+    }, 1000);
+}
+
+async function evaluatePrediction() {
+    const p = pendingPrediction;
+    const coin = COINS.find(c => c.id === p.coinId);
+    let newPrice;
+    try {
+        const fresh = await fetchPrices();
+        livePrices = fresh;
+        newPrice = fresh[p.coinId]?.usd;
+    } catch { newPrice = p.priceAt; }
+
+    if (!newPrice) newPrice = p.priceAt;
+
+    const actualUp = newPrice >= p.priceAt;
+    const win = (p.direction === 'up' && actualUp) || (p.direction === 'down' && !actualUp);
+    const pctMove = ((newPrice - p.priceAt) / p.priceAt * 100).toFixed(3);
+
+    const s = loadStorage();
+    s.total = (s.total || 0) + 1;
+    if (win) {
+        s.wins = (s.wins || 0) + 1;
+        s.streak = (s.streak || 0) + 1;
+        if (s.streak > (s.best || 0)) s.best = s.streak;
+    } else {
+        s.streak = 0;
+    }
+    s.history = [{
+        coin: coin.symbol,
+        emoji: coin.emoji,
+        direction: p.direction,
+        priceBefore: p.priceAt,
+        priceAfter: newPrice,
+        pctMove,
+        win,
+        ts: Date.now()
+    }, ...(s.history || [])].slice(0, 20);
+    saveStorage(s);
+
+    pendingPrediction = null;
+    gameState = 'result';
+    renderStats();
+    renderResult(win, coin, p, newPrice, pctMove, s.streak);
+    renderHistory(s.history);
+}
+
+function renderResult(win, coin, prediction, newPrice, pctMove, streak) {
+    const icon = win ? ['🎉','🚀','🥳','💰','🏆'][Math.floor(Math.random()*5)] : ['😭','💀','🪦','😬','🫠'][Math.floor(Math.random()*5)];
+    const title = win ? ['CORRECT!','NAILED IT!','GENIUS!','LFG!'][Math.floor(Math.random()*4)] : ['REKT!','WRONG!','NGMI','OUCH!'][Math.floor(Math.random()*4)];
+    const move = parseFloat(pctMove);
+    const moveStr = (move >= 0 ? '+' : '') + pctMove + '%';
+    document.getElementById('game-area').innerHTML = `
+        <div class="result-card ${win ? 'win' : 'loss'}">
+            <div class="result-icon">${icon}</div>
+            <div class="result-title ${win ? 'win' : 'loss'}">${title}</div>
+            <div class="result-detail">
+                ${coin.emoji} ${coin.name} moved <strong>${moveStr}</strong><br>
+                from <strong>${formatPrice(prediction.priceAt)}</strong> → <strong>${formatPrice(newPrice)}</strong>
+            </div>
+            <div class="result-streak">${win ? `🔥 Streak: ${streak}` : '💀 Streak reset to 0'}</div>
+            <button class="play-again-btn" onclick="playAgain()">Play Again →</button>
+        </div>`;
+}
+
+function playAgain() {
+    gameState = null;
+    renderPredict();
+}
+
+function renderHistory(history) {
+    if (!history || history.length === 0) return;
+    document.getElementById('history-section').style.display = 'block';
+    document.getElementById('history-list').innerHTML = history.slice(0,8).map(h => {
+        const move = parseFloat(h.pctMove);
+        const moveStr = (move >= 0 ? '+' : '') + h.pctMove + '%';
+        return `<div class="history-item">
+            <span class="hi-result">${h.win ? '✅' : '❌'}</span>
+            <div class="hi-info">
+                <div class="hi-coin">${h.emoji} ${h.coin} — called ${h.direction.toUpperCase()}</div>
+                <div class="hi-delta">Moved ${moveStr} (${formatPrice(h.priceBefore)} → ${formatPrice(h.priceAfter)})</div>
+            </div>
+            <span class="hi-badge ${h.win ? 'win' : 'loss'}">${h.win ? 'WIN' : 'LOSS'}</span>
+        </div>`;
+    }).join('');
+}
+
+async function init() {
+    renderCoinSelector();
+    renderStats();
+    const s = getStats();
+    if (s.history.length > 0) renderHistory(s.history);
+
+    try {
+        livePrices = await fetchPrices();
+        renderPredict();
+    } catch(e) {
+        document.getElementById('game-area').innerHTML = `<div class="loading">⚠️ Could not load prices. Check your connection.</div>`;
+    }
+}
+
+init();
+</script>
+</body>
+</html>

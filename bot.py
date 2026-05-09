@@ -101,6 +101,7 @@ def write_json(main_data, meme_data, fng, news):
             'change_1h':  float(coin.get('price_change_percentage_1h_in_currency') or 0),
             'change_24h': float(coin.get('price_change_percentage_24h_in_currency') or 0),
             'change_7d':  float(coin.get('price_change_percentage_7d_in_currency') or 0),
+            'ath_change_pct': float(coin.get('ath_change_percentage') or 0),
             'market_cap': coin['market_cap'] or 0,
             'volume_24h': coin['total_volume'] or 0,
             'sparkline':  coin.get('sparkline_in_7d', {}).get('price', [])

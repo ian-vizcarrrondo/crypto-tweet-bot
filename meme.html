@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🐸 CryptoDoggy — Meme Zone</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { background:#0a0a14; color:#e8e8f0; font-family:'Segoe UI',system-ui,sans-serif; min-height:100vh; }
+
+        /* NAV */
+        .site-nav { background:#06060f; border-bottom:1px solid #13132a; padding:0 24px; display:flex; align-items:center; gap:2px; }
+        .nav-brand { font-size:18px; margin-right:16px; }
+        .nav-link { padding:13px 18px; font-size:13px; font-weight:700; color:#444; text-decoration:none; border-bottom:3px solid transparent; transition:color 0.15s,border-color 0.15s; }
+        .nav-link:hover { color:#aaa; }
+        .nav-link.active { color:#a855f7; border-bottom-color:#a855f7; }
+        .mood-bar { height:3px; background:linear-gradient(90deg,#a855f7,#ec4899,#f5a623); }
+
+        /* HEADER */
+        .meme-header { background:linear-gradient(135deg,#1a0a2e,#0d0a1a,#0a1a0a); border-bottom:2px solid #a855f7; padding:28px 24px; text-align:center; }
+        .meme-header h1 { font-size:36px; font-weight:900; background:linear-gradient(135deg,#a855f7,#ec4899,#f5a623); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+        .meme-header p { color:#666; font-size:14px; margin-top:6px; }
+        .meme-ticker { font-size:11px; color:#444; margin-top:8px; }
+
+        /* PAGE */
+        .page { max-width:960px; margin:0 auto; padding:32px 24px; }
+
+        /* AWARDS */
+        .awards { display:flex; gap:16px; margin-bottom:36px; flex-wrap:wrap; }
+        .award-card { flex:1; min-width:220px; border-radius:16px; padding:20px; text-align:center; }
+        .award-card.degen { background:linear-gradient(135deg,#1a0a2e,#2a0a1a); border:1px solid #a855f7; }
+        .award-card.rug   { background:linear-gradient(135deg,#1a0a0a,#2a1500); border:1px solid #ff4757; }
+        .award-card.moon  { background:linear-gradient(135deg,#0a1a0a,#001a10); border:1px solid #00d4aa; }
+        .award-icon  { font-size:40px; margin-bottom:8px; }
+        .award-label { font-size:10px; color:#666; text-transform:uppercase; letter-spacing:1.5px; margin-bottom:6px; }
+        .award-name  { font-size:20px; font-weight:900; }
+        .award-sub   { font-size:12px; color:#666; margin-top:4px; }
+
+        /* SECTION */
+        .section-header { font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:2px; border-left:3px solid #a855f7; padding:6px 12px; margin:0 0 20px; color:#a855f7; }
+        .section-header.green { color:#00d4aa; border-color:#00d4aa; }
+        .section-header.red   { color:#ff4757; border-color:#ff4757; }
+
+        /* COIN CARDS GRID */
+        .cards-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:20px; margin-bottom:40px; }
+
+        /* DEGEN CARD */
+        .degen-card { background:#13132a; border:1px solid #1f1f3a; border-radius:16px; padding:22px; position:relative; overflow:hidden; transition:border-color 0.2s; }
+        .degen-card:hover { border-color:#a855f7; }
+        .degen-card .dc-top { display:flex; align-items:center; gap:14px; margin-bottom:18px; }
+        .degen-card .dc-emoji { font-size:38px; }
+        .degen-card .dc-info .dc-name { font-size:16px; font-weight:800; }
+        .degen-card .dc-info .dc-sym  { font-size:11px; color:#555; margin-top:2px; }
+        .degen-card .dc-price { font-size:20px; font-weight:900; margin-bottom:4px; }
+        .degen-card .dc-change { font-size:13px; font-weight:700; margin-bottom:16px; }
+        .dc-change.green { color:#00d4aa; }
+        .dc-change.red   { color:#ff4757; }
+
+        /* DEGEN SCORE BAR */
+        .degen-score-label { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+        .degen-score-label .dsl-title { font-size:10px; color:#666; text-transform:uppercase; letter-spacing:1px; }
+        .degen-score-label .dsl-value { font-size:18px; font-weight:900; }
+        .degen-bar-bg { background:#0a0a14; border-radius:999px; height:10px; overflow:hidden; margin-bottom:6px; }
+        .degen-bar-fill { height:100%; border-radius:999px; transition:width 1s cubic-bezier(0.22,1,0.36,1); }
+        .degen-tier { font-size:11px; font-weight:700; margin-bottom:16px; }
+
+        /* RUG METER */
+        .rug-meter-wrap { margin-top:4px; }
+        .rug-meter-label { display:flex; justify-content:space-between; margin-bottom:5px; }
+        .rug-meter-label .rml-title { font-size:10px; color:#666; text-transform:uppercase; letter-spacing:1px; }
+        .rug-meter-label .rml-val   { font-size:13px; font-weight:700; }
+        .rug-bar-bg { background:#0a0a14; border-radius:999px; height:8px; overflow:hidden; }
+        .rug-bar-fill { height:100%; border-radius:999px; transition:width 1s 0.3s cubic-bezier(0.22,1,0.36,1); }
+        .rug-verdict { font-size:11px; font-weight:700; margin-top:6px; }
+
+        /* COMMENTARY */
+        .dc-commentary { font-size:11px; color:#555; font-style:italic; margin-top:12px; border-top:1px solid #1a1a2e; padding-top:10px; line-height:1.5; }
+
+        /* DISCLAIMER */
+        .disclaimer { background:#0d0d1f; border:1px solid #1a1a35; border-radius:10px; padding:14px 18px; font-size:11px; color:#444; text-align:center; margin-top:8px; line-height:1.6; }
+
+        /* LOADING */
+        .loading { text-align:center; padding:80px 24px; color:#444; font-size:24px; animation:pulse 1.5s ease-in-out infinite; }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    </style>
+</head>
+<body>
+
+<nav class="site-nav">
+    <span class="nav-brand">🐶</span>
+    <a href="index.html" class="nav-link">📊 Dashboard</a>
+    <a href="game.html" class="nav-link">🎮 Predict</a>
+    <a href="meme.html" class="nav-link active">🐸 Meme Zone</a>
+</nav>
+<div class="mood-bar"></div>
+
+<div class="meme-header">
+    <h1>🐸 Meme Zone</h1>
+    <p>Pure degen analysis. Not financial advice. Obviously.</p>
+    <div class="meme-ticker" id="meme-ticker">Loading meme data...</div>
+</div>
+
+<div class="page" id="main-page">
+    <div class="loading">🐸 Consulting the meme oracle...</div>
+</div>
+
+<script>
+const PRICE_URL = window.location.href.replace(/\/[^\/]*$/, '') + '/prices.json?t=' + Date.now();
+
+function formatPrice(p) {
+    if (p >= 1000) return '$' + p.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+    if (p >= 1)    return '$' + p.toFixed(4);
+    if (p >= 0.01) return '$' + p.toFixed(5);
+    if (p >= 0.0001) return '$' + p.toFixed(7);
+    return '$' + p.toFixed(10);
+}
+function formatLarge(v) {
+    if (!v) return '—';
+    if (v >= 1e9) return '$' + (v/1e9).toFixed(2) + 'B';
+    if (v >= 1e6) return '$' + (v/1e6).toFixed(1) + 'M';
+    return '$' + v.toLocaleString();
+}
+
+function calcDegenScore(coin) {
+    // Volatility: absolute weekly move per day (0-50 pts)
+    const vol = Math.min(Math.abs(coin.change_7d || 0) / 7, 10) * 5;
+    // Momentum: absolute 24h move (0-30 pts)
+    const mom = Math.min(Math.abs(coin.change_24h || 0), 20) * 1.5;
+    // Activity: volume/market cap ratio (0-20 pts)
+    const activity = Math.min(((coin.volume_24h || 0) / (coin.market_cap || 1)) * 100, 20);
+    return Math.min(Math.round(vol + mom + activity), 100);
+}
+
+function calcRugRisk(coin) {
+    let risk = 20; // baseline
+    // Market cap: smaller = riskier
+    const mcap = coin.market_cap || 0;
+    if (mcap < 50e6)       risk += 30;
+    else if (mcap < 200e6) risk += 20;
+    else if (mcap < 1e9)   risk += 10;
+    // Volume/market cap: low activity = illiquid = risky
+    const volRatio = ((coin.volume_24h || 0) / (mcap || 1)) * 100;
+    if (volRatio < 5)       risk += 25;
+    else if (volRatio < 15) risk += 12;
+    // 7d trend: big drop = panic = rug vibes
+    const d7 = coin.change_7d || 0;
+    if (d7 < -40)      risk += 25;
+    else if (d7 < -20) risk += 15;
+    else if (d7 < -10) risk += 8;
+    return Math.min(risk, 100);
+}
+
+function degenTier(score) {
+    if (score >= 85) return { label:'💀 ABSOLUTE DEGEN', color:'#ff4757' };
+    if (score >= 70) return { label:'🔥 HIGH DEGEN',     color:'#ff8c42' };
+    if (score >= 50) return { label:'⚡ MODERATE DEGEN', color:'#f5a623' };
+    if (score >= 30) return { label:'😐 CASUAL DEGEN',   color:'#a855f7' };
+    return                  { label:'🐣 BABY DEGEN',     color:'#38bdf8' };
+}
+
+function rugVerdict(score) {
+    if (score >= 80) return { label:'🚨 PROBABLY RUGGING', color:'#ff4757' };
+    if (score >= 60) return { label:'⚠️ SMELLS RUGGY',    color:'#ff8c42' };
+    if (score >= 40) return { label:'🤔 MAYBE FINE?',     color:'#f5a623' };
+    if (score >= 20) return { label:'🟡 RELATIVELY SAFE', color:'#7bc67e' };
+    return                  { label:'🟢 BLUE CHIP MEME',  color:'#00d4aa' };
+}
+
+function degenCommentary(coin, degenScore, rugScore) {
+    const comments = [];
+    if (Math.abs(coin.change_24h || 0) > 15) comments.push(`${coin.symbol} moved ${(coin.change_24h||0).toFixed(1)}% today — your heart rate is probably elevated.`);
+    if (degenScore > 80) comments.push(`This is not a coin, it's a casino slot machine shaped like a ${coin.name.toLowerCase()}.`);
+    if (rugScore > 70) comments.push(`The dev wallet is definitely watching your buy order right now.`);
+    if ((coin.change_7d||0) < -30) comments.push(`Down ${Math.abs(coin.change_7d||0).toFixed(0)}% this week. Probably fine.`);
+    if ((coin.change_7d||0) > 30)  comments.push(`Up ${(coin.change_7d||0).toFixed(0)}% this week. This is totally sustainable.`);
+    const volRatio = ((coin.volume_24h||0)/(coin.market_cap||1))*100;
+    if (volRatio > 50) comments.push(`Volume is ${volRatio.toFixed(0)}% of market cap. Someone is very busy.`);
+    if (comments.length === 0) comments.push(`${coin.symbol} is doing ${coin.symbol} things. Make of that what you will.`);
+    return comments[0];
+}
+
+function degenBarColor(score) {
+    if (score >= 75) return 'linear-gradient(90deg,#ff4757,#ff8c42)';
+    if (score >= 50) return 'linear-gradient(90deg,#ff8c42,#f5a623)';
+    if (score >= 30) return 'linear-gradient(90deg,#a855f7,#ec4899)';
+    return 'linear-gradient(90deg,#38bdf8,#a855f7)';
+}
+function rugBarColor(score) {
+    if (score >= 70) return 'linear-gradient(90deg,#ff4757,#cc2233)';
+    if (score >= 45) return 'linear-gradient(90deg,#ff8c42,#ff4757)';
+    if (score >= 25) return 'linear-gradient(90deg,#f5a623,#ff8c42)';
+    return 'linear-gradient(90deg,#00d4aa,#7bc67e)';
+}
+
+function renderMemeZone(coins) {
+    const page = document.getElementById('main-page');
+
+    const scored = coins.map(coin => ({
+        ...coin,
+        degenScore: calcDegenScore(coin),
+        rugScore: calcRugRisk(coin),
+    })).sort((a,b) => b.degenScore - a.degenScore);
+
+    const mostDegen   = scored[0];
+    const mostRug     = scored.reduce((a,b) => a.rugScore > b.rugScore ? a : b);
+    const moonCandidate = scored.reduce((a,b) => (b.change_7d||0) > (a.change_7d||0) ? b : a);
+
+    // Ticker
+    document.getElementById('meme-ticker').textContent =
+        scored.map(c => `${c.emoji} ${c.symbol} ${(c.change_24h||0)>=0?'▲':'▼'}${Math.abs(c.change_24h||0).toFixed(1)}%`).join('  •  ');
+
+    page.innerHTML = `
+        <!-- Awards -->
+        <div class="awards">
+            <div class="award-card degen">
+                <div class="award-icon">💀</div>
+                <div class="award-label">Most Degen</div>
+                <div class="award-name">${mostDegen.emoji} ${mostDegen.symbol}</div>
+                <div class="award-sub">Degen Score: ${mostDegen.degenScore}/100</div>
+            </div>
+            <div class="award-card rug">
+                <div class="award-icon">🪤</div>
+                <div class="award-label">Most Likely to Rug</div>
+                <div class="award-name">${mostRug.emoji} ${mostRug.symbol}</div>
+                <div class="award-sub">Rug Risk: ${mostRug.rugScore}/100</div>
+            </div>
+            <div class="award-card moon">
+                <div class="award-icon">🌕</div>
+                <div class="award-label">Moon Candidate</div>
+                <div class="award-name">${moonCandidate.emoji} ${moonCandidate.symbol}</div>
+                <div class="award-sub">7d: ${(moonCandidate.change_7d||0)>=0?'+':''}${(moonCandidate.change_7d||0).toFixed(1)}%</div>
+            </div>
+        </div>
+
+        <!-- Cards -->
+        <div class="section-header">🔥 Degen Rankings</div>
+        <div class="cards-grid">
+            ${scored.map((coin, idx) => {
+                const tier = degenTier(coin.degenScore);
+                const rug  = rugVerdict(coin.rugScore);
+                const chg24 = coin.change_24h || 0;
+                const chgCls = chg24 >= 0 ? 'green' : 'red';
+                const chgSign = chg24 >= 0 ? '+' : '';
+                const commentary = degenCommentary(coin, coin.degenScore, coin.rugScore);
+                return `
+                <div class="degen-card">
+                    <div style="position:absolute;top:14px;right:14px;font-size:22px;opacity:0.15">#${idx+1}</div>
+                    <div class="dc-top">
+                        <div class="dc-emoji">${coin.emoji || '🪙'}</div>
+                        <div class="dc-info">
+                            <div class="dc-name">${coin.name}</div>
+                            <div class="dc-sym">${coin.symbol} · Mcap ${formatLarge(coin.market_cap)}</div>
+                        </div>
+                    </div>
+                    <div class="dc-price">${formatPrice(coin.price||0)}</div>
+                    <div class="dc-change ${chgCls}">${chgSign}${chg24.toFixed(2)}% (24h) &nbsp; ${(coin.change_7d||0)>=0?'+':''}${(coin.change_7d||0).toFixed(1)}% (7d)</div>
+
+                    <!-- Degen Score -->
+                    <div class="degen-score-label">
+                        <span class="dsl-title">🎲 Degen Score</span>
+                        <span class="dsl-value" style="color:${tier.color}">${coin.degenScore}</span>
+                    </div>
+                    <div class="degen-bar-bg">
+                        <div class="degen-bar-fill" style="width:0%;background:${degenBarColor(coin.degenScore)}" data-target="${coin.degenScore}"></div>
+                    </div>
+                    <div class="degen-tier" style="color:${tier.color}">${tier.label}</div>
+
+                    <!-- Rug Pull-O-Meter -->
+                    <div class="rug-meter-wrap">
+                        <div class="rug-meter-label">
+                            <span class="rml-title">🪤 Rug Pull-O-Meter</span>
+                            <span class="rml-val" style="color:${rug.color}">${coin.rugScore}/100</span>
+                        </div>
+                        <div class="rug-bar-bg">
+                            <div class="rug-bar-fill" style="width:0%;background:${rugBarColor(coin.rugScore)}" data-target="${coin.rugScore}"></div>
+                        </div>
+                        <div class="rug-verdict" style="color:${rug.color}">${rug.label}</div>
+                    </div>
+
+                    <div class="dc-commentary">"${commentary}"</div>
+                </div>`;
+            }).join('')}
+        </div>
+
+        <div class="disclaimer">
+            ⚠️ Degen Score and Rug Pull-O-Meter are purely for entertainment. This is not financial advice.
+            All scores are computed algorithmically from price data and do not reflect real investment risk.
+            Do your own research. Never invest more than you can afford to lose.
+        </div>`;
+
+    // Animate bars after render
+    requestAnimationFrame(() => {
+        setTimeout(() => {
+            document.querySelectorAll('.degen-bar-fill, .rug-bar-fill').forEach(el => {
+                el.style.width = el.getAttribute('data-target') + '%';
+            });
+        }, 100);
+    });
+}
+
+async function init() {
+    try {
+        const res = await fetch(PRICE_URL);
+        if (!res.ok) throw new Error('Could not load prices.json');
+        const data = await res.json();
+        if (!data.meme_coins || data.meme_coins.length === 0) throw new Error('No meme coin data available');
+        renderMemeZone(data.meme_coins);
+    } catch(e) {
+        document.getElementById('main-page').innerHTML = `<div class="loading">⚠️ ${e.message}</div>`;
+    }
+}
+
+init();
+</script>
+</body>
+</html>
