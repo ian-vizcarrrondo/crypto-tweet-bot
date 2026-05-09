@@ -9,11 +9,16 @@
         body { background:#0a0a14; color:#e8e8f0; font-family:'Segoe UI',system-ui,sans-serif; min-height:100vh; }
 
         /* NAV */
-        .site-nav { background:#06060f; border-bottom:1px solid #13132a; padding:0 24px; display:flex; align-items:center; gap:2px; }
-        .nav-brand { font-size:18px; margin-right:16px; }
-        .nav-link { padding:13px 18px; font-size:13px; font-weight:700; color:#444; text-decoration:none; border-bottom:3px solid transparent; transition:color 0.15s,border-color 0.15s; }
-        .nav-link:hover { color:#aaa; }
-        .nav-link.active { color:#a855f7; border-bottom-color:#a855f7; }
+        .site-nav { background:#06060f; border-bottom:1px solid #1a1a30; padding:10px 24px; display:flex; align-items:center; gap:6px; }
+        .nav-brand { font-size:22px; margin-right:12px; }
+        .nav-link { padding:9px 18px; font-size:14px; font-weight:800; color:#666; text-decoration:none; border-radius:10px; border:1px solid transparent; transition:all 0.18s; white-space:nowrap; letter-spacing:0.2px; }
+        .nav-link:hover { color:#ccc; background:#13132a; border-color:#1f1f3a; }
+        .nav-link[href="index.html"].active  { background:#1a1200; border-color:#f5a623; color:#f5a623; box-shadow:0 0 14px rgba(245,166,35,0.25); }
+        .nav-link[href="game.html"].active   { background:#0a1a10; border-color:#00d4aa; color:#00d4aa; box-shadow:0 0 14px rgba(0,212,170,0.25); }
+        .nav-link[href="meme.html"].active   { background:#140a20; border-color:#a855f7; color:#a855f7; box-shadow:0 0 14px rgba(168,85,247,0.25); }
+        .nav-link[href="index.html"]:not(.active):hover { color:#f5a623; }
+        .nav-link[href="game.html"]:not(.active):hover  { color:#00d4aa; }
+        .nav-link[href="meme.html"]:not(.active):hover  { color:#a855f7; }
         .mood-bar { height:3px; background:linear-gradient(90deg,#a855f7,#ec4899,#f5a623); }
 
         /* HEADER */
