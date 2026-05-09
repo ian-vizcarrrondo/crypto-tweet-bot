@@ -61,6 +61,13 @@
         .coin-table td { padding: 13px 14px; border-bottom: 1px solid #0f0f1e; font-size: 14px; vertical-align: middle; }
         .coin-table td:not(:first-child):not(:nth-child(2)) { text-align: right; }
         .coin-table tbody tr:hover { background: #0f0f20; }
+        .coin-table tbody tr.clickable { cursor: pointer; transition: background 0.15s, box-shadow 0.15s; }
+        .coin-table tbody tr.clickable:hover,
+        .coin-table tbody tr.clickable:focus-visible { background: #17172f; box-shadow: inset 3px 0 0 #f5a623; outline: none; }
+        .coin-table tbody tr.clickable:focus-visible { outline: 2px solid #f5a623; outline-offset: -2px; }
+        .coin-detail-link { color: inherit; text-decoration: none; }
+        .coin-detail-link:hover .name,
+        .coin-detail-link:focus-visible .name { color: #f5a623; text-decoration: underline; }
 
         .coin-info { display: flex; align-items: center; gap: 10px; }
         .coin-emoji { font-size: 22px; line-height: 1; }
@@ -291,12 +298,24 @@ function renderTable(bodyId, coins) {
         const sid = `spark-${coin.id}-${bodyId}`;
         const price = coin.price || 0;
         const row = document.createElement('tr');
+        const detailUrl = `coin.html?id=${encodeURIComponent(coin.id)}`;
+        row.className = 'clickable';
+        row.tabIndex = 0;
+        row.setAttribute('role', 'link');
+        row.setAttribute('aria-label', `View details for ${coin.name}`);
+        row.addEventListener('click', () => { window.location.href = detailUrl; });
+        row.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                window.location.href = detailUrl;
+            }
+        });
         row.innerHTML = `
             <td class="rank">${idx + 1}</td>
-            <td><div class="coin-info">
+            <td><a class="coin-detail-link" href="${detailUrl}" aria-label="View details for ${coin.name}"><div class="coin-info">
                 <div class="coin-emoji">${coin.emoji || '🪙'}</div>
                 <div class="coin-name-block"><div class="name">${coin.name}</div><div class="ticker">${coin.symbol}</div></div>
-            </div></td>
+            </div></a></td>
             <td class="price">${formatPrice(price)}</td>
             <td class="change-cell ${cc(coin.change_1h)}">${ct(coin.change_1h)}</td>
             <td class="change-cell ${cc(coin.change_24h)}">${ct(coin.change_24h)}</td>
@@ -304,6 +323,7 @@ function renderTable(bodyId, coins) {
             <td class="mkt-cap">${formatLarge(coin.market_cap)}</td>
             <td class="sparkline-cell"><canvas id="${sid}" width="100" height="38"></canvas></td>
         `;
+        row.querySelector('.coin-detail-link').addEventListener('click', (event) => event.stopPropagation());
         tbody.appendChild(row);
         if (coin.sparkline && coin.sparkline.length > 0) {
             setTimeout(() => drawSparkline(sid, coin.sparkline, (coin.change_7d || 0) >= 0), 0);
