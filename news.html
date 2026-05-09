@@ -293,21 +293,17 @@ function timeAgo(ts) {
     return Math.floor(diff/86400) + 'd ago';
 }
 
-// ── CATEGORY → TAGS ──
-const COIN_TAGS = ['BTC','ETH','SOL','BNB','XRP','ADA','DOT','AVAX','MATIC','LINK','UNI','SUI','TON','NEAR','DOGE','SHIB','LTC'];
-const CATEGORY_MAP = {
-    'DeFi': 'defi', 'NFT': 'nft', 'Regulation': 'reg', 'Exchange': null, 'Altcoin': null,
-    'Technology': null, 'Mining': null, 'Market': null
-};
+// ── TAGS FROM FREE TEXT ──
+const COIN_TAGS = ['BTC','ETH','SOL','BNB','XRP','ADA','AVAX','LINK','SUI','TON','NEAR','DOGE','SHIB'];
 
-function extractTags(cats, tags) {
-    const all = ((cats || '') + ',' + (tags || '')).toUpperCase();
+function extractTags(title, body) {
+    const hay = ((title||'') + ' ' + (body||'')).toUpperCase();
     const result = [];
-    COIN_TAGS.forEach(c => { if (all.includes(c)) result.push(c); });
-    const lowerAll = ((cats || '') + ',' + (tags || '')).toLowerCase();
-    if (lowerAll.includes('defi')) result.push('DeFi');
-    if (lowerAll.includes('nft')) result.push('NFT');
-    if (lowerAll.includes('regulat') || lowerAll.includes('sec') || lowerAll.includes('law')) result.push('REG');
+    COIN_TAGS.forEach(c => { if (hay.includes(c) || hay.includes(' '+c+' ')) result.push(c); });
+    const lower = hay.toLowerCase();
+    if (lower.includes('defi')) result.push('DeFi');
+    if (lower.includes('nft')) result.push('NFT');
+    if (lower.includes('regulat') || lower.includes(' sec ') || lower.includes('lawsuit')) result.push('REG');
     return [...new Set(result)].slice(0, 4);
 }
 
@@ -319,7 +315,8 @@ function tagClass(tag) {
 // ── COIN FILTER MATCH ──
 function matchesCoin(article, coin) {
     if (coin === 'ALL') return true;
-    const haystack = (article.title + ' ' + article.body + ' ' + article.categories + ' ' + article.tags).toUpperCase();
+    const haystack = ((article.title||'') + ' ' + (article.body||'')).toUpperCase();
+    // match "BTC" as word (avoid e.g. "ABSTRACT" matching "BTC" — it won't, but be safe)
     return haystack.includes(coin);
 }
 
@@ -329,7 +326,7 @@ function renderCard(article, featured=false) {
     const tags = article._tags;
     const ago = timeAgo(article.published_on);
 
-    const imgEl = article.imageurl && article.imageurl.length > 10
+    const imgEl = article.imageurl && article.imageurl.startsWith('http')
         ? `<img class="news-card-image" src="${article.imageurl}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
           + `<div class="news-card-image-placeholder" style="display:none">📰</div>`
         : `<div class="news-card-image-placeholder">📰</div>`;
@@ -347,7 +344,7 @@ function renderCard(article, featured=false) {
         ${imgEl}
         <div class="news-card-body">
             <div class="news-top">
-                <span class="news-source">${article.source_info?.name || article.source || 'CryptoNews'}</span>
+                <span class="news-source">${article.source || 'CryptoNews'}</span>
                 <span class="sentiment-badge ${sent}">${sentLabel(sent)}</span>
             </div>
             <div class="news-title">${article.title}</div>
@@ -390,35 +387,88 @@ function renderGrid() {
     grid.innerHTML = html;
 }
 
+// ── RSS SOURCES (no API key needed) ──
+const RSS_FEEDS = [
+    { url: 'https://cointelegraph.com/rss', name: 'CoinTelegraph' },
+    { url: 'https://decrypt.co/feed',       name: 'Decrypt' },
+    { url: 'https://www.coindesk.com/arc/outboundfeeds/rss/', name: 'CoinDesk' }
+];
+
+function extractImageFromItem(item) {
+    // Try <media:content url="...">
+    const media = item.querySelector('content') || item.getElementsByTagNameNS('*','content')[0];
+    if (media && media.getAttribute('url')) return media.getAttribute('url');
+    // Try <enclosure url="...">
+    const enc = item.querySelector('enclosure');
+    if (enc && enc.getAttribute('url')) return enc.getAttribute('url');
+    // Try first <img> in description or encoded content
+    const raw = item.querySelector('description')?.textContent || '';
+    const m = raw.match(/<img[^>]+src=["']([^"']+)["']/i);
+    if (m) return m[1];
+    return '';
+}
+
+async function fetchRSS(feed) {
+    const proxy = `https://api.allorigins.win/get?url=${encodeURIComponent(feed.url)}`;
+    const res = await fetch(proxy, { cache: 'no-store' });
+    if (!res.ok) throw new Error(`${feed.name}: HTTP ${res.status}`);
+    const data = await res.json();
+    const parser = new DOMParser();
+    const xml = parser.parseFromString(data.contents, 'text/xml');
+    const items = [...xml.querySelectorAll('item')];
+    return items.map(item => {
+        const title = item.querySelector('title')?.textContent?.trim() || '';
+        // <link> in RSS is tricky — it's often a text node after the tag
+        let url = '';
+        const linkEl = item.querySelector('link');
+        if (linkEl) url = linkEl.textContent?.trim() || linkEl.getAttribute('href') || '';
+        const pubDate = item.querySelector('pubDate')?.textContent || '';
+        const description = item.querySelector('description')?.textContent || '';
+        const cleanBody = description.replace(/<[^>]*>/g, '').replace(/&[a-z]+;/g,' ').trim();
+        const published_on = pubDate ? Math.floor(new Date(pubDate).getTime() / 1000) : Math.floor(Date.now()/1000);
+        const imageurl = extractImageFromItem(item);
+        return {
+            title,
+            url,
+            imageurl,
+            body: cleanBody,
+            source: feed.name,
+            published_on
+        };
+    }).filter(a => a.title && a.url);
+}
+
 // ── FETCH NEWS ──
 async function fetchNews() {
     const err = document.getElementById('errorBanner');
     err.style.display = 'none';
 
     try {
-        const catMap = { ALL: '', BTC: 'BTC', ETH: 'ETH', SOL: 'SOL', SUI: 'SUI', TON: 'TON', NEAR: 'NEAR' };
-        const cat = catMap[coinFilter] || '';
-        const url = cat
-            ? `https://min-api.cryptocompare.com/data/v2/news/?lang=EN&categories=${cat}&sortOrder=latest`
-            : `https://min-api.cryptocompare.com/data/v2/news/?lang=EN&sortOrder=latest`;
+        // Fetch all RSS feeds in parallel, skip any that fail
+        const results = await Promise.allSettled(RSS_FEEDS.map(f => fetchRSS(f)));
+        let merged = [];
+        results.forEach(r => { if (r.status === 'fulfilled') merged = merged.concat(r.value); });
 
-        const res = await fetch(url);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const json = await res.json();
+        if (!merged.length) throw new Error('All RSS feeds failed to load');
 
-        if (json.Type === 100 && json.Data) {
-            allArticles = json.Data.slice(0, 50).map(a => ({
-                ...a,
-                _sentiment: scoreSentiment(a.title + ' ' + (a.body || '')),
-                _tags: extractTags(a.categories, a.tags)
-            }));
-        } else {
-            throw new Error('Unexpected API response');
-        }
+        // Sort by publish time, newest first, deduplicate by title
+        merged.sort((a, b) => b.published_on - a.published_on);
+        const seen = new Set();
+        merged = merged.filter(a => {
+            const key = a.title.slice(0, 60).toLowerCase();
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+        });
 
-        const now = new Date();
+        allArticles = merged.slice(0, 60).map(a => ({
+            ...a,
+            _sentiment: scoreSentiment(a.title + ' ' + a.body),
+            _tags: extractTags(a.title, a.body)
+        }));
+
         document.getElementById('lastUpdated').textContent =
-            now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+            new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
 
         updateTrending();
         renderGrid();
@@ -427,8 +477,7 @@ async function fetchNews() {
         console.error('News fetch error:', e);
         err.style.display = 'block';
         document.getElementById('errorMsg').textContent =
-            'Could not load live news — check your connection. ' + e.message;
-        // Show whatever we have
+            'Could not load news feeds — ' + e.message;
         if (allArticles.length) renderGrid();
     }
 }
@@ -451,8 +500,7 @@ function setCoinFilter(btn, coin) {
     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     coinFilter = coin;
-    // re-fetch with new category for better results
-    fetchNews();
+    renderGrid(); // filter client-side — no re-fetch needed
 }
 
 function setSentFilter(btn, sent) {
