@@ -1,16 +1,16 @@
-name: Crypto Tweet Bot
+name: Crypto Price Bot
 
 on:
   schedule:
     - cron: '0 * * * *'   # every hour
-  workflow_dispatch:        # allow manual runs from GitHub UI
+  workflow_dispatch:
 
 jobs:
   run-bot:
     runs-on: ubuntu-latest
 
     permissions:
-      contents: write       # needed to push prices.json back to repo
+      contents: write
 
     steps:
       - name: Checkout repo
@@ -21,10 +21,18 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-bot-${{ hashFiles('**/requirements*.txt') }}
+          restore-keys: ${{ runner.os }}-pip-bot-
+
       - name: Install dependencies
         run: pip install requests feedparser
 
       - name: Run bot
+        id: run-bot
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
@@ -37,3 +45,10 @@ jobs:
           git add prices.json
           git diff --cached --quiet || git commit -m "Update prices [skip ci]"
           git push
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_TOKEN }}/sendMessage" \
+            --data-urlencode "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" \
+            --data-urlencode "text=🚨 Crypto Price Bot FAILED on GitHub Actions. Check the run: https://github.com/${{ github.repository }}/actions"
