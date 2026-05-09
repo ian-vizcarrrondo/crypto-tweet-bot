@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🪙 CryptoDoggy Coin Detail</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #0a0a14; color: #e8e8f0; font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; }
+        a { color: inherit; }
+        .header { background: linear-gradient(135deg, #1a0a2e 0%, #0d1a2e 100%); border-bottom: 2px solid #f5a623; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+        .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+        .brand-emoji { font-size: 40px; }
+        .brand h1 { font-size: 24px; font-weight: 800; background: linear-gradient(135deg, #f5a623, #ff6b6b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .brand p { font-size: 12px; color: #888; margin-top: 3px; }
+        .back-link { color: #f5a623; text-decoration: none; font-weight: 800; }
+        .layout { padding: 24px; display: grid; gap: 18px; max-width: 1100px; margin: 0 auto; }
+        .card { background: #13132a; border: 1px solid #1f1f3a; border-radius: 16px; padding: 20px; }
+        .coin-hero { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+        .coin-title { display: flex; align-items: center; gap: 14px; }
+        .coin-emoji { font-size: 46px; }
+        .coin-name { font-size: 28px; font-weight: 900; }
+        .coin-symbol { color: #888; font-size: 13px; font-weight: 800; letter-spacing: 1.4px; text-transform: uppercase; }
+        .price { font-size: 32px; font-weight: 900; color: #f5a623; text-align: right; }
+        .updated { color: #555; font-size: 12px; margin-top: 6px; text-align: right; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+        .stat { background: #0f0f20; border: 1px solid #1a1a35; border-radius: 12px; padding: 14px; }
+        .label { color: #666; font-size: 10px; text-transform: uppercase; letter-spacing: 1.2px; }
+        .value { font-size: 18px; font-weight: 800; margin-top: 6px; }
+        .green { color: #00d4aa; }
+        .red { color: #ff4757; }
+        .neutral { color: #888; }
+        .coin-list { display: flex; gap: 8px; flex-wrap: wrap; }
+        .coin-pill { background: #0f0f20; border: 1px solid #1f1f3a; border-radius: 999px; color: #e8e8f0; padding: 8px 12px; text-decoration: none; font-size: 13px; }
+        .coin-pill.active, .coin-pill:hover { border-color: #f5a623; color: #f5a623; }
+        .chart-wrap { height: 320px; }
+        .error-state { color: #ff4757; padding: 24px; text-align: center; }
+    </style>
+</head>
+<body>
+<header class="header">
+    <a class="brand" href="index.html">
+        <div class="brand-emoji">🐶</div>
+        <div><h1>CryptoDoggy</h1><p>Coin detail dashboard</p></div>
+    </a>
+    <a class="back-link" href="index.html">← Back to dashboard</a>
+</header>
+
+<main class="layout">
+    <section id="coin-card" class="card"><div class="error-state">Loading coin data…</div></section>
+    <section class="card"><div class="chart-wrap"><canvas id="coin-chart"></canvas></div></section>
+    <section id="coin-list" class="card coin-list"></section>
+</main>
+
+<script>
+let coinChart = null;
+
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/\"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function safeHttpsUrl(value) {
+    const url = String(value ?? '').trim();
+    return url.startsWith('https://') ? url : '#';
+}
+
+function formatPrice(p) {
+    const value = Number(p) || 0;
+    if (value >= 1000) return '$' + value.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+    if (value >= 1)    return '$' + value.toFixed(2);
+    if (value >= 0.01) return '$' + value.toFixed(4);
+    if (value >= 0.0001) return '$' + value.toFixed(6);
+    return '$' + value.toFixed(8);
+}
+
+function formatLarge(v) {
+    const value = Number(v) || 0;
+    if (!value) return '—';
+    if (value >= 1e12) return '$' + (value/1e12).toFixed(2) + 'T';
+    if (value >= 1e9)  return '$' + (value/1e9).toFixed(1) + 'B';
+    if (value >= 1e6)  return '$' + (value/1e6).toFixed(1) + 'M';
+    return '$' + value.toLocaleString();
+}
+
+function changeClass(v) { if (v == null) return 'neutral'; return Number(v) >= 0 ? 'green' : 'red'; }
+function changeText(v) { if (v == null) return '—'; const n = Number(v); return (n >= 0 ? '+' : '') + n.toFixed(2) + '%'; }
+
+function renderCoin(coin, updated) {
+    const card = document.getElementById('coin-card');
+    const updatedDate = updated ? new Date(updated).toLocaleString() : 'Unknown';
+    card.innerHTML = `
+        <div class="coin-hero">
+            <div class="coin-title">
+                <div class="coin-emoji">${escapeHtml(coin.emoji || '🪙')}</div>
+                <div>
+                    <div class="coin-name">${escapeHtml(coin.name)}</div>
+                    <div class="coin-symbol">${escapeHtml(coin.symbol)}</div>
+                </div>
+            </div>
+            <div>
+                <div class="price">${escapeHtml(formatPrice(coin.price))}</div>
+                <div class="updated">Last updated: ${escapeHtml(updatedDate)}</div>
+            </div>
+        </div>
+        <div class="stats-grid" style="margin-top:18px">
+            <div class="stat"><div class="label">1h Change</div><div class="value ${changeClass(coin.change_1h)}">${escapeHtml(changeText(coin.change_1h))}</div></div>
+            <div class="stat"><div class="label">24h Change</div><div class="value ${changeClass(coin.change_24h)}">${escapeHtml(changeText(coin.change_24h))}</div></div>
+            <div class="stat"><div class="label">7d Change</div><div class="value ${changeClass(coin.change_7d)}">${escapeHtml(changeText(coin.change_7d))}</div></div>
+            <div class="stat"><div class="label">Market Cap</div><div class="value">${escapeHtml(formatLarge(coin.market_cap))}</div></div>
+            <div class="stat"><div class="label">24h Volume</div><div class="value">${escapeHtml(formatLarge(coin.volume_24h))}</div></div>
+        </div>`;
+}
+
+function renderChart(coin) {
+    const canvas = document.getElementById('coin-chart');
+    const prices = Array.isArray(coin.sparkline) ? coin.sparkline.map(Number).filter(Number.isFinite) : [];
+    if (coinChart) coinChart.destroy();
+    coinChart = new Chart(canvas, {
+        type: 'line',
+        data: { labels: prices.map((_, i) => i + 1), datasets: [{ data: prices, borderColor: (Number(coin.change_7d) || 0) >= 0 ? '#00d4aa' : '#ff4757', borderWidth: 2, pointRadius: 0, fill: true, backgroundColor: '#f5a62318', tension: 0.35 }] },
+        options: { maintainAspectRatio: false, animation: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { ticks: { color: '#666' }, grid: { color: '#1a1a35' } } } }
+    });
+}
+
+function renderCoinList(coins, selectedId) {
+    document.getElementById('coin-list').innerHTML = coins.map(coin => {
+        const coinId = String(coin.id ?? '');
+        const href = `coin.html?id=${encodeURIComponent(coinId)}`;
+        const active = coinId === selectedId ? ' active' : '';
+        return `<a class="coin-pill${active}" href="${escapeHtml(href)}">${escapeHtml(coin.emoji || '🪙')} ${escapeHtml(coin.name)} <span class="neutral">${escapeHtml(coin.symbol)}</span></a>`;
+    }).join('');
+}
+
+async function fetchAndRender() {
+    try {
+        const base = window.location.href.replace(/\/[^\/]*$/, '');
+        const res = await fetch(base + '/prices.json?t=' + Date.now());
+        if (!res.ok) throw new Error('prices.json not found — please run the workflow first');
+        const data = await res.json();
+        const coins = [...(data.main_coins || []), ...(data.meme_coins || [])];
+        if (!coins.length) throw new Error('No price data yet — run the Crypto Price Bot workflow in GitHub');
+
+        const params = new URLSearchParams(window.location.search);
+        const selectedId = params.get('id') || coins[0].id;
+        const coin = coins.find(c => String(c.id) === selectedId) || coins[0];
+
+        renderCoin(coin, data.updated);
+        renderChart(coin);
+        renderCoinList(coins, String(coin.id ?? ''));
+        document.title = `${coin.emoji || '🪙'} ${coin.name || 'Coin'} — CryptoDoggy`;
+    } catch (err) {
+        console.error(err);
+        document.getElementById('coin-card').innerHTML = `<div class="error-state">⚠️ ${escapeHtml(err.message)}</div>`;
+    }
+}
+
+fetchAndRender();
+</script>
+</body>
+</html>

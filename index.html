@@ -62,7 +62,7 @@
         .coin-table td:not(:first-child):not(:nth-child(2)) { text-align: right; }
         .coin-table tbody tr:hover { background: #0f0f20; }
 
-        .coin-info { display: flex; align-items: center; gap: 10px; }
+        .coin-info { display: flex; align-items: center; gap: 10px; color: inherit; text-decoration: none; }
         .coin-emoji { font-size: 22px; line-height: 1; }
         .coin-name-block .name { font-weight: 700; font-size: 14px; }
         .coin-name-block .ticker { font-size: 11px; color: #555; margin-top: 1px; }
@@ -247,6 +247,20 @@ let sparklineCharts = {};
 let countdown = 60;
 let countdownInterval = null;
 
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function safeHttpsUrl(value) {
+    const url = String(value ?? '').trim();
+    return url.startsWith('https://') ? url : '#';
+}
+
 function formatPrice(p) {
     if (p >= 1000) return '$' + p.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
     if (p >= 1)    return '$' + p.toFixed(2);
@@ -290,19 +304,23 @@ function renderTable(bodyId, coins) {
     coins.forEach((coin, idx) => {
         const sid = `spark-${coin.id}-${bodyId}`;
         const price = coin.price || 0;
+        const coinId = encodeURIComponent(String(coin.id ?? ''));
+        const coinName = escapeHtml(coin.name);
+        const coinSymbol = escapeHtml(coin.symbol);
+        const coinEmoji = escapeHtml(coin.emoji || '🪙');
         const row = document.createElement('tr');
         row.innerHTML = `
             <td class="rank">${idx + 1}</td>
-            <td><div class="coin-info">
-                <div class="coin-emoji">${coin.emoji || '🪙'}</div>
-                <div class="coin-name-block"><div class="name">${coin.name}</div><div class="ticker">${coin.symbol}</div></div>
-            </div></td>
+            <td><a class="coin-info" href="coin.html?id=${coinId}">
+                <div class="coin-emoji">${coinEmoji}</div>
+                <div class="coin-name-block"><div class="name">${coinName}</div><div class="ticker">${coinSymbol}</div></div>
+            </a></td>
             <td class="price">${formatPrice(price)}</td>
             <td class="change-cell ${cc(coin.change_1h)}">${ct(coin.change_1h)}</td>
             <td class="change-cell ${cc(coin.change_24h)}">${ct(coin.change_24h)}</td>
             <td class="change-cell ${cc(coin.change_7d)}">${ct(coin.change_7d)}</td>
             <td class="mkt-cap">${formatLarge(coin.market_cap)}</td>
-            <td class="sparkline-cell"><canvas id="${sid}" width="100" height="38"></canvas></td>
+            <td class="sparkline-cell"><canvas id="${escapeHtml(sid)}" width="100" height="38"></canvas></td>
         `;
         tbody.appendChild(row);
         if (coin.sparkline && coin.sparkline.length > 0) {
@@ -315,16 +333,21 @@ function renderNews(newsItems) {
     if (!newsItems || newsItems.length === 0) return;
     const grid = document.getElementById('news-grid');
     const icons = ['📰','🔥','💡','📊','🚀','⚡'];
-    grid.innerHTML = newsItems.map((item, i) => `
-        <a class="news-card" href="${item.link}" target="_blank" rel="noopener">
-            <div class="news-icon">${icons[i % icons.length]}</div>
+    grid.innerHTML = newsItems.map((item, i) => {
+        const safeLink = escapeHtml(safeHttpsUrl(item.link));
+        const publishedValue = escapeHtml(item.published);
+        const published = publishedValue ? new Date(publishedValue).toLocaleDateString() : '';
+        const meta = published ? `CoinDesk • ${published}` : 'CoinDesk';
+        return `
+        <a class="news-card" href="${safeLink}" target="_blank" rel="noopener">
+            <div class="news-icon">${escapeHtml(icons[i % icons.length])}</div>
             <div class="news-content">
-                <div class="news-title">${item.title}</div>
-                <div class="news-meta">CoinDesk ${item.published ? '• ' + new Date(item.published).toLocaleDateString() : ''}</div>
+                <div class="news-title">${escapeHtml(item.title)}</div>
+                <div class="news-meta">${escapeHtml(meta)}</div>
             </div>
             <div class="news-arrow">→</div>
-        </a>
-    `).join('');
+        </a>`;
+    }).join('');
     document.getElementById('news-section').style.display = 'block';
 }
 
@@ -349,8 +372,8 @@ async function fetchAndRender() {
         if (data.fear_greed) {
             const fc = fngColor(parseInt(data.fear_greed.value));
             fngHtml = `<div class="fng-card">
-                <div class="fng-gauge" style="background:${fc}1a;border:2px solid ${fc};color:${fc}">${data.fear_greed.value}</div>
-                <div class="fng-info"><div class="label">Fear &amp; Greed</div><div class="classification" style="color:${fc}">${data.fear_greed.value_classification}</div></div>
+                <div class="fng-gauge" style="background:${fc}1a;border:2px solid ${fc};color:${fc}">${escapeHtml(data.fear_greed.value)}</div>
+                <div class="fng-info"><div class="label">Fear &amp; Greed</div><div class="classification" style="color:${fc}">${escapeHtml(data.fear_greed.value_classification)}</div></div>
             </div>`;
         }
 
@@ -369,11 +392,11 @@ async function fetchAndRender() {
         document.getElementById('highlights').innerHTML = `
             <div class="highlight-card gainer">
                 <div class="highlight-icon">🚀</div>
-                <div class="highlight-info"><div class="type">Top Gainer 24h</div><div class="coin-name">${top.emoji} ${top.name}</div><div class="change green">${ct(top.change_24h)}</div></div>
+                <div class="highlight-info"><div class="type">Top Gainer 24h</div><div class="coin-name">${escapeHtml(top.emoji || '🪙')} ${escapeHtml(top.name)}</div><div class="change green">${ct(top.change_24h)}</div></div>
             </div>
             <div class="highlight-card loser">
                 <div class="highlight-icon">💥</div>
-                <div class="highlight-info"><div class="type">Biggest Drop 24h</div><div class="coin-name">${bot.emoji} ${bot.name}</div><div class="change red">${ct(bot.change_24h)}</div></div>
+                <div class="highlight-info"><div class="type">Biggest Drop 24h</div><div class="coin-name">${escapeHtml(bot.emoji || '🪙')} ${escapeHtml(bot.name)}</div><div class="change red">${ct(bot.change_24h)}</div></div>
             </div>`;
 
         document.getElementById('main-section').style.display = 'block';
@@ -389,7 +412,7 @@ async function fetchAndRender() {
     } catch (err) {
         console.error(err);
         document.getElementById('stats-bar').innerHTML =
-            `<div class="error-state">⚠️ ${err.message}</div>`;
+            `<div class="error-state">⚠️ ${escapeHtml(err.message)}</div>`;
         startCountdown();
     }
 }
