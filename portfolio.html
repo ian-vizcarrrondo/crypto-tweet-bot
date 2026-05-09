@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💼 Portfolio — CryptoDoggy</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #0a0a14; color: #e8e8f0; font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; }
+
+        /* ── NAV ── */
+        .site-nav { background: #06060f; border-bottom: 1px solid #1a1a30; padding: 10px 24px; display: flex; align-items: center; gap: 6px; }
+        .nav-brand { font-size: 22px; margin-right: 12px; }
+        .nav-link { padding: 9px 18px; font-size: 14px; font-weight: 800; color: #666; text-decoration: none; border-radius: 10px; border: 1px solid transparent; transition: all 0.18s; white-space: nowrap; letter-spacing: 0.2px; }
+        .nav-link:hover { color: #ccc; background: #13132a; border-color: #1f1f3a; }
+        .nav-link[href="index.html"].active       { background: #1a1200; border-color: #f5a623; color: #f5a623; box-shadow: 0 0 14px rgba(245,166,35,0.25); }
+        .nav-link[href="game.html"].active        { background: #0a1a10; border-color: #00d4aa; color: #00d4aa; box-shadow: 0 0 14px rgba(0,212,170,0.25); }
+        .nav-link[href="meme.html"].active        { background: #140a20; border-color: #a855f7; color: #a855f7; box-shadow: 0 0 14px rgba(168,85,247,0.25); }
+        .nav-link[href="portfolio.html"].active   { background: #0a1520; border-color: #38bdf8; color: #38bdf8; box-shadow: 0 0 14px rgba(56,189,248,0.25); }
+        .nav-link[href="index.html"]:not(.active):hover      { color: #f5a623; }
+        .nav-link[href="game.html"]:not(.active):hover       { color: #00d4aa; }
+        .nav-link[href="meme.html"]:not(.active):hover       { color: #a855f7; }
+        .nav-link[href="portfolio.html"]:not(.active):hover  { color: #38bdf8; }
+        .theme-toggle { margin-left: auto; background: none; border: 1px solid #1f1f3a; border-radius: 20px; padding: 6px 13px; color: #666; cursor: pointer; font-size: 15px; transition: all 0.18s; }
+        .theme-toggle:hover { border-color: #444; color: #ccc; }
+
+        /* ── LIGHT MODE ── */
+        body.light { background: #f0f2f8; color: #1a1a2e; }
+        body.light .site-nav { background: #fff; border-color: #e0e0f0; }
+        body.light .nav-link { color: #999; }
+        body.light .nav-link:hover { background: #f4f4fc; border-color: #dde0ee; }
+        body.light .theme-toggle { border-color: #dde0ee; color: #999; }
+        body.light .theme-toggle:hover { border-color: #aaa; color: #333; }
+        body.light .page-header { background: linear-gradient(135deg, #ece8f8, #e4f0f8); }
+        body.light .card { background: #fff; border-color: #e0e0f0; }
+        body.light .card-label { color: #aaa; }
+        body.light .add-form { background: #fff; border-color: #e0e0f0; }
+        body.light .form-row select,
+        body.light .form-row input { background: #f4f6fc; border-color: #dde0ee; color: #1a1a2e; }
+        body.light .holdings-table th { color: #aaa; border-color: #dde0ee; }
+        body.light .holdings-table td { border-color: #eceff8; }
+        body.light .holdings-table tbody tr:hover { background: #f4f6fc; }
+        body.light .empty-state { color: #aaa; }
+        body.light .section-title { color: #1a1a2e; border-color: #38bdf8; }
+        body.light .remove-btn { color: #ccc; }
+        body.light .remove-btn:hover { color: #ff4757; }
+
+        /* ── PAGE HEADER ── */
+        .page-header { background: linear-gradient(135deg, #0d1520 0%, #0a1a28 100%); border-bottom: 2px solid #38bdf8; padding: 20px 24px; }
+        .page-header h1 { font-size: 24px; font-weight: 800; color: #38bdf8; }
+        .page-header p { font-size: 13px; color: #555; margin-top: 4px; }
+
+        /* ── LAYOUT ── */
+        .page-body { display: flex; gap: 24px; padding: 24px; flex-wrap: wrap; }
+        .left-col { flex: 1; min-width: 300px; display: flex; flex-direction: column; gap: 20px; }
+        .right-col { width: 320px; flex-shrink: 0; display: flex; flex-direction: column; gap: 20px; }
+
+        /* ── CARDS ── */
+        .card { background: #13132a; border: 1px solid #1f1f3a; border-radius: 16px; padding: 20px; }
+        .card-label { font-size: 10px; color: #555; text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 6px; }
+        .card-value { font-size: 28px; font-weight: 900; }
+        .card-value.blue { color: #38bdf8; }
+        .card-value.green { color: #00d4aa; }
+        .card-value.red { color: #ff4757; }
+        .card-value.gray { color: #555; }
+
+        /* ── SUMMARY ROW ── */
+        .summary-row { display: flex; gap: 16px; flex-wrap: wrap; }
+        .summary-row .card { flex: 1; min-width: 130px; }
+
+        /* ── ADD FORM ── */
+        .add-form { background: #13132a; border: 1px solid #1f1f3a; border-radius: 16px; padding: 20px; }
+        .section-title { font-size: 14px; font-weight: 800; color: #38bdf8; border-left: 3px solid #38bdf8; padding-left: 10px; margin-bottom: 16px; }
+        .form-row { display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+        .form-row select, .form-row input {
+            background: #0a0a14; border: 1px solid #1f1f3a; border-radius: 8px;
+            color: #e8e8f0; padding: 9px 12px; font-size: 13px; flex: 1; min-width: 100px;
+            outline: none; transition: border-color 0.15s;
+        }
+        .form-row select:focus, .form-row input:focus { border-color: #38bdf8; }
+        .form-row input[type="number"]::-webkit-inner-spin-button { opacity: 0.4; }
+        .add-btn {
+            width: 100%; padding: 11px; border-radius: 10px; border: none;
+            background: #38bdf8; color: #0a0a14; font-size: 14px; font-weight: 800;
+            cursor: pointer; transition: all 0.15s;
+        }
+        .add-btn:hover { background: #7dd3fc; }
+        .add-btn:active { transform: scale(0.98); }
+
+        /* ── HOLDINGS TABLE ── */
+        .holdings-table { width: 100%; border-collapse: collapse; }
+        .holdings-table th { text-align: left; padding: 8px 12px; font-size: 10px; color: #555; text-transform: uppercase; letter-spacing: 1.2px; border-bottom: 1px solid #1a1a2e; }
+        .holdings-table th:not(:first-child) { text-align: right; }
+        .holdings-table td { padding: 12px 12px; border-bottom: 1px solid #0f0f1e; font-size: 13px; vertical-align: middle; }
+        .holdings-table td:not(:first-child) { text-align: right; }
+        .holdings-table tbody tr:hover { background: #0f0f20; }
+        .coin-cell { display: flex; align-items: center; gap: 8px; }
+        .coin-em { font-size: 20px; }
+        .coin-nm { font-weight: 700; font-size: 13px; }
+        .coin-tk { font-size: 10px; color: #555; }
+        .pnl-pos { color: #00d4aa; font-weight: 700; }
+        .pnl-neg { color: #ff4757; font-weight: 700; }
+        .pnl-neu { color: #555; font-weight: 700; }
+        .remove-btn { background: none; border: none; color: #2a2a4a; font-size: 16px; cursor: pointer; transition: color 0.15s; padding: 0 4px; }
+        .remove-btn:hover { color: #ff4757; }
+
+        /* ── EMPTY STATE ── */
+        .empty-state { text-align: center; color: #333; font-size: 15px; padding: 40px 20px; }
+        .empty-state .empty-icon { font-size: 48px; margin-bottom: 12px; }
+
+        /* ── PIE CHART ── */
+        .chart-wrap { position: relative; width: 220px; height: 220px; margin: 0 auto; }
+        .chart-legend { margin-top: 16px; display: flex; flex-direction: column; gap: 6px; }
+        .legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+        .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+        .legend-name { flex: 1; color: #aaa; }
+        .legend-pct { font-weight: 700; }
+
+        /* ── FOOTER ── */
+        .footer { text-align: center; padding: 20px 24px; color: #333; font-size: 12px; border-top: 1px solid #13132a; margin-top: 8px; }
+
+        /* ── MOBILE ── */
+        @media (max-width: 768px) {
+            .page-body { flex-direction: column; }
+            .right-col { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="site-nav">
+    <span class="nav-brand">🐶</span>
+    <a href="index.html" class="nav-link">📊 Dashboard</a>
+    <a href="game.html" class="nav-link">🎮 Predict</a>
+    <a href="meme.html" class="nav-link">🐸 Meme Zone</a>
+    <a href="portfolio.html" class="nav-link active">💼 Portfolio</a>
+    <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()">☀️</button>
+</nav>
+
+<div class="page-header">
+    <h1>💼 My Portfolio</h1>
+    <p>Track your crypto holdings — all data stays on your device, no account needed.</p>
+</div>
+
+<div class="page-body">
+    <!-- Left: summary + holdings table -->
+    <div class="left-col">
+        <!-- Summary cards -->
+        <div class="summary-row" id="summary-row">
+            <div class="card"><div class="card-label">Total Value</div><div class="card-value blue" id="total-value">—</div></div>
+            <div class="card"><div class="card-label">Total Cost</div><div class="card-value gray" id="total-cost">—</div></div>
+            <div class="card"><div class="card-label">P&amp;L</div><div class="card-value" id="total-pnl">—</div></div>
+            <div class="card"><div class="card-label">Return</div><div class="card-value" id="total-pct">—</div></div>
+        </div>
+
+        <!-- Add holding form -->
+        <div class="add-form">
+            <div class="section-title">Add Holding</div>
+            <div class="form-row">
+                <select id="coin-select"><option value="">Select coin…</option></select>
+                <input type="number" id="amount-input" placeholder="Amount (e.g. 0.5)" step="any" min="0">
+                <input type="number" id="cost-input" placeholder="Avg buy price (USD)" step="any" min="0">
+            </div>
+            <button class="add-btn" onclick="addHolding()">＋ Add to Portfolio</button>
+        </div>
+
+        <!-- Holdings table -->
+        <div>
+            <div class="section-title">Holdings</div>
+            <div id="holdings-container">
+                <div class="empty-state"><div class="empty-icon">💼</div>No holdings yet.<br>Add a coin above to get started.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right: pie chart -->
+    <div class="right-col">
+        <div class="card" id="chart-card" style="display:none">
+            <div class="section-title">Allocation</div>
+            <div class="chart-wrap"><canvas id="pie-chart"></canvas></div>
+            <div class="chart-legend" id="chart-legend"></div>
+        </div>
+    </div>
+</div>
+
+<div class="footer">Data from CoinGecko via prices.json • Holdings stored locally in your browser</div>
+
+<script>
+const STORAGE_KEY = 'cryptodoggy_portfolio';
+const COLORS = ['#38bdf8','#00d4aa','#f5a623','#a855f7','#ff4757','#ff8c42','#fbbf24','#4ade80','#f472b6','#818cf8','#34d399','#fb923c'];
+
+let priceData = {};   // { coinId: { price, name, symbol, emoji } }
+let holdings = [];    // [{ id, amount, avgBuy }]
+let pieChart = null;
+
+// ── Theme ──
+function initTheme() {
+    if (localStorage.getItem('cryptodoggy_theme') === 'light') {
+        document.body.classList.add('light');
+        document.getElementById('theme-toggle').textContent = '🌙';
+    }
+}
+function toggleTheme() {
+    const isLight = document.body.classList.toggle('light');
+    localStorage.setItem('cryptodoggy_theme', isLight ? 'light' : 'dark');
+    document.getElementById('theme-toggle').textContent = isLight ? '🌙' : '☀️';
+}
+
+// ── Storage ──
+function loadHoldings() {
+    try { holdings = JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+    catch { holdings = []; }
+}
+function saveHoldings() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(holdings));
+}
+
+// ── Format ──
+function fmt$(n) {
+    if (n === null || n === undefined) return '—';
+    if (n >= 1e9) return '$' + (n/1e9).toFixed(2) + 'B';
+    if (n >= 1e6) return '$' + (n/1e6).toFixed(2) + 'M';
+    if (n >= 1000) return '$' + n.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+    if (n >= 1) return '$' + n.toFixed(2);
+    if (n >= 0.01) return '$' + n.toFixed(4);
+    return '$' + n.toFixed(8);
+}
+function fmtChange(n) {
+    if (n === null || n === undefined) return '—';
+    const sign = n >= 0 ? '+' : '';
+    return sign + n.toFixed(2) + '%';
+}
+
+// ── Load prices ──
+async function loadPrices() {
+    try {
+        const base = window.location.href.replace(/\/[^\/]*$/, '');
+        const res = await fetch(base + '/prices.json?t=' + Date.now());
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        const allCoins = [...(data.main_coins || []), ...(data.meme_coins || [])];
+        allCoins.forEach(c => {
+            priceData[c.id] = { price: c.price, name: c.name, symbol: c.symbol, emoji: c.emoji || '🪙' };
+        });
+        populateCoinSelect(allCoins);
+    } catch(e) {
+        console.warn('Could not load prices.json', e);
+    }
+}
+
+function populateCoinSelect(coins) {
+    const sel = document.getElementById('coin-select');
+    sel.innerHTML = '<option value="">Select coin…</option>';
+    coins.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.id;
+        opt.textContent = `${c.emoji || '🪙'} ${c.name.charAt(0).toUpperCase()+c.name.slice(1)} (${c.symbol})`;
+        sel.appendChild(opt);
+    });
+}
+
+// ── Add / remove ──
+function addHolding() {
+    const id = document.getElementById('coin-select').value;
+    const amount = parseFloat(document.getElementById('amount-input').value);
+    const avgBuy = parseFloat(document.getElementById('cost-input').value);
+
+    if (!id) { alert('Please select a coin.'); return; }
+    if (!amount || amount <= 0) { alert('Please enter a valid amount.'); return; }
+    if (!avgBuy || avgBuy <= 0) { alert('Please enter your average buy price.'); return; }
+
+    // Merge with existing if same coin
+    const existing = holdings.find(h => h.id === id);
+    if (existing) {
+        const totalCost = existing.amount * existing.avgBuy + amount * avgBuy;
+        const totalAmt  = existing.amount + amount;
+        existing.avgBuy = totalCost / totalAmt;
+        existing.amount = totalAmt;
+    } else {
+        holdings.push({ id, amount, avgBuy });
+    }
+
+    saveHoldings();
+    document.getElementById('amount-input').value = '';
+    document.getElementById('cost-input').value = '';
+    document.getElementById('coin-select').value = '';
+    render();
+}
+
+function removeHolding(id) {
+    holdings = holdings.filter(h => h.id !== id);
+    saveHoldings();
+    render();
+}
+
+// ── Render ──
+function render() {
+    if (holdings.length === 0) {
+        document.getElementById('holdings-container').innerHTML = `
+            <div class="empty-state"><div class="empty-icon">💼</div>No holdings yet.<br>Add a coin above to get started.</div>`;
+        document.getElementById('total-value').textContent = '—';
+        document.getElementById('total-cost').textContent = '—';
+        const pnlEl = document.getElementById('total-pnl');
+        pnlEl.textContent = '—'; pnlEl.className = 'card-value gray';
+        const pctEl = document.getElementById('total-pct');
+        pctEl.textContent = '—'; pctEl.className = 'card-value gray';
+        document.getElementById('chart-card').style.display = 'none';
+        if (pieChart) { pieChart.destroy(); pieChart = null; }
+        return;
+    }
+
+    let totalValue = 0, totalCost = 0;
+    const rows = holdings.map((h, idx) => {
+        const info = priceData[h.id] || {};
+        const price = info.price || 0;
+        const value = price * h.amount;
+        const cost  = h.avgBuy * h.amount;
+        const pnl   = value - cost;
+        const pct   = cost > 0 ? (pnl / cost) * 100 : 0;
+        totalValue += value;
+        totalCost  += cost;
+        const pnlClass = pnl > 0 ? 'pnl-pos' : pnl < 0 ? 'pnl-neg' : 'pnl-neu';
+        return `<tr>
+            <td><div class="coin-cell"><span class="coin-em">${info.emoji||'🪙'}</span><div><div class="coin-nm">${(info.name||h.id).charAt(0).toUpperCase()+(info.name||h.id).slice(1)}</div><div class="coin-tk">${info.symbol||''}</div></div></div></td>
+            <td>${h.amount.toLocaleString('en-US', {maximumFractionDigits:8})}</td>
+            <td>${fmt$(price)}</td>
+            <td>${fmt$(value)}</td>
+            <td>${fmt$(h.avgBuy)}</td>
+            <td class="${pnlClass}">${pnl >= 0 ? '+' : ''}${fmt$(pnl).replace('$','')} USD</td>
+            <td class="${pnlClass}">${fmtChange(pct)}</td>
+            <td><button class="remove-btn" onclick="removeHolding('${h.id}')" title="Remove">✕</button></td>
+        </tr>`;
+    }).join('');
+
+    document.getElementById('holdings-container').innerHTML = `
+        <table class="holdings-table">
+            <thead><tr><th>Coin</th><th>Amount</th><th>Price</th><th>Value</th><th>Avg Buy</th><th>P&amp;L</th><th>Return</th><th></th></tr></thead>
+            <tbody>${rows}</tbody>
+        </table>`;
+
+    // Summary
+    const totalPnl = totalValue - totalCost;
+    const totalPct = totalCost > 0 ? (totalPnl / totalCost) * 100 : 0;
+    document.getElementById('total-value').textContent = fmt$(totalValue);
+    document.getElementById('total-cost').textContent = fmt$(totalCost);
+
+    const pnlEl = document.getElementById('total-pnl');
+    pnlEl.textContent = (totalPnl >= 0 ? '+' : '') + fmt$(Math.abs(totalPnl)).replace('$','') + ' USD';
+    pnlEl.className = 'card-value ' + (totalPnl > 0 ? 'green' : totalPnl < 0 ? 'red' : 'gray');
+
+    const pctEl = document.getElementById('total-pct');
+    pctEl.textContent = fmtChange(totalPct);
+    pctEl.className = 'card-value ' + (totalPct > 0 ? 'green' : totalPct < 0 ? 'red' : 'gray');
+
+    // Pie chart
+    renderPie(totalValue);
+}
+
+function renderPie(totalValue) {
+    const chartCard = document.getElementById('chart-card');
+    if (totalValue === 0) { chartCard.style.display = 'none'; return; }
+    chartCard.style.display = '';
+
+    const labels = [], values = [], colors = [];
+    holdings.forEach((h, i) => {
+        const info = priceData[h.id] || {};
+        const value = (info.price || 0) * h.amount;
+        if (value > 0) {
+            labels.push((info.symbol || h.id).toUpperCase());
+            values.push(value);
+            colors.push(COLORS[i % COLORS.length]);
+        }
+    });
+
+    if (pieChart) pieChart.destroy();
+    pieChart = new Chart(document.getElementById('pie-chart'), {
+        type: 'doughnut',
+        data: { labels, datasets: [{ data: values, backgroundColor: colors, borderWidth: 2, borderColor: '#0a0a14' }] },
+        options: {
+            responsive: false, animation: false,
+            plugins: { legend: { display: false }, tooltip: { callbacks: {
+                label: ctx => ` ${ctx.label}: ${fmt$(ctx.raw)} (${((ctx.raw/totalValue)*100).toFixed(1)}%)`
+            }}}
+        }
+    });
+
+    // Legend
+    document.getElementById('chart-legend').innerHTML = labels.map((lbl, i) => `
+        <div class="legend-item">
+            <div class="legend-dot" style="background:${colors[i]}"></div>
+            <span class="legend-name">${lbl}</span>
+            <span class="legend-pct" style="color:${colors[i]}">${((values[i]/totalValue)*100).toFixed(1)}%</span>
+        </div>`).join('');
+}
+
+// ── Init ──
+initTheme();
+loadHoldings();
+loadPrices().then(() => render());
+</script>
+</body>
+</html>

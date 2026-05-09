@@ -36,9 +36,17 @@
         .nav-link[href="index.html"].active  { background: #1a1200; border-color: #f5a623; color: #f5a623; box-shadow: 0 0 14px rgba(245,166,35,0.25); }
         .nav-link[href="game.html"].active   { background: #0a1a10; border-color: #00d4aa; color: #00d4aa; box-shadow: 0 0 14px rgba(0,212,170,0.25); }
         .nav-link[href="meme.html"].active   { background: #140a20; border-color: #a855f7; color: #a855f7; box-shadow: 0 0 14px rgba(168,85,247,0.25); }
-        .nav-link[href="index.html"]:not(.active):hover { color: #f5a623; }
-        .nav-link[href="game.html"]:not(.active):hover  { color: #00d4aa; }
-        .nav-link[href="meme.html"]:not(.active):hover  { color: #a855f7; }
+        .nav-link[href="index.html"]:not(.active):hover      { color: #f5a623; }
+        .nav-link[href="game.html"]:not(.active):hover       { color: #00d4aa; }
+        .nav-link[href="meme.html"]:not(.active):hover       { color: #a855f7; }
+        .nav-link[href="portfolio.html"].active              { background: #0a1520; border-color: #38bdf8; color: #38bdf8; box-shadow: 0 0 14px rgba(56,189,248,0.25); }
+        .nav-link[href="portfolio.html"]:not(.active):hover  { color: #38bdf8; }
+        .theme-toggle {
+            margin-left: auto; background: none; border: 1px solid #1f1f3a;
+            border-radius: 20px; padding: 6px 13px; color: #666; cursor: pointer;
+            font-size: 15px; transition: all 0.18s; flex-shrink: 0;
+        }
+        .theme-toggle:hover { border-color: #444; color: #ccc; }
 
         /* ── MOOD THEME ── */
         body[data-mood="fear"]         { --mood: #ff4757; --mood-bg: rgba(255,71,87,0.04); }
@@ -253,6 +261,51 @@
         .modal-hint { font-size:12px; color:#444; text-align:center; margin-top:12px; }
         .modal-select-prompt { text-align:center; color:#555; font-size:14px; margin-top:20px; }
 
+        /* ── LIGHT MODE ── */
+        body.light { background: #f0f2f8; color: #1a1a2e; }
+        body.light .site-nav { background: #fff; border-color: #e0e0f0; }
+        body.light .nav-link { color: #999; }
+        body.light .nav-link:hover { background: #f4f4fc; border-color: #dde0ee; }
+        body.light .theme-toggle { border-color: #dde0ee; color: #999; }
+        body.light .theme-toggle:hover { border-color: #aaa; color: #333; }
+        body.light .ticker-wrap { background: #e8eaf2; border-color: #d0d0e8; }
+        body.light .ticker-item { color: #777; }
+        body.light .ticker-item .ticker-price { color: #1a1a2e; }
+        body.light .header { background: linear-gradient(135deg, #ece8f8 0%, #e4ecf4 100%); }
+        body.light .logo-text p { color: #777; }
+        body.light .refresh-info .countdown .cd-sub { color: #999; }
+        body.light .refresh-info .last-updated { color: #999; }
+        body.light .tg-banner { background: linear-gradient(135deg, #1a1a3e, #0d2a1a); }
+        body.light .stat-card,
+        body.light .fng-card { background: #fff; border-color: #e0e0f0; }
+        body.light .stat-card .label,
+        body.light .fng-info .label { color: #aaa; }
+        body.light .highlight-card { background: #fff; }
+        body.light .highlight-info .type { color: #aaa; }
+        body.light .view-btn { background: #e8eaf2; border-color: #d0d0e8; color: #777; }
+        body.light .view-btn:hover:not(.active) { color: #333; border-color: #aaa; }
+        body.light .coin-table th { color: #aaa; border-color: #dde0ee; }
+        body.light .coin-table td { border-color: #eceff8; }
+        body.light .coin-table tbody tr:hover { background: #f4f6fc; }
+        body.light .coin-table tbody tr.selected { background: #fffbf0; }
+        body.light .coin-name-block .ticker { color: #aaa; }
+        body.light .mkt-cap { color: #aaa; }
+        body.light .rank { color: #bbb; }
+        body.light .volume-chart-wrap { background: #fff; border-color: #e0e0f0; }
+        body.light .news-card { background: #fff; border-color: #e0e0f0; }
+        body.light .news-card:hover { border-color: #f5a623; background: #fffbf0; }
+        body.light .news-content .news-title { color: #1a1a2e; }
+        body.light .news-content .news-meta { color: #aaa; }
+        body.light .footer { color: #aaa; border-color: #e0e0f0; }
+        body.light .modal-box { background: #fff; border-color: #e0e0f0; }
+        body.light .modal-close { color: #aaa; }
+        body.light .modal-close:hover { color: #1a1a2e; }
+        body.light .modal-coin { background: #f4f6fc; }
+        body.light .modal-stat-row { border-color: #e0e0f0; }
+        body.light .modal-stat-row .stat-label { color: #aaa; }
+        body.light .modal-hint { color: #bbb; }
+        body.light .alert-banner { background: linear-gradient(90deg,#fff0f0,#fffff0,#fff0f0); border-color: #ffcccc; }
+
         /* ── MOBILE ── */
         @media (max-width: 768px) {
             .site-nav { padding: 8px 12px; gap: 4px; }
@@ -286,6 +339,8 @@
     <a href="index.html" class="nav-link active">📊 Dashboard</a>
     <a href="game.html" class="nav-link">🎮 Predict</a>
     <a href="meme.html" class="nav-link">🐸 Meme Zone</a>
+    <a href="portfolio.html" class="nav-link">💼 Portfolio</a>
+    <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()">☀️</button>
 </nav>
 <div class="mood-bar" id="mood-bar"></div>
 
@@ -613,7 +668,7 @@ function refreshTableSelections() {
     });
 }
 
-function openComparison() {
+async function openComparison() {
     const modal = document.getElementById('comparison-modal');
     const container = document.getElementById('modal-coins');
     const hint = document.getElementById('modal-hint');
@@ -639,27 +694,46 @@ function openComparison() {
             ${athPct != null ? `<div class="modal-stat-row"><span class="stat-label">From ATH</span><span class="stat-val ${cc(athPct)}">${ct(athPct)}</span></div>` : ''}
             <div class="modal-stat-row"><span class="stat-label">Market Cap</span><span class="stat-val">${formatLarge(coin.market_cap)}</span></div>
             <div class="modal-stat-row"><span class="stat-label">24h Volume</span><span class="stat-val">${formatLarge(coin.volume_24h)}</span></div>
-            <div class="modal-spark"><canvas id="msp-${coin.id}" width="220" height="60"></canvas></div>
+            <div class="modal-spark">
+                <div style="font-size:10px;color:#666;margin-bottom:5px;text-transform:uppercase;letter-spacing:1px">30d Price</div>
+                <canvas id="msp-${coin.id}" width="220" height="90"></canvas>
+            </div>
         </div>`;
     }).join('');
 
-    selected.forEach(coin => {
-        if (coin.sparkline && coin.sparkline.length > 0) {
-            const positive = (coin.change_7d||0) >= 0;
-            const color = positive ? '#00d4aa' : '#ff4757';
+    modal.style.display = 'flex';
+    hint.textContent = selectedCoinIds.length < 2 ? 'Click another coin to compare side by side.' : '';
+
+    // Fetch live 30d chart data from CoinGecko
+    for (const coin of selected) {
+        try {
+            const res = await fetch(`https://api.coingecko.com/api/v3/coins/${coin.id}/market_chart?vs_currency=usd&days=30&interval=daily`);
+            const data = await res.json();
+            const prices = (data.prices || []).map(p => p[1]);
             const canvas = document.getElementById(`msp-${coin.id}`);
-            if (canvas) {
+            if (canvas && prices.length > 0) {
+                const positive = prices[prices.length - 1] >= prices[0];
+                const color = positive ? '#00d4aa' : '#ff4757';
                 modalSparkCharts[coin.id] = new Chart(canvas, {
-                    type:'line',
-                    data:{ labels:coin.sparkline.map((_,i)=>i), datasets:[{ data:coin.sparkline, borderColor:color, borderWidth:2, pointRadius:0, fill:true, backgroundColor:color+'22', tension:0.4 }] },
-                    options:{ responsive:false, animation:false, plugins:{legend:{display:false},tooltip:{enabled:false}}, scales:{x:{display:false},y:{display:false}} }
+                    type: 'line',
+                    data: { labels: prices.map((_,i) => i), datasets: [{ data: prices, borderColor: color, borderWidth: 2, pointRadius: 0, fill: true, backgroundColor: color + '22', tension: 0.4 }] },
+                    options: { responsive: false, animation: false, plugins: { legend: { display: false }, tooltip: { enabled: false } }, scales: { x: { display: false }, y: { display: false } } }
+                });
+            }
+        } catch(e) {
+            // Fall back to 7d sparkline on error
+            const canvas = document.getElementById(`msp-${coin.id}`);
+            if (canvas && coin.sparkline && coin.sparkline.length > 0) {
+                const positive = (coin.change_7d || 0) >= 0;
+                const color = positive ? '#00d4aa' : '#ff4757';
+                modalSparkCharts[coin.id] = new Chart(canvas, {
+                    type: 'line',
+                    data: { labels: coin.sparkline.map((_,i) => i), datasets: [{ data: coin.sparkline, borderColor: color, borderWidth: 2, pointRadius: 0, fill: true, backgroundColor: color + '22', tension: 0.4 }] },
+                    options: { responsive: false, animation: false, plugins: { legend: { display: false }, tooltip: { enabled: false } }, scales: { x: { display: false }, y: { display: false } } }
                 });
             }
         }
-    });
-
-    hint.textContent = selectedCoinIds.length < 2 ? 'Click another coin to compare side by side.' : '';
-    modal.style.display = 'flex';
+    }
 }
 
 function closeComparison() {
@@ -763,6 +837,20 @@ function startCountdown() {
     }, 1000);
 }
 
+// ── Theme ──
+function initTheme() {
+    if (localStorage.getItem('cryptodoggy_theme') === 'light') {
+        document.body.classList.add('light');
+        document.getElementById('theme-toggle').textContent = '🌙';
+    }
+}
+function toggleTheme() {
+    const isLight = document.body.classList.toggle('light');
+    localStorage.setItem('cryptodoggy_theme', isLight ? 'light' : 'dark');
+    document.getElementById('theme-toggle').textContent = isLight ? '🌙' : '☀️';
+}
+
+initTheme();
 fetchAndRender();
 </script>
 </body>

@@ -16,9 +16,19 @@
         .nav-link[href="index.html"].active  { background:#1a1200; border-color:#f5a623; color:#f5a623; box-shadow:0 0 14px rgba(245,166,35,0.25); }
         .nav-link[href="game.html"].active   { background:#0a1a10; border-color:#00d4aa; color:#00d4aa; box-shadow:0 0 14px rgba(0,212,170,0.25); }
         .nav-link[href="meme.html"].active   { background:#140a20; border-color:#a855f7; color:#a855f7; box-shadow:0 0 14px rgba(168,85,247,0.25); }
-        .nav-link[href="index.html"]:not(.active):hover { color:#f5a623; }
-        .nav-link[href="game.html"]:not(.active):hover  { color:#00d4aa; }
-        .nav-link[href="meme.html"]:not(.active):hover  { color:#a855f7; }
+        .nav-link[href="index.html"]:not(.active):hover      { color:#f5a623; }
+        .nav-link[href="game.html"]:not(.active):hover       { color:#00d4aa; }
+        .nav-link[href="meme.html"]:not(.active):hover       { color:#a855f7; }
+        .nav-link[href="portfolio.html"].active              { background:#0a1520; border-color:#38bdf8; color:#38bdf8; box-shadow:0 0 14px rgba(56,189,248,0.25); }
+        .nav-link[href="portfolio.html"]:not(.active):hover  { color:#38bdf8; }
+        .theme-toggle { margin-left:auto; background:none; border:1px solid #1f1f3a; border-radius:20px; padding:6px 13px; color:#666; cursor:pointer; font-size:15px; transition:all 0.18s; }
+        .theme-toggle:hover { border-color:#444; color:#ccc; }
+        body.light { background:#f0f2f8; color:#1a1a2e; }
+        body.light .site-nav { background:#fff; border-color:#e0e0f0; }
+        body.light .nav-link { color:#999; }
+        body.light .nav-link:hover { background:#f4f4fc; border-color:#dde0ee; }
+        body.light .theme-toggle { border-color:#dde0ee; color:#999; }
+        body.light .theme-toggle:hover { border-color:#aaa; color:#333; }
         .mood-bar { height:3px; background:linear-gradient(90deg,#a855f7,#ec4899,#f5a623); }
 
         /* HEADER */
@@ -96,6 +106,8 @@
     <a href="index.html" class="nav-link">📊 Dashboard</a>
     <a href="game.html" class="nav-link">🎮 Predict</a>
     <a href="meme.html" class="nav-link active">🐸 Meme Zone</a>
+    <a href="portfolio.html" class="nav-link">💼 Portfolio</a>
+    <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()">☀️</button>
 </nav>
 <div class="mood-bar"></div>
 
@@ -315,6 +327,19 @@ async function init() {
     }
 }
 
+function initTheme() {
+    if (localStorage.getItem('cryptodoggy_theme') === 'light') {
+        document.body.classList.add('light');
+        document.getElementById('theme-toggle').textContent = '🌙';
+    }
+}
+function toggleTheme() {
+    const isLight = document.body.classList.toggle('light');
+    localStorage.setItem('cryptodoggy_theme', isLight ? 'light' : 'dark');
+    document.getElementById('theme-toggle').textContent = isLight ? '🌙' : '☀️';
+}
+
+initTheme();
 init();
 </script>
 </body>

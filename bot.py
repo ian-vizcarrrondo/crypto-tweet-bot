@@ -18,7 +18,10 @@ MAIN_COINS = [
     {'id': 'avalanche-2',   'label': '🔺 #AVAX', 'ticker': 'AVAX', 'name': 'avalanche', 'emoji': '🔺'},
     {'id': 'chainlink',     'label': '🔗 #LINK', 'ticker': 'LINK', 'name': 'chainlink', 'emoji': '🔗'},
     {'id': 'polkadot',      'label': '⚫ #DOT',  'ticker': 'DOT',  'name': 'polkadot',  'emoji': '⚫'},
-    {'id': 'matic-network', 'label': '🟣 #POL',  'ticker': 'POL',  'name': 'polygon',   'emoji': '🟣'},
+    {'id': 'matic-network',    'label': '🟣 #POL',  'ticker': 'POL',  'name': 'polygon',   'emoji': '🟣'},
+    {'id': 'sui',              'label': '💧 #SUI',  'ticker': 'SUI',  'name': 'sui',       'emoji': '💧'},
+    {'id': 'the-open-network', 'label': '💎 #TON',  'ticker': 'TON',  'name': 'toncoin',   'emoji': '💎'},
+    {'id': 'near',             'label': '🌐 #NEAR', 'ticker': 'NEAR', 'name': 'near',      'emoji': '🌐'},
 ]
 
 MEME_COINS = [
