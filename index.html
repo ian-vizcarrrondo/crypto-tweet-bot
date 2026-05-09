@@ -109,7 +109,8 @@
         }
         .logo-text p { font-size:12px; color:#888; margin-top:3px; }
         .refresh-info { text-align:right; }
-        .refresh-info .countdown { font-size:22px; font-weight:800; color:#f5a623; }
+        .refresh-info .countdown { font-size:15px; font-weight:800; color:#f5a623; line-height:1.4; }
+        .refresh-info .countdown .cd-sub { font-size:10px; font-weight:400; color:#444; display:block; }
         .refresh-info .last-updated { font-size:11px; color:#555; margin-top:3px; }
 
         /* ── STATS BAR ── */
@@ -251,6 +252,30 @@
         .modal-spark { margin-top:12px; }
         .modal-hint { font-size:12px; color:#444; text-align:center; margin-top:12px; }
         .modal-select-prompt { text-align:center; color:#555; font-size:14px; margin-top:20px; }
+
+        /* ── MOBILE ── */
+        @media (max-width: 768px) {
+            .site-nav { padding: 8px 12px; gap: 4px; }
+            .nav-link { padding: 7px 12px; font-size: 13px; }
+            .header { padding: 12px 16px; }
+            .controls { padding: 8px 16px; flex-wrap: wrap; }
+            .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+            /* Hide low-priority columns: 1h%, 7d%, ATH, 7d Chart */
+            .coin-table th:nth-child(4),
+            .coin-table td:nth-child(4),
+            .coin-table th:nth-child(6),
+            .coin-table td:nth-child(6),
+            .coin-table th:nth-child(7),
+            .coin-table td:nth-child(7),
+            .coin-table th:nth-child(9),
+            .coin-table td:nth-child(9) { display: none; }
+
+            /* Tighten remaining columns */
+            .coin-table th, .coin-table td { padding: 10px 8px; font-size: 13px; }
+            .coin-name { font-size: 13px; }
+            .coin-symbol { font-size: 11px; }
+        }
     </style>
 </head>
 <body>
@@ -285,7 +310,7 @@
         </div>
     </div>
     <div class="refresh-info">
-        <div class="countdown" id="countdown">60s</div>
+        <div class="countdown" id="countdown">—<span class="cd-sub">until next update</span></div>
         <div class="last-updated" id="last-updated">Loading...</div>
     </div>
 </div>
@@ -381,7 +406,7 @@
 let sparklineCharts = {};
 let volumeChart = null;
 let modalSparkCharts = {};
-let countdown = 60;
+let nextUpdateAt = null;
 let countdownInterval = null;
 let allCoinData = [];
 let selectedCoinIds = [];
@@ -709,7 +734,9 @@ async function fetchAndRender() {
         renderVolumeChart(all);
         renderNews(data.news);
 
-        document.getElementById('last-updated').textContent = 'Last updated: ' + new Date(data.updated).toLocaleTimeString();
+        const updatedAt = new Date(data.updated);
+        document.getElementById('last-updated').textContent = 'Data from: ' + updatedAt.toLocaleTimeString();
+        nextUpdateAt = new Date(updatedAt.getTime() + 60 * 60 * 1000); // bot runs hourly
         startCountdown();
     } catch (err) {
         console.error(err);
@@ -720,12 +747,19 @@ async function fetchAndRender() {
 
 function startCountdown() {
     if (countdownInterval) clearInterval(countdownInterval);
-    countdown = 60;
-    document.getElementById('countdown').textContent = '60s';
     countdownInterval = setInterval(() => {
-        countdown--;
-        document.getElementById('countdown').textContent = countdown + 's';
-        if (countdown <= 0) { clearInterval(countdownInterval); fetchAndRender(); }
+        const el = document.getElementById('countdown');
+        if (!el) return;
+        if (!nextUpdateAt) { el.innerHTML = '—<span class="cd-sub">until next update</span>'; return; }
+        const secsLeft = Math.max(0, Math.round((nextUpdateAt - Date.now()) / 1000));
+        const m = Math.floor(secsLeft / 60);
+        const s = secsLeft % 60;
+        const label = secsLeft > 0
+            ? (m > 0 ? `${m}m ${s}s` : `${s}s`)
+            : 'Updating...';
+        el.innerHTML = `${label}<span class="cd-sub">until next update</span>`;
+        // Auto-refetch once the expected update time passes
+        if (secsLeft === 0) { clearInterval(countdownInterval); setTimeout(fetchAndRender, 5000); }
     }, 1000);
 }
 

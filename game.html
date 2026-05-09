@@ -283,10 +283,6 @@ function renderWaiting() {
                 <span class="pr-label">Price when you called it</span>
                 <span class="pr-val">${formatPrice(p.priceAt)}</span>
             </div>
-            <div class="price-row">
-                <span class="pr-label">Current price</span>
-                <span class="pr-val" id="current-price-display">Fetching...</span>
-            </div>
             <div class="countdown-wrap">
                 <div class="countdown-ring" id="wait-countdown">60</div>
                 <div class="countdown-label">seconds until result</div>
@@ -297,24 +293,13 @@ function renderWaiting() {
 function startWaitCountdown() {
     waitCountdown = 60;
     if (waitInterval) clearInterval(waitInterval);
-    waitInterval = setInterval(async () => {
+    waitInterval = setInterval(() => {
         waitCountdown--;
         const el = document.getElementById('wait-countdown');
         if (el) el.textContent = waitCountdown;
-
-        // Update live price display
-        try {
-            const fresh = await fetchPrices();
-            livePrices = fresh;
-            const priceEl = document.getElementById('current-price-display');
-            if (priceEl && fresh[pendingPrediction.coinId]) {
-                priceEl.textContent = formatPrice(fresh[pendingPrediction.coinId].usd);
-            }
-        } catch {}
-
         if (waitCountdown <= 0) {
             clearInterval(waitInterval);
-            evaluatePrediction();
+            evaluatePrediction(); // single fetch happens here
         }
     }, 1000);
 }
