@@ -98,6 +98,52 @@
         .footer a { color: #f5a623; text-decoration: none; }
         .footer a:hover { color: #ffca5c; }
 
+        /* Ticker tape */
+        .ticker-wrap {
+            background: #0d0d1f;
+            border-bottom: 1px solid #1a1a35;
+            overflow: hidden;
+            white-space: nowrap;
+            padding: 8px 0;
+            position: relative;
+        }
+        .ticker-wrap::before, .ticker-wrap::after {
+            content: '';
+            position: absolute;
+            top: 0; bottom: 0;
+            width: 60px;
+            z-index: 2;
+            pointer-events: none;
+        }
+        .ticker-wrap::before { left: 0; background: linear-gradient(to right, #0d0d1f, transparent); }
+        .ticker-wrap::after  { right: 0; background: linear-gradient(to left, #0d0d1f, transparent); }
+        .ticker-track {
+            display: inline-block;
+            animation: ticker-scroll 40s linear infinite;
+        }
+        .ticker-track:hover { animation-play-state: paused; }
+        @keyframes ticker-scroll {
+            0%   { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        .ticker-item {
+            display: inline-block;
+            margin: 0 28px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #aaa;
+        }
+        .ticker-item .ticker-emoji { margin-right: 4px; }
+        .ticker-item .ticker-price { color: #e8e8f0; }
+        .ticker-item .ticker-change { margin-left: 6px; font-size: 11px; }
+        .ticker-item .ticker-change.green { color: #00d4aa; }
+        .ticker-item .ticker-change.red   { color: #ff4757; }
+
+        /* Volume chart */
+        .volume-section { padding: 0 24px 20px; }
+        .volume-chart-wrap { background: #13132a; border: 1px solid #1f1f3a; border-radius: 12px; padding: 20px; }
+        .volume-chart-wrap canvas { width: 100% !important; }
+
         .loading-state { text-align: center; padding: 60px 24px; color: #444; font-size: 18px; animation: pulse 1.5s ease-in-out infinite; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
         .error-state { color: #ff4757; padding: 20px 24px; font-size: 14px; }
@@ -173,6 +219,11 @@
 </head>
 <body>
 
+<!-- Ticker tape -->
+<div class="ticker-wrap" id="ticker-wrap" style="display:none">
+    <div class="ticker-track" id="ticker-track"></div>
+</div>
+
 <div class="header">
     <div class="logo">
         <div class="logo-emoji">🐶</div>
@@ -222,6 +273,13 @@
     </div>
 </div>
 
+<div id="volume-section" class="volume-section" style="display:none">
+    <div class="section-header" style="color:#38bdf8;border-color:#38bdf8">📊 24h Trading Volume</div>
+    <div class="volume-chart-wrap">
+        <canvas id="volume-chart" height="200"></canvas>
+    </div>
+</div>
+
 <div id="news-section" style="display:none">
     <div class="section-header blue">📰 Latest Crypto News</div>
     <div class="news-grid" id="news-grid"></div>
@@ -244,6 +302,7 @@
 
 <script>
 let sparklineCharts = {};
+let volumeChart = null;
 let countdown = 60;
 let countdownInterval = null;
 
@@ -309,6 +368,59 @@ function renderTable(bodyId, coins) {
             setTimeout(() => drawSparkline(sid, coin.sparkline, (coin.change_7d || 0) >= 0), 0);
         }
     });
+}
+
+function renderTicker(allCoins) {
+    const track = document.getElementById('ticker-track');
+    const items = allCoins.map(coin => {
+        const change = coin.change_24h || 0;
+        const cls = change >= 0 ? 'green' : 'red';
+        const sign = change >= 0 ? '+' : '';
+        return `<span class="ticker-item">
+            <span class="ticker-emoji">${coin.emoji || '🪙'}</span>
+            <span>${coin.symbol}</span>
+            <span class="ticker-price">${formatPrice(coin.price)}</span>
+            <span class="ticker-change ${cls}">${sign}${change.toFixed(2)}%</span>
+        </span>`;
+    }).join('');
+    track.innerHTML = items + items;
+    document.getElementById('ticker-wrap').style.display = 'block';
+}
+
+function renderVolumeChart(allCoins) {
+    const sorted = [...allCoins].sort((a, b) => (b.volume_24h || 0) - (a.volume_24h || 0));
+    const labels = sorted.map(c => `${c.emoji} ${c.symbol}`);
+    const values = sorted.map(c => c.volume_24h || 0);
+    const colors = sorted.map(c => (c.change_24h || 0) >= 0 ? '#00d4aa' : '#ff4757');
+
+    if (volumeChart) { volumeChart.destroy(); volumeChart = null; }
+    volumeChart = new Chart(document.getElementById('volume-chart'), {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [{
+                label: '24h Volume (USD)',
+                data: values,
+                backgroundColor: colors,
+                borderRadius: 6,
+                borderSkipped: false,
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            animation: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: { callbacks: { label: ctx => ' ' + formatLarge(ctx.raw) } }
+            },
+            scales: {
+                x: { ticks: { color: '#555', callback: v => formatLarge(v) }, grid: { color: '#0f0f1e' } },
+                y: { ticks: { color: '#aaa', font: { size: 12 } }, grid: { display: false } }
+            }
+        }
+    });
+    document.getElementById('volume-section').style.display = 'block';
 }
 
 function renderNews(newsItems) {
@@ -380,6 +492,10 @@ async function fetchAndRender() {
         document.getElementById('meme-section').style.display = 'block';
         renderTable('main-coins-body', data.main_coins);
         renderTable('meme-coins-body', data.meme_coins);
+
+        const allCoins = [...data.main_coins, ...data.meme_coins.filter(c => c.id !== 'dogecoin')];
+        renderTicker(allCoins);
+        renderVolumeChart(allCoins);
         renderNews(data.news);
 
         const updated = new Date(data.updated);

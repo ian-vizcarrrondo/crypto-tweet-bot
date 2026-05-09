@@ -1,4 +1,5 @@
 import os
+import time
 import requests
 import feedparser
 
@@ -14,14 +15,32 @@ COINS = [
     {'id': 'bonk',          'label': '🔨 #BONK',  'ticker': 'BONK', 'name': 'bonk'},
 ]
 
+def get_with_retry(url, params, retries=4, backoff=5):
+    for attempt in range(retries):
+        try:
+            r = requests.get(url, params=params, timeout=15)
+            if r.status_code == 429:
+                wait = backoff * (2 ** attempt)
+                print(f"Rate limited. Retrying in {wait}s...")
+                time.sleep(wait)
+                continue
+            r.raise_for_status()
+            return r.json()
+        except requests.RequestException as e:
+            if attempt == retries - 1:
+                raise
+            wait = backoff * (2 ** attempt)
+            print(f"Request failed ({e}). Retrying in {wait}s...")
+            time.sleep(wait)
+    raise RuntimeError(f"All {retries} retries failed for {url}")
+
 def get_prices():
     ids = ','.join(c['id'] for c in COINS)
-    r = requests.get('https://api.coingecko.com/api/v3/simple/price', params={
+    return get_with_retry('https://api.coingecko.com/api/v3/simple/price', {
         'ids': ids,
         'vs_currencies': 'usd',
         'include_24hr_change': 'true'
     })
-    return r.json()
 
 def get_news_for_coin(ticker, name):
     feed = feedparser.parse('https://www.coindesk.com/arc/outboundfeeds/rss/')

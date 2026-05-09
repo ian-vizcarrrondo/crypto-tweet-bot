@@ -1,5 +1,6 @@
 import os
 import json
+import time
 import requests
 import feedparser
 from datetime import datetime, timezone
@@ -29,19 +30,38 @@ MEME_COINS = [
     {'id': 'bonk',       'label': '🔨 #BONK',  'ticker': 'BONK', 'name': 'bonk',      'emoji': '🔨'},
 ]
 
+def get_with_retry(url, params, retries=4, backoff=5):
+    for attempt in range(retries):
+        try:
+            r = requests.get(url, params=params, timeout=15)
+            if r.status_code == 429:
+                wait = backoff * (2 ** attempt)
+                print(f"Rate limited. Retrying in {wait}s...")
+                time.sleep(wait)
+                continue
+            r.raise_for_status()
+            return r.json()
+        except requests.RequestException as e:
+            if attempt == retries - 1:
+                raise
+            wait = backoff * (2 ** attempt)
+            print(f"Request failed ({e}). Retrying in {wait}s...")
+            time.sleep(wait)
+    raise RuntimeError(f"All {retries} retries failed for {url}")
+
 def get_prices(coins):
     ids = ','.join(c['id'] for c in coins)
-    r = requests.get('https://api.coingecko.com/api/v3/coins/markets', params={
+    return get_with_retry('https://api.coingecko.com/api/v3/coins/markets', {
         'vs_currency': 'usd', 'ids': ids,
         'price_change_percentage': '1h,24h,7d', 'sparkline': 'true'
     })
-    return r.json()
 
 def get_fear_greed():
     try:
-        r = requests.get('https://api.alternative.me/fng/')
+        r = requests.get('https://api.alternative.me/fng/', timeout=10)
         return r.json()['data'][0]
-    except:
+    except Exception as e:
+        print(f"Fear & Greed fetch failed: {e}")
         return None
 
 def get_news(count=6):
