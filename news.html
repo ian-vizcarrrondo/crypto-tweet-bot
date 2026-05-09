@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📰 CryptoDoggy — News Hub</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { background:#0a0a14; color:#e8e8f0; font-family:'Segoe UI',system-ui,sans-serif; min-height:100vh; }
+
+        /* ── NAV ── */
+        .site-nav { background:#06060f; border-bottom:1px solid #1a1a30; padding:10px 24px; display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+        .nav-brand { font-size:22px; margin-right:12px; }
+        .nav-link { padding:9px 18px; font-size:14px; font-weight:800; color:#666; text-decoration:none; border-radius:10px; border:1px solid transparent; transition:all 0.18s; white-space:nowrap; letter-spacing:0.2px; }
+        .nav-link:hover { color:#ccc; background:#13132a; border-color:#1f1f3a; }
+        .nav-link[href="index.html"].active     { background:#1a1200; border-color:#f5a623; color:#f5a623; box-shadow:0 0 14px rgba(245,166,35,0.25); }
+        .nav-link[href="game.html"].active      { background:#0a1a10; border-color:#00d4aa; color:#00d4aa; box-shadow:0 0 14px rgba(0,212,170,0.25); }
+        .nav-link[href="meme.html"].active      { background:#140a20; border-color:#a855f7; color:#a855f7; box-shadow:0 0 14px rgba(168,85,247,0.25); }
+        .nav-link[href="portfolio.html"].active { background:#0a1520; border-color:#38bdf8; color:#38bdf8; box-shadow:0 0 14px rgba(56,189,248,0.25); }
+        .nav-link[href="news.html"].active      { background:#1a0808; border-color:#ff6b6b; color:#ff6b6b; box-shadow:0 0 14px rgba(255,107,107,0.25); }
+        .nav-link[href="index.html"]:not(.active):hover     { color:#f5a623; }
+        .nav-link[href="game.html"]:not(.active):hover      { color:#00d4aa; }
+        .nav-link[href="meme.html"]:not(.active):hover      { color:#a855f7; }
+        .nav-link[href="portfolio.html"]:not(.active):hover { color:#38bdf8; }
+        .nav-link[href="news.html"]:not(.active):hover      { color:#ff6b6b; }
+        .theme-toggle { margin-left:auto; background:none; border:1px solid #1f1f3a; border-radius:20px; padding:6px 13px; color:#666; cursor:pointer; font-size:15px; transition:all 0.18s; flex-shrink:0; }
+        .theme-toggle:hover { border-color:#444; color:#ccc; }
+
+        /* ── LIGHT MODE ── */
+        body.light { background:#f0f2f8; color:#1a1a2e; }
+        body.light .site-nav { background:#fff; border-color:#e0e0f0; }
+        body.light .nav-link { color:#999; }
+        body.light .nav-link:hover { background:#f4f4fc; border-color:#dde0ee; }
+        body.light .theme-toggle { border-color:#dde0ee; color:#999; }
+        body.light .theme-toggle:hover { border-color:#aaa; color:#333; }
+        body.light .news-header { background:linear-gradient(135deg,#fff0f0,#fff8f0); border-color:#ff6b6b; }
+        body.light .news-header h1 { color:#cc2222; }
+        body.light .news-header p { color:#888; }
+        body.light .stats-strip { background:#fff; border-color:#e0e0f0; }
+        body.light .stat-pill { background:#f4f4fc; border-color:#dde0ee; color:#444; }
+        body.light .filter-bar { background:#fff; border-color:#e0e0f0; }
+        body.light .filter-btn { background:#f4f4fc; border-color:#dde0ee; color:#666; }
+        body.light .filter-btn:hover { border-color:#aaa; color:#333; }
+        body.light .filter-btn.active { background:#ff6b6b; color:#fff; border-color:#ff6b6b; }
+        body.light .sentiment-btn { background:#f4f4fc; border-color:#dde0ee; color:#666; }
+        body.light .sentiment-btn.active-bull { background:#00d4aa; color:#fff; border-color:#00d4aa; }
+        body.light .sentiment-btn.active-bear { background:#ff4757; color:#fff; border-color:#ff4757; }
+        body.light .sentiment-btn.active-neu  { background:#888; color:#fff; border-color:#888; }
+        body.light .news-card { background:#fff; border-color:#e8e8f0; }
+        body.light .news-card:hover { border-color:#ff6b6b; box-shadow:0 4px 20px rgba(255,107,107,0.12); }
+        body.light .news-meta { color:#aaa; }
+        body.light .news-source { color:#888; }
+        body.light .news-title { color:#1a1a2e; }
+        body.light .news-body { color:#555; }
+        body.light .tag { background:#f0f0f8; color:#888; }
+        body.light .skeleton { background:linear-gradient(90deg,#eee 25%,#f5f5f5 50%,#eee 75%); }
+        body.light .empty-state { color:#aaa; }
+        body.light .refresh-note { color:#aaa; }
+
+        /* ── MOOD BAR ── */
+        .mood-bar { height:3px; background:linear-gradient(90deg,#ff6b6b,#f5a623,#ff6b6b); background-size:200% 100%; animation:moodShift 4s ease infinite; }
+        @keyframes moodShift { 0%{background-position:0%} 100%{background-position:200%} }
+
+        /* ── HEADER ── */
+        .news-header { background:linear-gradient(135deg,#1a0808,#0d0808,#1a0a0a); border-bottom:2px solid #ff6b6b; padding:22px 28px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; }
+        .news-header-left { display:flex; align-items:center; gap:14px; }
+        .news-header-icon { font-size:42px; }
+        .news-header h1 { font-size:26px; font-weight:900; background:linear-gradient(135deg,#ff6b6b,#f5a623); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+        .news-header p { font-size:12px; color:#666; margin-top:4px; }
+        .live-badge { display:flex; align-items:center; gap:6px; background:#1a0808; border:1px solid #ff6b6b30; border-radius:20px; padding:6px 14px; font-size:12px; font-weight:700; color:#ff6b6b; }
+        .live-dot { width:7px; height:7px; border-radius:50%; background:#ff6b6b; animation:livePulse 1.4s ease-in-out infinite; }
+        @keyframes livePulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.8)} }
+
+        /* ── STATS STRIP ── */
+        .stats-strip { background:#0d0d1f; border-bottom:1px solid #1a1a35; padding:10px 28px; display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+        .stat-pill { background:#13132a; border:1px solid #1f1f3a; border-radius:20px; padding:5px 14px; font-size:12px; color:#aaa; display:flex; align-items:center; gap:6px; }
+        .stat-pill strong { color:#e8e8f0; }
+        .stat-pill .pill-icon { font-size:13px; }
+        .refresh-note { font-size:11px; color:#444; margin-left:auto; }
+
+        /* ── FILTER BAR ── */
+        .filter-bar { background:#0d0d1f; border-bottom:1px solid #1a1a35; padding:12px 28px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+        .filter-label { font-size:10px; font-weight:800; color:#444; text-transform:uppercase; letter-spacing:1.5px; margin-right:4px; }
+        .filter-btn { padding:6px 14px; border-radius:8px; font-size:12px; font-weight:700; border:1px solid #1f1f3a; background:#13132a; color:#555; cursor:pointer; transition:all 0.15s; }
+        .filter-btn:hover { color:#ccc; border-color:#333; }
+        .filter-btn.active { background:#ff6b6b; color:#fff; border-color:#ff6b6b; box-shadow:0 0 10px rgba(255,107,107,0.3); }
+        .filter-divider { width:1px; height:22px; background:#1f1f3a; margin:0 4px; flex-shrink:0; }
+        .sentiment-btn { padding:6px 14px; border-radius:8px; font-size:12px; font-weight:700; border:1px solid #1f1f3a; background:#13132a; color:#555; cursor:pointer; transition:all 0.15s; }
+        .sentiment-btn:hover { color:#ccc; border-color:#333; }
+        .sentiment-btn.active-bull { background:#00d4aa; color:#0a0a14; border-color:#00d4aa; }
+        .sentiment-btn.active-bear { background:#ff4757; color:#fff; border-color:#ff4757; }
+        .sentiment-btn.active-neu  { background:#555; color:#fff; border-color:#555; }
+
+        /* ── MAIN LAYOUT ── */
+        .page { max-width:1200px; margin:0 auto; padding:28px 24px; }
+
+        /* ── NEWS GRID ── */
+        .news-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:20px; }
+
+        /* ── NEWS CARD ── */
+        .news-card { background:#13132a; border:1px solid #1f1f3a; border-radius:16px; overflow:hidden; text-decoration:none; color:inherit; display:flex; flex-direction:column; transition:all 0.2s; cursor:pointer; }
+        .news-card:hover { border-color:#ff6b6b; box-shadow:0 4px 24px rgba(255,107,107,0.15); transform:translateY(-2px); }
+        .news-card-image { width:100%; height:170px; object-fit:cover; background:#0d0d1f; display:block; }
+        .news-card-image-placeholder { width:100%; height:170px; background:linear-gradient(135deg,#1a0808,#0d0d1f); display:flex; align-items:center; justify-content:center; font-size:48px; }
+        .news-card-body { padding:16px 18px; flex:1; display:flex; flex-direction:column; gap:10px; }
+        .news-top { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+        .news-source { font-size:10px; font-weight:800; color:#666; text-transform:uppercase; letter-spacing:1px; }
+        .news-meta { font-size:10px; color:#444; }
+        .sentiment-badge { font-size:10px; font-weight:800; padding:3px 8px; border-radius:6px; flex-shrink:0; }
+        .sentiment-badge.bull { background:rgba(0,212,170,0.15); color:#00d4aa; border:1px solid rgba(0,212,170,0.3); }
+        .sentiment-badge.bear { background:rgba(255,71,87,0.15); color:#ff4757; border:1px solid rgba(255,71,87,0.3); }
+        .sentiment-badge.neu  { background:rgba(100,100,120,0.2); color:#888; border:1px solid rgba(100,100,120,0.3); }
+        .news-title { font-size:15px; font-weight:700; line-height:1.45; color:#e8e8f0; flex:1; }
+        .news-body { font-size:12px; color:#666; line-height:1.55; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+        .news-footer { display:flex; gap:6px; flex-wrap:wrap; margin-top:auto; padding-top:8px; border-top:1px solid #1a1a2e; }
+        .tag { font-size:10px; padding:3px 8px; border-radius:6px; background:#1a1a30; color:#555; font-weight:600; }
+        .tag.btc  { color:#f7931a; background:rgba(247,147,26,0.1); }
+        .tag.eth  { color:#627eea; background:rgba(98,126,234,0.1); }
+        .tag.sol  { color:#9945ff; background:rgba(153,69,255,0.1); }
+        .tag.sui  { color:#4da2ff; background:rgba(77,162,255,0.1); }
+        .tag.ton  { color:#0098ea; background:rgba(0,152,234,0.1); }
+        .tag.near { color:#00c08b; background:rgba(0,192,139,0.1); }
+        .tag.defi { color:#f5a623; background:rgba(245,166,35,0.1); }
+        .tag.nft  { color:#a855f7; background:rgba(168,85,247,0.1); }
+        .tag.reg  { color:#ff6b6b; background:rgba(255,107,107,0.1); }
+
+        /* ── FEATURED CARD (first item) ── */
+        .news-card.featured { grid-column:1/-1; flex-direction:row; max-height:220px; }
+        .news-card.featured .news-card-image { width:340px; height:220px; flex-shrink:0; }
+        .news-card.featured .news-card-image-placeholder { width:340px; height:220px; flex-shrink:0; }
+        .news-card.featured .news-title { font-size:18px; }
+        .news-card.featured .news-body { -webkit-line-clamp:3; }
+        @media(max-width:700px) { .news-card.featured { flex-direction:column; max-height:none; } .news-card.featured .news-card-image, .news-card.featured .news-card-image-placeholder { width:100%; } }
+
+        /* ── SKELETON LOADERS ── */
+        .skeleton { border-radius:8px; background:linear-gradient(90deg,#13132a 25%,#1a1a30 50%,#13132a 75%); background-size:200% 100%; animation:shimmer 1.4s infinite; }
+        @keyframes shimmer { 0%{background-position:200%} 100%{background-position:-200%} }
+        .skel-card { background:#13132a; border:1px solid #1f1f3a; border-radius:16px; overflow:hidden; }
+        .skel-img { height:170px; }
+        .skel-body { padding:16px 18px; display:flex; flex-direction:column; gap:10px; }
+        .skel-line { height:12px; }
+        .skel-line.short { width:40%; }
+        .skel-line.med { width:70%; }
+        .skel-line.full { width:100%; }
+        .skel-line.title { height:15px; width:90%; }
+
+        /* ── EMPTY STATE ── */
+        .empty-state { text-align:center; padding:80px 20px; color:#444; }
+        .empty-state .empty-icon { font-size:56px; margin-bottom:16px; }
+        .empty-state p { font-size:15px; }
+
+        /* ── ERROR BANNER ── */
+        .error-banner { background:#1a0808; border:1px solid #ff475740; border-radius:12px; padding:14px 20px; color:#ff4757; font-size:13px; margin-bottom:20px; display:none; }
+
+        /* ── SECTION LABEL ── */
+        .section-label { font-size:11px; font-weight:800; color:#ff6b6b; text-transform:uppercase; letter-spacing:2px; border-left:3px solid #ff6b6b; padding:5px 12px; margin-bottom:16px; }
+
+        /* ── TRENDING TICKER ── */
+        .trending-strip { background:#0d0d1f; border-bottom:1px solid #1a1a35; padding:8px 28px; overflow:hidden; white-space:nowrap; position:relative; }
+        .trending-strip::before,.trending-strip::after { content:''; position:absolute; top:0; bottom:0; width:40px; z-index:2; pointer-events:none; }
+        .trending-strip::before { left:0; background:linear-gradient(to right,#0d0d1f,transparent); }
+        .trending-strip::after  { right:0; background:linear-gradient(to left,#0d0d1f,transparent); }
+        .trending-track { display:inline-flex; gap:24px; animation:trendScroll 30s linear infinite; }
+        .trending-track:hover { animation-play-state:paused; }
+        @keyframes trendScroll { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+        .trend-item { font-size:11px; color:#555; font-weight:700; display:inline-flex; align-items:center; gap:5px; }
+        .trend-item span { color:#ff6b6b; }
+        .trend-label { font-size:10px; font-weight:800; color:#333; text-transform:uppercase; letter-spacing:1px; margin-right:8px; }
+    </style>
+</head>
+<body>
+
+<!-- ── NAV ── -->
+<nav class="site-nav">
+    <span class="nav-brand">🐶</span>
+    <a href="index.html" class="nav-link">Dashboard</a>
+    <a href="game.html" class="nav-link">Predict</a>
+    <a href="meme.html" class="nav-link">Meme Zone</a>
+    <a href="portfolio.html" class="nav-link">Portfolio</a>
+    <a href="news.html" class="nav-link active">News Hub</a>
+    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark/light">☀️</button>
+</nav>
+
+<!-- ── MOOD BAR ── -->
+<div class="mood-bar"></div>
+
+<!-- ── HEADER ── -->
+<div class="news-header">
+    <div class="news-header-left">
+        <div class="news-header-icon">📰</div>
+        <div>
+            <h1>Crypto News Hub</h1>
+            <p>Live headlines • Sentiment analysis • Filter by coin</p>
+        </div>
+    </div>
+    <div class="live-badge">
+        <div class="live-dot"></div>
+        LIVE
+    </div>
+</div>
+
+<!-- ── TRENDING STRIP ── -->
+<div class="trending-strip" id="trendingStrip">
+    <div class="trending-track" id="trendingTrack">
+        <span class="trend-label">🔥 Trending</span>
+        <span class="trend-item">Loading...</span>
+    </div>
+</div>
+
+<!-- ── STATS STRIP ── -->
+<div class="stats-strip">
+    <div class="stat-pill"><span class="pill-icon">📄</span> <span id="totalCount"><strong>—</strong> stories</span></div>
+    <div class="stat-pill"><span class="pill-icon">🟢</span> <span id="bullCount"><strong>—</strong> bullish</span></div>
+    <div class="stat-pill"><span class="pill-icon">🔴</span> <span id="bearCount"><strong>—</strong> bearish</span></div>
+    <div class="stat-pill"><span class="pill-icon">⏱️</span> Updated: <strong id="lastUpdated">—</strong></div>
+    <div class="refresh-note" id="refreshNote">Auto-refreshes every 5 min</div>
+</div>
+
+<!-- ── FILTER BAR ── -->
+<div class="filter-bar">
+    <span class="filter-label">Coin</span>
+    <button class="filter-btn active" data-coin="ALL" onclick="setCoinFilter(this,'ALL')">All</button>
+    <button class="filter-btn" data-coin="BTC" onclick="setCoinFilter(this,'BTC')">₿ BTC</button>
+    <button class="filter-btn" data-coin="ETH" onclick="setCoinFilter(this,'ETH')">Ξ ETH</button>
+    <button class="filter-btn" data-coin="SOL" onclick="setCoinFilter(this,'SOL')">◎ SOL</button>
+    <button class="filter-btn" data-coin="SUI" onclick="setCoinFilter(this,'SUI')">💧 SUI</button>
+    <button class="filter-btn" data-coin="TON" onclick="setCoinFilter(this,'TON')">💎 TON</button>
+    <button class="filter-btn" data-coin="NEAR" onclick="setCoinFilter(this,'NEAR')">🌐 NEAR</button>
+
+    <div class="filter-divider"></div>
+
+    <span class="filter-label">Sentiment</span>
+    <button class="sentiment-btn" data-sent="ALL" onclick="setSentFilter(this,'ALL')">All</button>
+    <button class="sentiment-btn" data-sent="bull" onclick="setSentFilter(this,'bull')">🟢 Bullish</button>
+    <button class="sentiment-btn" data-sent="bear" onclick="setSentFilter(this,'bear')">🔴 Bearish</button>
+    <button class="sentiment-btn" data-sent="neu" onclick="setSentFilter(this,'neu')">⚪ Neutral</button>
+</div>
+
+<!-- ── PAGE BODY ── -->
+<div class="page">
+    <div id="errorBanner" class="error-banner">⚠️ <span id="errorMsg">Could not load news.</span></div>
+    <div class="section-label">Latest Stories</div>
+    <div class="news-grid" id="newsGrid">
+        <!-- skeleton loaders -->
+        <div class="skel-card" style="grid-column:1/-1">
+            <div class="skel-img skeleton"></div>
+            <div class="skel-body">
+                <div class="skel-line short skeleton"></div>
+                <div class="skel-line title skeleton"></div>
+                <div class="skel-line full skeleton"></div>
+                <div class="skel-line med skeleton"></div>
+            </div>
+        </div>
+        <div class="skel-card"><div class="skel-img skeleton"></div><div class="skel-body"><div class="skel-line short skeleton"></div><div class="skel-line title skeleton"></div><div class="skel-line full skeleton"></div></div></div>
+        <div class="skel-card"><div class="skel-img skeleton"></div><div class="skel-body"><div class="skel-line short skeleton"></div><div class="skel-line title skeleton"></div><div class="skel-line full skeleton"></div></div></div>
+        <div class="skel-card"><div class="skel-img skeleton"></div><div class="skel-body"><div class="skel-line short skeleton"></div><div class="skel-line title skeleton"></div><div class="skel-line full skeleton"></div></div></div>
+    </div>
+</div>
+
+<script>
+// ── STATE ──
+let allArticles = [];
+let coinFilter = 'ALL';
+let sentFilter = 'ALL';
+let refreshTimer;
+
+// ── BULLISH / BEARISH KEYWORDS ──
+const BULL_WORDS = ['surge','surged','surging','rally','rallied','rallying','bull','bullish','gain','gained','jump','jumped','rise','rose','risen','soar','soared','pump','pumped','breakout','all-time high','ath','record high','outperform','buy','buying','accumulate','recovery','recover','adoption','launch','upgrade','partnership','milestone','approval'];
+const BEAR_WORDS = ['crash','crashed','crashing','drop','dropped','fall','fell','decline','declined','declining','bear','bearish','dump','dumped','selloff','sell-off','plunge','plunged','correction','fear','hack','hacked','exploit','exploit','ban','banned','regulation','sec','lawsuit','fraud','scam','rug','liquidat','bankrupt','contagion','collapse'];
+
+function scoreSentiment(text) {
+    const lower = text.toLowerCase();
+    let bull = 0, bear = 0;
+    BULL_WORDS.forEach(w => { if (lower.includes(w)) bull++; });
+    BEAR_WORDS.forEach(w => { if (lower.includes(w)) bear++; });
+    if (bull > bear) return 'bull';
+    if (bear > bull) return 'bear';
+    return 'neu';
+}
+
+function sentLabel(s) {
+    if (s === 'bull') return '🟢 Bullish';
+    if (s === 'bear') return '🔴 Bearish';
+    return '⚪ Neutral';
+}
+
+// ── TIME AGO ──
+function timeAgo(ts) {
+    const diff = Math.floor(Date.now()/1000) - ts;
+    if (diff < 60) return 'just now';
+    if (diff < 3600) return Math.floor(diff/60) + 'm ago';
+    if (diff < 86400) return Math.floor(diff/3600) + 'h ago';
+    return Math.floor(diff/86400) + 'd ago';
+}
+
+// ── CATEGORY → TAGS ──
+const COIN_TAGS = ['BTC','ETH','SOL','BNB','XRP','ADA','DOT','AVAX','MATIC','LINK','UNI','SUI','TON','NEAR','DOGE','SHIB','LTC'];
+const CATEGORY_MAP = {
+    'DeFi': 'defi', 'NFT': 'nft', 'Regulation': 'reg', 'Exchange': null, 'Altcoin': null,
+    'Technology': null, 'Mining': null, 'Market': null
+};
+
+function extractTags(cats, tags) {
+    const all = ((cats || '') + ',' + (tags || '')).toUpperCase();
+    const result = [];
+    COIN_TAGS.forEach(c => { if (all.includes(c)) result.push(c); });
+    const lowerAll = ((cats || '') + ',' + (tags || '')).toLowerCase();
+    if (lowerAll.includes('defi')) result.push('DeFi');
+    if (lowerAll.includes('nft')) result.push('NFT');
+    if (lowerAll.includes('regulat') || lowerAll.includes('sec') || lowerAll.includes('law')) result.push('REG');
+    return [...new Set(result)].slice(0, 4);
+}
+
+function tagClass(tag) {
+    const map = {BTC:'btc',ETH:'eth',SOL:'sol',SUI:'sui',TON:'ton',NEAR:'near',DEFI:'defi',NFT:'nft',REG:'reg'};
+    return map[tag.toUpperCase()] || '';
+}
+
+// ── COIN FILTER MATCH ──
+function matchesCoin(article, coin) {
+    if (coin === 'ALL') return true;
+    const haystack = (article.title + ' ' + article.body + ' ' + article.categories + ' ' + article.tags).toUpperCase();
+    return haystack.includes(coin);
+}
+
+// ── RENDER CARD ──
+function renderCard(article, featured=false) {
+    const sent = article._sentiment;
+    const tags = article._tags;
+    const ago = timeAgo(article.published_on);
+
+    const imgEl = article.imageurl && article.imageurl.length > 10
+        ? `<img class="news-card-image" src="${article.imageurl}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+          + `<div class="news-card-image-placeholder" style="display:none">📰</div>`
+        : `<div class="news-card-image-placeholder">📰</div>`;
+
+    const tagHtml = tags.map(t =>
+        `<span class="tag ${tagClass(t)}">${t}</span>`
+    ).join('');
+
+    const bodySnippet = article.body
+        ? article.body.replace(/<[^>]*>/g,'').slice(0,160) + '…'
+        : '';
+
+    return `
+    <a class="news-card${featured?' featured':''}" href="${article.url}" target="_blank" rel="noopener">
+        ${imgEl}
+        <div class="news-card-body">
+            <div class="news-top">
+                <span class="news-source">${article.source_info?.name || article.source || 'CryptoNews'}</span>
+                <span class="sentiment-badge ${sent}">${sentLabel(sent)}</span>
+            </div>
+            <div class="news-title">${article.title}</div>
+            ${bodySnippet ? `<div class="news-body">${bodySnippet}</div>` : ''}
+            <div class="news-footer">
+                ${tagHtml}
+                <span class="news-meta" style="margin-left:auto">${ago}</span>
+            </div>
+        </div>
+    </a>`;
+}
+
+// ── RENDER GRID ──
+function renderGrid() {
+    const grid = document.getElementById('newsGrid');
+    let filtered = allArticles.filter(a =>
+        matchesCoin(a, coinFilter) &&
+        (sentFilter === 'ALL' || a._sentiment === sentFilter)
+    );
+
+    // update stat counts
+    document.getElementById('totalCount').innerHTML = `<strong>${filtered.length}</strong> stories`;
+    const bulls = filtered.filter(a => a._sentiment === 'bull').length;
+    const bears = filtered.filter(a => a._sentiment === 'bear').length;
+    document.getElementById('bullCount').innerHTML = `<strong>${bulls}</strong> bullish`;
+    document.getElementById('bearCount').innerHTML = `<strong>${bears}</strong> bearish`;
+
+    if (!filtered.length) {
+        grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
+            <div class="empty-icon">🔍</div>
+            <p>No stories match this filter. Try a different coin or sentiment.</p>
+        </div>`;
+        return;
+    }
+
+    let html = '';
+    filtered.forEach((a, i) => {
+        html += renderCard(a, i === 0);
+    });
+    grid.innerHTML = html;
+}
+
+// ── FETCH NEWS ──
+async function fetchNews() {
+    const err = document.getElementById('errorBanner');
+    err.style.display = 'none';
+
+    try {
+        const catMap = { ALL: '', BTC: 'BTC', ETH: 'ETH', SOL: 'SOL', SUI: 'SUI', TON: 'TON', NEAR: 'NEAR' };
+        const cat = catMap[coinFilter] || '';
+        const url = cat
+            ? `https://min-api.cryptocompare.com/data/v2/news/?lang=EN&categories=${cat}&sortOrder=latest`
+            : `https://min-api.cryptocompare.com/data/v2/news/?lang=EN&sortOrder=latest`;
+
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const json = await res.json();
+
+        if (json.Type === 100 && json.Data) {
+            allArticles = json.Data.slice(0, 50).map(a => ({
+                ...a,
+                _sentiment: scoreSentiment(a.title + ' ' + (a.body || '')),
+                _tags: extractTags(a.categories, a.tags)
+            }));
+        } else {
+            throw new Error('Unexpected API response');
+        }
+
+        const now = new Date();
+        document.getElementById('lastUpdated').textContent =
+            now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+
+        updateTrending();
+        renderGrid();
+
+    } catch(e) {
+        console.error('News fetch error:', e);
+        err.style.display = 'block';
+        document.getElementById('errorMsg').textContent =
+            'Could not load live news — check your connection. ' + e.message;
+        // Show whatever we have
+        if (allArticles.length) renderGrid();
+    }
+}
+
+// ── TRENDING TOPICS ──
+function updateTrending() {
+    const words = {};
+    allArticles.forEach(a => {
+        (a._tags || []).forEach(t => { words[t] = (words[t]||0) + 1; });
+    });
+    const sorted = Object.entries(words).sort((a,b)=>b[1]-a[1]).slice(0,8);
+    const items = sorted.map(([w,c]) => `<span class="trend-item"><span>${w}</span> ${c} stories</span>`).join('');
+    const doubled = items + items; // duplicate for seamless loop
+    document.getElementById('trendingTrack').innerHTML =
+        `<span class="trend-label">🔥 Trending</span>` + doubled;
+}
+
+// ── FILTERS ──
+function setCoinFilter(btn, coin) {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    coinFilter = coin;
+    // re-fetch with new category for better results
+    fetchNews();
+}
+
+function setSentFilter(btn, sent) {
+    document.querySelectorAll('.sentiment-btn').forEach(b => {
+        b.classList.remove('active-bull','active-bear','active-neu');
+    });
+    sentFilter = sent;
+    if (sent === 'bull') btn.classList.add('active-bull');
+    else if (sent === 'bear') btn.classList.add('active-bear');
+    else if (sent === 'neu') btn.classList.add('active-neu');
+    else btn.classList.add('active');
+    renderGrid();
+}
+
+// ── THEME ──
+function toggleTheme() {
+    document.body.classList.toggle('light');
+    const btn = document.querySelector('.theme-toggle');
+    btn.textContent = document.body.classList.contains('light') ? '🌙' : '☀️';
+    localStorage.setItem('theme', document.body.classList.contains('light') ? 'light' : 'dark');
+}
+
+// ── COUNTDOWN ──
+let secondsLeft = 300;
+function tickRefresh() {
+    secondsLeft--;
+    if (secondsLeft <= 0) {
+        secondsLeft = 300;
+        fetchNews();
+    }
+    const m = Math.floor(secondsLeft/60);
+    const s = secondsLeft % 60;
+    document.getElementById('refreshNote').textContent =
+        `Refreshing in ${m}:${s.toString().padStart(2,'0')}`;
+}
+
+// ── INIT ──
+(function init() {
+    if (localStorage.getItem('theme') === 'light') {
+        document.body.classList.add('light');
+        document.querySelector('.theme-toggle').textContent = '🌙';
+    }
+    // Mark active nav
+    document.querySelectorAll('.nav-link').forEach(l => {
+        if (l.getAttribute('href') === 'news.html') l.classList.add('active');
+        else l.classList.remove('active');
+    });
+    fetchNews();
+    setInterval(tickRefresh, 1000);
+})();
+</script>
+</body>
+</html>
