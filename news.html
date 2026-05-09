@@ -387,55 +387,72 @@ function renderGrid() {
     grid.innerHTML = html;
 }
 
-// ── RSS SOURCES (no API key needed) ──
+// ── RSS SOURCES ──
 const RSS_FEEDS = [
-    { url: 'https://cointelegraph.com/rss', name: 'CoinTelegraph' },
-    { url: 'https://decrypt.co/feed',       name: 'Decrypt' },
-    { url: 'https://www.coindesk.com/arc/outboundfeeds/rss/', name: 'CoinDesk' }
+    { url: 'https://cointelegraph.com/rss',                    name: 'CoinTelegraph' },
+    { url: 'https://decrypt.co/feed',                          name: 'Decrypt'       },
+    { url: 'https://www.coindesk.com/arc/outboundfeeds/rss/',  name: 'CoinDesk'      }
+];
+
+// Two proxy strategies: corsproxy returns raw XML; allorigins wraps in JSON
+const PROXIES = [
+    { build: url => `https://corsproxy.io/?${encodeURIComponent(url)}`,                  json: false },
+    { build: url => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,     json: true  },
+    { build: url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,json: false }
 ];
 
 function extractImageFromItem(item) {
-    // Try <media:content url="...">
-    const media = item.querySelector('content') || item.getElementsByTagNameNS('*','content')[0];
+    const media = item.getElementsByTagNameNS('*','content')[0] || item.querySelector('content');
     if (media && media.getAttribute('url')) return media.getAttribute('url');
-    // Try <enclosure url="...">
     const enc = item.querySelector('enclosure');
-    if (enc && enc.getAttribute('url')) return enc.getAttribute('url');
-    // Try first <img> in description or encoded content
+    if (enc && enc.getAttribute('url') && /image/.test(enc.getAttribute('type')||'image')) return enc.getAttribute('url');
     const raw = item.querySelector('description')?.textContent || '';
     const m = raw.match(/<img[^>]+src=["']([^"']+)["']/i);
     if (m) return m[1];
     return '';
 }
 
-async function fetchRSS(feed) {
-    const proxy = `https://api.allorigins.win/get?url=${encodeURIComponent(feed.url)}`;
-    const res = await fetch(proxy, { cache: 'no-store' });
-    if (!res.ok) throw new Error(`${feed.name}: HTTP ${res.status}`);
-    const data = await res.json();
+function parseXMLItems(xmlText, feedName) {
     const parser = new DOMParser();
-    const xml = parser.parseFromString(data.contents, 'text/xml');
+    const xml = parser.parseFromString(xmlText, 'text/xml');
+    const parseErr = xml.querySelector('parsererror');
+    if (parseErr) throw new Error('XML parse error');
     const items = [...xml.querySelectorAll('item')];
     return items.map(item => {
         const title = item.querySelector('title')?.textContent?.trim() || '';
-        // <link> in RSS is tricky — it's often a text node after the tag
         let url = '';
         const linkEl = item.querySelector('link');
-        if (linkEl) url = linkEl.textContent?.trim() || linkEl.getAttribute('href') || '';
-        const pubDate = item.querySelector('pubDate')?.textContent || '';
-        const description = item.querySelector('description')?.textContent || '';
-        const cleanBody = description.replace(/<[^>]*>/g, '').replace(/&[a-z]+;/g,' ').trim();
-        const published_on = pubDate ? Math.floor(new Date(pubDate).getTime() / 1000) : Math.floor(Date.now()/1000);
+        if (linkEl) url = (linkEl.textContent?.trim() || linkEl.getAttribute('href') || '').replace(/\s/g,'');
+        const pubDate  = item.querySelector('pubDate')?.textContent || '';
+        const desc     = item.querySelector('description')?.textContent || '';
+        const cleanBody = desc.replace(/<[^>]*>/g,' ').replace(/&nbsp;/g,' ').replace(/&amp;/g,'&').trim();
+        const published_on = pubDate ? Math.floor(new Date(pubDate).getTime()/1000) : Math.floor(Date.now()/1000);
         const imageurl = extractImageFromItem(item);
-        return {
-            title,
-            url,
-            imageurl,
-            body: cleanBody,
-            source: feed.name,
-            published_on
-        };
+        return { title, url, imageurl, body: cleanBody, source: feedName, published_on };
     }).filter(a => a.title && a.url);
+}
+
+async function fetchRSS(feed) {
+    let lastErr;
+    for (const proxy of PROXIES) {
+        try {
+            const res = await fetch(proxy.build(feed.url), { cache: 'no-store' });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            let xmlText;
+            if (proxy.json) {
+                const data = await res.json();
+                xmlText = data.contents;
+            } else {
+                xmlText = await res.text();
+            }
+            if (!xmlText || xmlText.length < 100) throw new Error('Empty response');
+            return parseXMLItems(xmlText, feed.name);
+        } catch(e) {
+            lastErr = e;
+            // try next proxy
+        }
+    }
+    throw new Error(`${feed.name}: ${lastErr?.message}`);
 }
 
 // ── FETCH NEWS ──
@@ -444,21 +461,23 @@ async function fetchNews() {
     err.style.display = 'none';
 
     try {
-        // Fetch all RSS feeds in parallel, skip any that fail
         const results = await Promise.allSettled(RSS_FEEDS.map(f => fetchRSS(f)));
         let merged = [];
-        results.forEach(r => { if (r.status === 'fulfilled') merged = merged.concat(r.value); });
+        const failures = [];
+        results.forEach((r, i) => {
+            if (r.status === 'fulfilled') merged = merged.concat(r.value);
+            else failures.push(RSS_FEEDS[i].name + ': ' + r.reason?.message);
+        });
 
-        if (!merged.length) throw new Error('All RSS feeds failed to load');
+        if (!merged.length) throw new Error('All RSS feeds failed — ' + failures.join(' | '));
 
-        // Sort by publish time, newest first, deduplicate by title
+        // sort newest first, deduplicate
         merged.sort((a, b) => b.published_on - a.published_on);
         const seen = new Set();
         merged = merged.filter(a => {
             const key = a.title.slice(0, 60).toLowerCase();
             if (seen.has(key)) return false;
-            seen.add(key);
-            return true;
+            seen.add(key); return true;
         });
 
         allArticles = merged.slice(0, 60).map(a => ({
@@ -470,14 +489,16 @@ async function fetchNews() {
         document.getElementById('lastUpdated').textContent =
             new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
 
+        // warn if some feeds failed but don't block the page
+        if (failures.length) console.warn('Some feeds failed:', failures);
+
         updateTrending();
         renderGrid();
 
     } catch(e) {
         console.error('News fetch error:', e);
         err.style.display = 'block';
-        document.getElementById('errorMsg').textContent =
-            'Could not load news feeds — ' + e.message;
+        document.getElementById('errorMsg').textContent = '⚠️ ' + e.message;
         if (allArticles.length) renderGrid();
     }
 }
