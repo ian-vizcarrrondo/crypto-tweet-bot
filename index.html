@@ -6,131 +6,282 @@
     <title>🐶 CryptoDoggy Dashboard</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: #0a0a14; color: #e8e8f0; font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; }
+        :root {
+            --bg: #070713;
+            --bg-soft: #0d0d1f;
+            --card: rgba(19, 19, 42, 0.82);
+            --card-soft: rgba(255, 255, 255, 0.055);
+            --border: rgba(255, 255, 255, 0.09);
+            --muted: #9494ad;
+            --muted-dark: #63637c;
+            --text: #f6f6fb;
+            --orange: #f5a623;
+            --orange-2: #ff8c00;
+            --purple: #a855f7;
+            --blue: #38bdf8;
+            --green: #00d4aa;
+            --red: #ff4757;
+            --container: 1180px;
+        }
 
-        .header {
-            background: linear-gradient(135deg, #1a0a2e 0%, #0d1a2e 100%);
-            border-bottom: 2px solid #f5a623;
-            padding: 16px 24px;
-            display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            background:
+                radial-gradient(circle at 15% 8%, rgba(245,166,35,0.16), transparent 28%),
+                radial-gradient(circle at 85% 10%, rgba(168,85,247,0.20), transparent 30%),
+                linear-gradient(180deg, #090916 0%, var(--bg) 42%, #05050c 100%);
+            color: var(--text);
+            font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+            min-height: 100vh;
+        }
+        a { color: inherit; }
+
+        .container { width: min(var(--container), calc(100% - 48px)); margin: 0 auto; }
+
+        .hero {
+            position: relative;
+            overflow: hidden;
+            padding: 28px 0 78px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        .hero::after {
+            content: '';
+            position: absolute;
+            inset: auto -12% -38% 40%;
+            height: 360px;
+            background: radial-gradient(circle, rgba(245,166,35,0.18), transparent 62%);
+            pointer-events: none;
+        }
+        .top-nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            margin-bottom: 76px;
+            position: relative;
+            z-index: 1;
         }
         .logo { display: flex; align-items: center; gap: 12px; }
-        .logo-emoji { font-size: 40px; }
+        .logo-emoji { font-size: 42px; filter: drop-shadow(0 8px 22px rgba(245,166,35,0.28)); }
         .logo-text h1 {
-            font-size: 24px; font-weight: 800;
-            background: linear-gradient(135deg, #f5a623, #ff6b6b);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+            font-size: 24px;
+            font-weight: 900;
+            letter-spacing: -0.03em;
+            background: linear-gradient(135deg, var(--orange), #ff6b6b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
-        .logo-text p { font-size: 12px; color: #888; margin-top: 3px; }
-        .refresh-info { text-align: right; }
-        .refresh-info .countdown { font-size: 22px; font-weight: 800; color: #f5a623; }
-        .refresh-info .last-updated { font-size: 11px; color: #555; margin-top: 3px; }
+        .logo-text p { font-size: 12px; color: var(--muted); margin-top: 4px; }
+        .refresh-info {
+            text-align: right;
+            background: rgba(255,255,255,0.055);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 12px 16px;
+            box-shadow: 0 18px 48px rgba(0,0,0,0.18);
+            backdrop-filter: blur(16px);
+        }
+        .refresh-info .countdown { font-size: 24px; font-weight: 900; color: var(--orange); line-height: 1; }
+        .refresh-info .last-updated { font-size: 11px; color: var(--muted); margin-top: 5px; }
 
-        .stats-bar { display: flex; gap: 12px; padding: 16px 24px; flex-wrap: wrap; }
-        .stat-card { background: #13132a; border: 1px solid #1f1f3a; border-radius: 12px; padding: 14px 20px; flex: 1; min-width: 130px; }
-        .stat-card .label { font-size: 10px; color: #666; text-transform: uppercase; letter-spacing: 1.2px; }
-        .stat-card .value { font-size: 20px; font-weight: 800; margin-top: 5px; }
-        .value.orange { color: #f5a623; }
-        .value.purple { color: #a855f7; }
+        .hero-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.7fr);
+            align-items: center;
+            gap: 44px;
+            position: relative;
+            z-index: 1;
+        }
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #ffd58a;
+            background: rgba(245,166,35,0.10);
+            border: 1px solid rgba(245,166,35,0.24);
+            border-radius: 999px;
+            padding: 8px 12px;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: 22px;
+        }
+        .hero-copy h2 {
+            font-size: clamp(44px, 8vw, 82px);
+            line-height: 0.95;
+            letter-spacing: -0.07em;
+            max-width: 860px;
+        }
+        .hero-copy p {
+            color: #c9c9db;
+            font-size: clamp(17px, 2vw, 21px);
+            line-height: 1.65;
+            max-width: 690px;
+            margin-top: 24px;
+        }
+        .hero-actions, .cta-actions { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 32px; }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            min-height: 50px;
+            padding: 0 22px;
+            border-radius: 999px;
+            font-size: 14px;
+            font-weight: 900;
+            text-decoration: none;
+            transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+            white-space: nowrap;
+        }
+        .btn:hover { transform: translateY(-2px); }
+        .btn:focus-visible { outline: 3px solid rgba(56,189,248,0.45); outline-offset: 3px; }
+        .btn.primary { background: linear-gradient(135deg, var(--orange), var(--orange-2)); color: #080812; box-shadow: 0 18px 44px rgba(245,166,35,0.30); }
+        .btn.primary:hover { box-shadow: 0 22px 54px rgba(245,166,35,0.42); }
+        .btn.secondary { background: rgba(168,85,247,0.15); border: 1px solid rgba(168,85,247,0.42); color: #f6edff; }
+        .btn.secondary:hover { background: rgba(168,85,247,0.24); border-color: rgba(168,85,247,0.65); }
+        .btn.ghost { background: rgba(255,255,255,0.06); border: 1px solid var(--border); color: var(--text); }
+        .btn.ghost:hover { background: rgba(255,255,255,0.10); border-color: rgba(255,255,255,0.18); }
+        .hero-proof { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 28px; color: var(--muted); font-size: 13px; }
+        .hero-proof span { display: inline-flex; align-items: center; gap: 7px; }
 
-        .fng-card { background: #13132a; border: 1px solid #1f1f3a; border-radius: 12px; padding: 14px 20px; flex: 1; min-width: 170px; display: flex; align-items: center; gap: 14px; }
-        .fng-gauge { width: 54px; height: 54px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 900; flex-shrink: 0; }
-        .fng-info .label { font-size: 10px; color: #666; text-transform: uppercase; letter-spacing: 1.2px; }
-        .fng-info .classification { font-size: 16px; font-weight: 800; margin-top: 3px; }
+        .hero-card {
+            background: linear-gradient(180deg, rgba(255,255,255,0.09), rgba(255,255,255,0.035));
+            border: 1px solid var(--border);
+            border-radius: 30px;
+            padding: 26px;
+            box-shadow: 0 30px 90px rgba(0,0,0,0.34);
+            backdrop-filter: blur(16px);
+        }
+        .hero-card-header { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; margin-bottom: 22px; }
+        .hero-card-title { font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.12em; font-weight: 800; }
+        .live-pill { color: var(--green); background: rgba(0,212,170,0.12); border: 1px solid rgba(0,212,170,0.25); border-radius: 999px; padding: 6px 10px; font-size: 11px; font-weight: 900; }
+        .alert-row { display: flex; gap: 14px; padding: 16px 0; border-top: 1px solid rgba(255,255,255,0.08); }
+        .alert-row:first-of-type { border-top: 0; }
+        .alert-icon { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 15px; background: rgba(245,166,35,0.12); flex: 0 0 auto; font-size: 22px; }
+        .alert-row strong { display: block; font-size: 15px; margin-bottom: 5px; }
+        .alert-row p { color: var(--muted); font-size: 13px; line-height: 1.5; }
 
-        .highlights { display: flex; gap: 12px; padding: 0 24px 16px; flex-wrap: wrap; }
-        .highlight-card { background: #13132a; border-radius: 12px; padding: 14px 20px; flex: 1; min-width: 200px; display: flex; align-items: center; gap: 14px; }
-        .highlight-card.gainer { border-left: 4px solid #00d4aa; }
-        .highlight-card.loser { border-left: 4px solid #ff4757; }
+        .benefits { padding: 0 0 74px; margin-top: -34px; position: relative; z-index: 2; }
+        .benefit-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; }
+        .benefit-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 22px;
+            padding: 20px;
+            min-height: 166px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.22);
+        }
+        .benefit-card .icon { font-size: 28px; margin-bottom: 18px; }
+        .benefit-card h3 { font-size: 15px; line-height: 1.25; margin-bottom: 9px; }
+        .benefit-card p { color: var(--muted); font-size: 13px; line-height: 1.5; }
+
+        .market-preview { padding: 18px 0 40px; }
+        .preview-heading { margin-bottom: 26px; }
+        .preview-kicker { color: var(--orange); font-size: 12px; font-weight: 900; letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 10px; }
+        .preview-heading h2 { font-size: clamp(30px, 4vw, 46px); letter-spacing: -0.045em; }
+        .preview-heading p { color: var(--muted); font-size: 16px; line-height: 1.6; max-width: 720px; margin-top: 12px; }
+
+        .stats-bar { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 18px; }
+        .stat-card, .fng-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 18px 20px;
+            box-shadow: 0 18px 54px rgba(0,0,0,0.18);
+        }
+        .stat-card { flex: 1; min-width: 150px; }
+        .stat-card .label, .fng-info .label { font-size: 10px; color: var(--muted-dark); text-transform: uppercase; letter-spacing: 1.2px; }
+        .stat-card .value { font-size: 22px; font-weight: 900; margin-top: 7px; }
+        .value.orange { color: var(--orange); }
+        .value.purple { color: var(--purple); }
+
+        .fng-card { flex: 1; min-width: 190px; display: flex; align-items: center; gap: 14px; }
+        .fng-gauge { width: 58px; height: 58px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 900; flex-shrink: 0; }
+        .fng-info .classification { font-size: 16px; font-weight: 900; margin-top: 4px; }
+
+        .highlights { display: flex; gap: 14px; margin-bottom: 24px; flex-wrap: wrap; }
+        .highlight-card { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 18px 20px; flex: 1; min-width: 220px; display: flex; align-items: center; gap: 14px; box-shadow: 0 18px 54px rgba(0,0,0,0.16); }
+        .highlight-card.gainer { border-left: 4px solid var(--green); }
+        .highlight-card.loser { border-left: 4px solid var(--red); }
         .highlight-icon { font-size: 32px; }
-        .highlight-info .type { font-size: 10px; color: #666; text-transform: uppercase; letter-spacing: 1.2px; }
-        .highlight-info .coin-name { font-size: 16px; font-weight: 700; margin-top: 3px; }
-        .highlight-info .change { font-size: 15px; font-weight: 700; margin-top: 2px; }
-        .change.green { color: #00d4aa; }
-        .change.red { color: #ff4757; }
+        .highlight-info .type { font-size: 10px; color: var(--muted-dark); text-transform: uppercase; letter-spacing: 1.2px; }
+        .highlight-info .coin-name { font-size: 16px; font-weight: 800; margin-top: 4px; }
+        .highlight-info .change { font-size: 15px; font-weight: 800; margin-top: 2px; }
+        .change.green { color: var(--green); }
+        .change.red { color: var(--red); }
 
-        .section-header { font-size: 12px; font-weight: 800; color: #f5a623; text-transform: uppercase; letter-spacing: 2px; border-left: 3px solid #f5a623; padding: 6px 12px; margin: 8px 24px 12px; }
-        .section-header.purple { color: #a855f7; border-color: #a855f7; }
-        .section-header.blue { color: #38bdf8; border-color: #38bdf8; }
+        .market-panel { background: rgba(255,255,255,0.035); border: 1px solid var(--border); border-radius: 28px; padding: 20px; margin-bottom: 20px; box-shadow: 0 24px 80px rgba(0,0,0,0.18); }
+        .section-header { font-size: 12px; font-weight: 900; color: var(--orange); text-transform: uppercase; letter-spacing: 2px; border-left: 3px solid var(--orange); padding: 6px 12px; margin: 0 0 14px; }
+        .section-header.purple { color: var(--purple); border-color: var(--purple); }
+        .section-header.blue { color: var(--blue); border-color: var(--blue); }
 
-        .table-wrapper { padding: 0 24px; overflow-x: auto; margin-bottom: 20px; }
-        .coin-table { width: 100%; border-collapse: collapse; }
-        .coin-table th { text-align: left; padding: 10px 14px; font-size: 10px; color: #555; text-transform: uppercase; letter-spacing: 1.2px; border-bottom: 1px solid #1a1a2e; }
+        .table-wrapper { overflow-x: auto; }
+        .coin-table { width: 100%; border-collapse: collapse; min-width: 760px; }
+        .coin-table th { text-align: left; padding: 12px 14px; font-size: 10px; color: var(--muted-dark); text-transform: uppercase; letter-spacing: 1.2px; border-bottom: 1px solid rgba(255,255,255,0.08); }
         .coin-table th:not(:first-child):not(:nth-child(2)) { text-align: right; }
-        .coin-table td { padding: 13px 14px; border-bottom: 1px solid #0f0f1e; font-size: 14px; vertical-align: middle; }
+        .coin-table td { padding: 15px 14px; border-bottom: 1px solid rgba(255,255,255,0.045); font-size: 14px; vertical-align: middle; }
         .coin-table td:not(:first-child):not(:nth-child(2)) { text-align: right; }
-        .coin-table tbody tr:hover { background: #0f0f20; }
+        .coin-table tbody tr { transition: background 0.16s ease; }
+        .coin-table tbody tr:hover { background: rgba(255,255,255,0.045); }
 
         .coin-info { display: flex; align-items: center; gap: 10px; }
         .coin-emoji { font-size: 22px; line-height: 1; }
-        .coin-name-block .name { font-weight: 700; font-size: 14px; }
-        .coin-name-block .ticker { font-size: 11px; color: #555; margin-top: 1px; }
-        .price { font-weight: 800; font-size: 15px; }
-        .change-cell { font-weight: 700; font-size: 13px; }
-        .change-cell.green { color: #00d4aa; }
-        .change-cell.red { color: #ff4757; }
-        .change-cell.neutral { color: #555; }
-        .mkt-cap { color: #888; font-size: 13px; }
-        .rank { color: #444; font-size: 12px; }
+        .coin-name-block .name { font-weight: 800; font-size: 14px; }
+        .coin-name-block .ticker { font-size: 11px; color: var(--muted-dark); margin-top: 1px; }
+        .price { font-weight: 900; font-size: 15px; }
+        .change-cell { font-weight: 800; font-size: 13px; }
+        .change-cell.green { color: var(--green); }
+        .change-cell.red { color: var(--red); }
+        .change-cell.neutral { color: var(--muted-dark); }
+        .mkt-cap { color: var(--muted); font-size: 13px; }
+        .rank { color: var(--muted-dark); font-size: 12px; }
         .sparkline-cell canvas { display: block; margin-left: auto; }
 
-        /* News section */
-        .news-grid { display: flex; flex-direction: column; gap: 10px; padding: 0 24px 24px; }
+        .news-grid { display: flex; flex-direction: column; gap: 12px; }
         .news-card {
-            background: #13132a;
-            border: 1px solid #1f1f3a;
-            border-radius: 12px;
-            padding: 16px 20px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 18px 20px;
             display: flex;
             align-items: flex-start;
             gap: 14px;
             text-decoration: none;
-            transition: border-color 0.2s, background 0.2s;
+            transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
         }
-        .news-card:hover { border-color: #f5a623; background: #1a1a35; }
+        .news-card:hover { transform: translateY(-2px); border-color: rgba(245,166,35,0.55); background: rgba(255,255,255,0.07); }
         .news-icon { font-size: 24px; flex-shrink: 0; margin-top: 2px; }
-        .news-content .news-title { color: #e8e8f0; font-size: 14px; font-weight: 600; line-height: 1.4; }
-        .news-content .news-meta { color: #555; font-size: 11px; margin-top: 6px; }
-        .news-arrow { color: #f5a623; font-size: 18px; margin-left: auto; flex-shrink: 0; align-self: center; }
+        .news-content .news-title { color: var(--text); font-size: 14px; font-weight: 700; line-height: 1.45; }
+        .news-content .news-meta { color: var(--muted-dark); font-size: 11px; margin-top: 6px; }
+        .news-arrow { color: var(--orange); font-size: 18px; margin-left: auto; flex-shrink: 0; align-self: center; }
 
-        .footer { text-align: center; padding: 28px 24px; color: #333; font-size: 12px; border-top: 1px solid #13132a; margin-top: 8px; line-height: 2; }
-        .footer a { color: #f5a623; text-decoration: none; }
-        .footer a:hover { color: #ffca5c; }
-
-        .loading-state { text-align: center; padding: 60px 24px; color: #444; font-size: 18px; animation: pulse 1.5s ease-in-out infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-        .error-state { color: #ff4757; padding: 20px 24px; font-size: 14px; }
-
-        /* Telegram banner */
-        .tg-banner {
-            background: linear-gradient(135deg, #1a1a3e, #0d2a1a);
-            border-bottom: 1px solid #1f3a2a;
-            padding: 12px 24px;
+        .final-cta { padding: 48px 0 56px; }
+        .final-cta-card {
+            background: linear-gradient(135deg, rgba(245,166,35,0.16), rgba(168,85,247,0.16));
+            border: 1px solid rgba(255,255,255,0.13);
+            border-radius: 30px;
+            padding: 38px;
             display: flex;
             align-items: center;
-            justify-content: center;
-            gap: 16px;
-            flex-wrap: wrap;
-            text-align: center;
+            justify-content: space-between;
+            gap: 28px;
+            box-shadow: 0 28px 90px rgba(0,0,0,0.26);
         }
-        .tg-banner p { font-size: 13px; color: #aaa; }
-        .tg-banner p strong { color: #e8e8f0; }
-        .tg-banner-btns { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
-        .tg-btn {
-            padding: 7px 16px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 700;
-            text-decoration: none;
-            transition: transform 0.15s, opacity 0.15s;
-            white-space: nowrap;
-        }
-        .tg-btn:hover { transform: scale(1.05); opacity: 0.9; }
-        .tg-btn.main { background: #f5a623; color: #0a0a14; }
-        .tg-btn.meme { background: #a855f7; color: #fff; }
+        .final-cta h2 { font-size: clamp(28px, 4vw, 44px); letter-spacing: -0.045em; margin-bottom: 12px; }
+        .final-cta p { color: #d5d5e7; line-height: 1.6; max-width: 650px; }
 
-        /* Floating Telegram button */
+        .footer { text-align: center; padding: 30px 24px 110px; color: var(--muted-dark); font-size: 12px; border-top: 1px solid rgba(255,255,255,0.07); margin-top: 8px; line-height: 2; }
+        .footer a { color: var(--orange); text-decoration: none; }
+        .footer a:hover { color: #ffca5c; }
+
+        .loading-state { text-align: center; padding: 54px 24px; color: var(--muted-dark); font-size: 18px; animation: pulse 1.5s ease-in-out infinite; width: 100%; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+        .error-state { color: var(--red); padding: 20px 0; font-size: 14px; }
+
         .tg-float {
             position: fixed;
             bottom: 28px;
@@ -141,91 +292,224 @@
             align-items: flex-end;
             gap: 10px;
         }
-        .tg-float-main {
-            background: linear-gradient(135deg, #f5a623, #ff8c00);
-            color: #0a0a14;
-            padding: 12px 20px;
-            border-radius: 30px;
-            font-size: 13px;
-            font-weight: 800;
+        .tg-float-main, .tg-float-meme {
+            border-radius: 999px;
             text-decoration: none;
+            transition: transform 0.18s ease, opacity 0.18s ease;
+            white-space: nowrap;
+        }
+        .tg-float-main {
+            background: linear-gradient(135deg, var(--orange), var(--orange-2));
+            color: #080812;
+            padding: 12px 20px;
+            font-size: 13px;
+            font-weight: 900;
             box-shadow: 0 4px 20px rgba(245,166,35,0.4);
             animation: floatPulse 2.5s ease-in-out infinite;
-            white-space: nowrap;
         }
         .tg-float-meme {
-            background: linear-gradient(135deg, #a855f7, #7c3aed);
+            background: linear-gradient(135deg, var(--purple), #7c3aed);
             color: #fff;
             padding: 10px 16px;
-            border-radius: 30px;
             font-size: 12px;
-            font-weight: 700;
-            text-decoration: none;
+            font-weight: 800;
             box-shadow: 0 4px 16px rgba(168,85,247,0.35);
-            white-space: nowrap;
         }
-        .tg-float a:hover { opacity: 0.9; transform: scale(1.03); }
+        .tg-float a:hover { opacity: 0.94; transform: translateY(-2px) scale(1.02); }
         @keyframes floatPulse {
             0%, 100% { box-shadow: 0 4px 20px rgba(245,166,35,0.4); }
             50% { box-shadow: 0 4px 32px rgba(245,166,35,0.75); }
+        }
+
+        @media (max-width: 980px) {
+            .hero { padding-bottom: 66px; }
+            .top-nav { margin-bottom: 54px; }
+            .hero-grid { grid-template-columns: 1fr; gap: 32px; }
+            .benefit-grid { grid-template-columns: repeat(2, 1fr); }
+            .final-cta-card { flex-direction: column; align-items: flex-start; }
+        }
+
+        @media (max-width: 640px) {
+            .container { width: min(100% - 32px, var(--container)); }
+            .hero { padding: 20px 0 54px; }
+            .top-nav { align-items: flex-start; margin-bottom: 44px; }
+            .logo-emoji { font-size: 36px; }
+            .logo-text h1 { font-size: 20px; }
+            .refresh-info { padding: 10px 12px; }
+            .refresh-info .countdown { font-size: 20px; }
+            .refresh-info .last-updated { max-width: 110px; }
+            .hero-copy h2 { font-size: clamp(40px, 14vw, 58px); }
+            .hero-copy p { font-size: 16px; }
+            .hero-actions, .cta-actions { flex-direction: column; }
+            .btn { width: 100%; }
+            .hero-card { padding: 20px; border-radius: 24px; }
+            .benefits { margin-top: -24px; padding-bottom: 54px; }
+            .benefit-grid { grid-template-columns: 1fr; }
+            .market-panel { padding: 16px; border-radius: 22px; }
+            .stats-bar, .highlights { gap: 10px; }
+            .stat-card, .fng-card, .highlight-card { min-width: 100%; }
+            .final-cta { padding: 34px 0 44px; }
+            .final-cta-card { padding: 26px; border-radius: 24px; }
+            .tg-float { right: 16px; bottom: 16px; }
+            .tg-float-meme { display: none; }
+            .footer { padding-bottom: 96px; }
         }
     </style>
 </head>
 <body>
 
-<div class="header">
-    <div class="logo">
-        <div class="logo-emoji">🐶</div>
-        <div class="logo-text">
-            <h1>CryptoDoggy Dashboard</h1>
-            <p>Live Market Tracker — Major Coins & Memecoins</p>
+<section class="hero">
+    <div class="container">
+        <div class="top-nav">
+            <div class="logo">
+                <div class="logo-emoji">🐶</div>
+                <div class="logo-text">
+                    <h1>CryptoDoggy</h1>
+                    <p>Telegram alerts for major coins & memecoins</p>
+                </div>
+            </div>
+            <div class="refresh-info" aria-label="Market data refresh status">
+                <div class="countdown" id="countdown">60s</div>
+                <div class="last-updated" id="last-updated">Loading...</div>
+            </div>
+        </div>
+
+        <div class="hero-grid">
+            <div class="hero-copy">
+                <div class="eyebrow">⚡ Live crypto signal bot</div>
+                <h2>Crypto alerts before the move hits your feed</h2>
+                <p>CryptoDoggy watches price action, memecoin momentum, fear/greed shifts, and breaking crypto headlines so you can get clear Telegram alerts while the market is still moving — not after everyone is posting screenshots.</p>
+                <div class="hero-actions">
+                    <a href="https://t.me/CryptoDoggyAlerts" target="_blank" class="btn primary">📈 Join Major Coin Alerts</a>
+                    <a href="https://t.me/CryptoDoggyMemes" target="_blank" class="btn secondary">🐸 Join Memecoin Alerts</a>
+                    <a href="#live-market-preview" class="btn ghost">View live preview ↓</a>
+                </div>
+                <div class="hero-proof">
+                    <span>✅ No spam</span>
+                    <span>✅ Telegram-first alerts</span>
+                    <span>✅ Market context in one place</span>
+                </div>
+            </div>
+
+            <div class="hero-card" aria-label="Example Telegram alerts">
+                <div class="hero-card-header">
+                    <div>
+                        <div class="hero-card-title">Alert preview</div>
+                        <strong>What CryptoDoggy sends</strong>
+                    </div>
+                    <span class="live-pill">LIVE</span>
+                </div>
+                <div class="alert-row">
+                    <div class="alert-icon">📈</div>
+                    <div>
+                        <strong>BTC +2.4% in 1h</strong>
+                        <p>Spot fast price moves with quick context before the chart becomes obvious.</p>
+                    </div>
+                </div>
+                <div class="alert-row">
+                    <div class="alert-icon">🐸</div>
+                    <div>
+                        <strong>Memecoin watchlist heating up</strong>
+                        <p>Track high-attention meme names separately from the major-cap market.</p>
+                    </div>
+                </div>
+                <div class="alert-row">
+                    <div class="alert-icon">📰</div>
+                    <div>
+                        <strong>Headline-driven volatility</strong>
+                        <p>Pair market moves with crypto news and sentiment so alerts feel actionable.</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-    <div class="refresh-info">
-        <div class="countdown" id="countdown">60s</div>
-        <div class="last-updated" id="last-updated">Loading...</div>
+</section>
+
+<section class="benefits" aria-label="CryptoDoggy benefits">
+    <div class="container benefit-grid">
+        <div class="benefit-card">
+            <div class="icon">📊</div>
+            <h3>Real-time price moves</h3>
+            <p>Monitor major coins for meaningful changes across short and longer timeframes.</p>
+        </div>
+        <div class="benefit-card">
+            <div class="icon">🐸</div>
+            <h3>Memecoin watchlist</h3>
+            <p>Keep speculative meme movers in a dedicated Telegram feed.</p>
+        </div>
+        <div class="benefit-card">
+            <div class="icon">😱</div>
+            <h3>Fear/greed context</h3>
+            <p>See whether sentiment is turning euphoric, fearful, or neutral.</p>
+        </div>
+        <div class="benefit-card">
+            <div class="icon">📰</div>
+            <h3>News-driven alerts</h3>
+            <p>Connect live crypto headlines with the market moves they may trigger.</p>
+        </div>
+        <div class="benefit-card">
+            <div class="icon">🔕</div>
+            <h3>No spam</h3>
+            <p>Simple Telegram alerts focused on signals, not noisy promo blasts.</p>
+        </div>
     </div>
-</div>
+</section>
 
-<!-- Telegram promo banner -->
-<div class="tg-banner">
-    <p>📱 <strong>Get free crypto alerts sent straight to your phone.</strong> Join our Telegram channels — no spam, just signals.</p>
-    <div class="tg-banner-btns">
-        <a href="https://t.me/CryptoDoggyAlerts" target="_blank" class="tg-btn main">📈 Major Coins Alerts</a>
-        <a href="https://t.me/CryptoDoggyMemes" target="_blank" class="tg-btn meme">🐸 Memecoin Alerts</a>
+<main class="market-preview" id="live-market-preview">
+    <div class="container">
+        <div class="preview-heading">
+            <div class="preview-kicker">Live market preview</div>
+            <h2>Check the data, then let the bot watch it for you.</h2>
+            <p>The dashboard below stays below the fold so new visitors see the value first, while existing users can still preview live market stats, movers, coin tables, and crypto news.</p>
+        </div>
+
+        <div id="stats-bar" class="stats-bar">
+            <div class="loading-state">🐶 Fetching live market data...</div>
+        </div>
+
+        <div id="highlights" class="highlights" style="display:none"></div>
+
+        <div id="main-section" class="market-panel" style="display:none">
+            <div class="section-header">📊 Major Coins</div>
+            <div class="table-wrapper">
+                <table class="coin-table">
+                    <thead><tr><th>#</th><th>Coin</th><th>Price</th><th>1h %</th><th>24h %</th><th>7d %</th><th>Market Cap</th><th>7d Chart</th></tr></thead>
+                    <tbody id="main-coins-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="meme-section" class="market-panel" style="display:none">
+            <div class="section-header purple">🐸 Memecoins</div>
+            <div class="table-wrapper">
+                <table class="coin-table">
+                    <thead><tr><th>#</th><th>Coin</th><th>Price</th><th>1h %</th><th>24h %</th><th>7d %</th><th>Market Cap</th><th>7d Chart</th></tr></thead>
+                    <tbody id="meme-coins-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="news-section" class="market-panel" style="display:none">
+            <div class="section-header blue">📰 Latest Crypto News</div>
+            <div class="news-grid" id="news-grid"></div>
+        </div>
     </div>
-</div>
+</main>
 
-<div id="stats-bar" class="stats-bar">
-    <div class="loading-state">🐶 Fetching live market data...</div>
-</div>
-
-<div id="highlights" class="highlights" style="display:none"></div>
-
-<div id="main-section" style="display:none">
-    <div class="section-header">📊 Major Coins</div>
-    <div class="table-wrapper">
-        <table class="coin-table">
-            <thead><tr><th>#</th><th>Coin</th><th>Price</th><th>1h %</th><th>24h %</th><th>7d %</th><th>Market Cap</th><th>7d Chart</th></tr></thead>
-            <tbody id="main-coins-body"></tbody>
-        </table>
+<section class="final-cta">
+    <div class="container">
+        <div class="final-cta-card">
+            <div>
+                <h2>Ready to stop refreshing charts?</h2>
+                <p>Join CryptoDoggy on Telegram and get concise crypto alerts delivered where you already check messages.</p>
+            </div>
+            <div class="cta-actions">
+                <a href="https://t.me/CryptoDoggyAlerts" target="_blank" class="btn primary">📈 Join Alerts</a>
+                <a href="https://t.me/CryptoDoggyMemes" target="_blank" class="btn secondary">🐸 Meme Alerts</a>
+            </div>
+        </div>
     </div>
-</div>
-
-<div id="meme-section" style="display:none">
-    <div class="section-header purple">🐸 Memecoins</div>
-    <div class="table-wrapper">
-        <table class="coin-table">
-            <thead><tr><th>#</th><th>Coin</th><th>Price</th><th>1h %</th><th>24h %</th><th>7d %</th><th>Market Cap</th><th>7d Chart</th></tr></thead>
-            <tbody id="meme-coins-body"></tbody>
-        </table>
-    </div>
-</div>
-
-<div id="news-section" style="display:none">
-    <div class="section-header blue">📰 Latest Crypto News</div>
-    <div class="news-grid" id="news-grid"></div>
-</div>
+</section>
 
 <!-- Floating Telegram button -->
 <div class="tg-float">
