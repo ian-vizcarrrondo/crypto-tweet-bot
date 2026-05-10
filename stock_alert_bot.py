@@ -16,7 +16,7 @@ from datetime import datetime, timezone, timedelta
 from email.utils import parsedate_to_datetime
 
 # ── CONFIG ──
-TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
+TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN", "")
 TELEGRAM_CHAT_ID   = os.getenv("TELEGRAM_CHAT_ID", "")
 
 # Only alert on articles published within this window (slightly > cron interval)
@@ -141,11 +141,11 @@ def build_alert(articles):
 
 
 def send_telegram(message):
-    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
-        print("❌ Missing TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID", file=sys.stderr)
+    if not TELEGRAM_TOKEN or not TELEGRAM_CHAT_ID:
+        print("❌ Missing TELEGRAM_TOKEN or TELEGRAM_CHAT_ID", file=sys.stderr)
         sys.exit(1)
 
-    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+    url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
     payload = {
         "chat_id":                  TELEGRAM_CHAT_ID,
         "text":                     message,

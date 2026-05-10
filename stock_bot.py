@@ -9,12 +9,13 @@ import os
 import sys
 import requests
 import feedparser
+import yfinance as yf
 from datetime import datetime
 import pytz
 
 # ── CONFIG ──
-TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
-TELEGRAM_CHAT_ID   = os.getenv("TELEGRAM_CHAT_ID", "")
+TELEGRAM_TOKEN   = os.getenv("TELEGRAM_TOKEN", "")
+TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "")
 
 WATCHLIST = [
     # Indices
@@ -47,18 +48,30 @@ NEWS_FEEDS = [
 HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; StockBot/1.0)"}
 
 
-# ── PRICES ──
+# ── PRICES (via yfinance — handles Yahoo auth automatically) ──
 def get_prices():
-    symbols = ",".join(t["symbol"] for t in WATCHLIST)
-    url = f"https://query1.finance.yahoo.com/v7/finance/quote?symbols={symbols}"
+    symbols = [t["symbol"] for t in WATCHLIST]
+    prices = {}
     try:
-        r = requests.get(url, headers=HEADERS, timeout=15)
-        r.raise_for_status()
-        results = r.json()["quoteResponse"]["result"]
-        return {q["symbol"]: q for q in results}
+        tickers = yf.Tickers(" ".join(symbols))
+        for sym in symbols:
+            try:
+                info = tickers.tickers[sym].fast_info
+                prev  = info.previous_close or info.last_price
+                price = info.last_price or 0
+                chg   = price - prev
+                pct   = (chg / prev * 100) if prev else 0
+                prices[sym] = {
+                    "symbol":                      sym,
+                    "regularMarketPrice":           round(price, 2),
+                    "regularMarketChange":          round(chg, 2),
+                    "regularMarketChangePercent":   round(pct, 2),
+                }
+            except Exception as e:
+                print(f"  ⚠️  {sym}: {e}", file=sys.stderr)
     except Exception as e:
         print(f"⚠️  Price fetch failed: {e}", file=sys.stderr)
-        return {}
+    return prices
 
 
 def fmt_pct(pct):
@@ -173,10 +186,10 @@ def build_message(prices, headlines):
 
 # ── SEND ──
 def send_telegram(message):
-    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
-        print("❌ Missing TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID", file=sys.stderr)
+    if not TELEGRAM_TOKEN or not TELEGRAM_CHAT_ID:
+        print("❌ Missing TELEGRAM_TOKEN or TELEGRAM_CHAT_ID", file=sys.stderr)
         sys.exit(1)
-    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+    url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
     payload = {
         "chat_id": TELEGRAM_CHAT_ID,
         "text": message,
