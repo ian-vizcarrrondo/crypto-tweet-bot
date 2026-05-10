@@ -329,7 +329,7 @@
             <div class="refresh-dot"></div>
             <span id="last-updated">Loading…</span>
         </div>
-        <button class="refresh-btn" onclick="loadSignals()">🔄 Refresh</button>
+        <button class="refresh-btn" onclick="loadSignals(true)">🔄 Refresh</button>
     </div>
 </div>
 
@@ -656,11 +656,61 @@ function applyFilterSort() {
     });
 }
 
+// ── CACHE HELPERS ──
+const CACHE_KEY = 'cryptodoggy_signals_v1';
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+function saveCache(coins) {
+    try {
+        localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), coins }));
+    } catch(e) {}
+}
+function loadCache() {
+    try {
+        const raw = localStorage.getItem(CACHE_KEY);
+        if (!raw) return null;
+        const { ts, coins } = JSON.parse(raw);
+        if (Date.now() - ts > CACHE_TTL) return null;
+        return { coins, ts };
+    } catch(e) { return null; }
+}
+function cacheAge(ts) {
+    const mins = Math.floor((Date.now() - ts) / 60000);
+    return mins === 0 ? 'just now' : `${mins}m ago`;
+}
+
+// ── ENRICH RAW API DATA ──
+function enrichCoins(data) {
+    return data.map(coin => {
+        const sparkPrices = coin.sparkline_in_7d?.price || [];
+        const rsi = computeRSI(sparkPrices);
+        const mom7 = coin.price_change_percentage_7d_in_currency || 0;
+        const volIntensity = coin.market_cap > 0 ? (coin.total_volume / coin.market_cap) : 0;
+        const signal = computeSignal(rsi, mom7, volIntensity);
+        return { ...coin, rsi, signal, volumeIntensity: volIntensity };
+    });
+}
+
 // ── LOAD DATA ──
-async function loadSignals() {
+async function loadSignals(forceRefresh = false) {
     const grid = document.getElementById('cards-grid');
-    grid.innerHTML = '<div class="skeleton"></div>'.repeat(6);
-    document.getElementById('last-updated').textContent = 'Loading…';
+    const lastUpdatedEl = document.getElementById('last-updated');
+
+    // 1. Serve from cache immediately if available
+    const cached = loadCache();
+    if (cached && !forceRefresh) {
+        allCoins = cached.coins;
+        updateSummary(allCoins);
+        applyFilterSort();
+        lastUpdatedEl.textContent = `Cached · ${cacheAge(cached.ts)}`;
+        return; // skip API call — cache is fresh
+    }
+
+    // 2. Show skeletons only if we have nothing to show yet
+    if (allCoins.length === 0) {
+        grid.innerHTML = '<div class="skeleton"></div>'.repeat(6);
+    }
+    lastUpdatedEl.textContent = 'Fetching live data…';
 
     const ids = COINS.map(c => c.id).join(',');
     const url = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd` +
@@ -668,40 +718,44 @@ async function loadSignals() {
         `&sparkline=true&price_change_percentage=7d`;
 
     try {
-        const resp = await fetch(url, {
-            headers: { 'Accept': 'application/json' },
-            cache: 'no-store'
-        });
+        const resp = await fetch(url, { headers: { 'Accept': 'application/json' } });
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
         const data = await resp.json();
 
-        // Enrich each coin with RSI + signal
-        allCoins = data.map(coin => {
-            const sparkPrices = coin.sparkline_in_7d?.price || [];
-            const rsi = computeRSI(sparkPrices);
-            const mom7 = coin.price_change_percentage_7d_in_currency || 0;
-            const volIntensity = coin.market_cap > 0 ? (coin.total_volume / coin.market_cap) : 0;
-            const signal = computeSignal(rsi, mom7, volIntensity);
-            return { ...coin, rsi, signal, volumeIntensity: volIntensity };
-        });
+        allCoins = enrichCoins(data);
+        saveCache(allCoins);
 
         updateSummary(allCoins);
         applyFilterSort();
 
         const now = new Date();
-        document.getElementById('last-updated').textContent =
-            'Updated ' + now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        lastUpdatedEl.textContent =
+            'Live · ' + now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 
     } catch (err) {
         console.error('Signals load error:', err);
-        grid.innerHTML = `
-            <div class="error-state" style="grid-column:1/-1">
-                <div class="error-icon">📡</div>
-                <h3>Signal lost</h3>
-                <p>Couldn't reach CoinGecko. Rate limit or network issue — try again in 30 seconds.</p>
-                <button onclick="loadSignals()">🔄 Retry</button>
-            </div>`;
-        document.getElementById('last-updated').textContent = 'Failed to load';
+        // If we have stale cache, show it with a warning instead of blank error
+        const stale = (() => {
+            try { const r = localStorage.getItem(CACHE_KEY); return r ? JSON.parse(r) : null; } catch(e) { return null; }
+        })();
+        if (stale && allCoins.length === 0) {
+            allCoins = stale.coins;
+            updateSummary(allCoins);
+            applyFilterSort();
+            lastUpdatedEl.textContent = `⚠️ Stale · ${cacheAge(stale.ts)}`;
+        } else if (allCoins.length > 0) {
+            // Keep current display, just update status
+            lastUpdatedEl.textContent = '⚠️ Rate limited — showing last data';
+        } else {
+            grid.innerHTML = `
+                <div class="error-state" style="grid-column:1/-1">
+                    <div class="error-icon">📡</div>
+                    <h3>Signal lost</h3>
+                    <p>CoinGecko rate limit hit. Wait 30–60 seconds and retry.</p>
+                    <button onclick="loadSignals(true)">🔄 Retry</button>
+                </div>`;
+            lastUpdatedEl.textContent = '⚠️ Failed to load';
+        }
     }
 }
 
@@ -718,8 +772,10 @@ if (localStorage.getItem('theme') === 'light') {
 }
 
 // ── INIT + AUTO-REFRESH ──
+// On page load: serve cache instantly, then check if refresh is needed in background
 loadSignals();
-setInterval(loadSignals, 120000); // refresh every 2 min (CoinGecko rate limits)
+// Auto-refresh every 5 min — cache will absorb extra calls within that window
+setInterval(() => loadSignals(true), 5 * 60 * 1000);
 </script>
 </body>
 </html>
