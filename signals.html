@@ -311,6 +311,7 @@
     <a href="news.html"      class="nav-link">📰 News Hub</a>
     <a href="stocks.html"    class="nav-link">📊 Stocks</a>
     <a href="signals.html"   class="nav-link active">📡 Signals</a>
+    <a href="pulse.html"     class="nav-link">⚡ Pulse</a>
     <button class="theme-toggle" onclick="toggleTheme()">☀️</button>
 </nav>
 <div class="mood-bar"></div>
@@ -691,6 +692,34 @@ function enrichCoins(data) {
     });
 }
 
+// ── PROXY FETCH (same chain as news/stocks pages) ──
+const PROXIES = [
+    { name: 'direct',     build: u => u,                                                        json: false },
+    { name: 'corsproxy',  build: u => `https://corsproxy.io/?${encodeURIComponent(u)}`,         json: false },
+    { name: 'allorigins', build: u => `https://api.allorigins.win/get?url=${encodeURIComponent(u)}`, json: true  },
+    { name: 'codetabs',   build: u => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`, json: false },
+];
+
+async function fetchJSON(url) {
+    for (const proxy of PROXIES) {
+        try {
+            const r = await fetch(proxy.build(url), {
+                headers: { 'Accept': 'application/json' },
+                signal: AbortSignal.timeout(10000),
+            });
+            if (!r.ok) throw new Error(`HTTP ${r.status}`);
+            if (proxy.json) {
+                const wrapper = await r.json();
+                return JSON.parse(wrapper.contents);
+            }
+            return r.json();
+        } catch (e) {
+            console.warn(`[${proxy.name}] failed:`, e.message);
+        }
+    }
+    throw new Error('All proxies failed');
+}
+
 // ── LOAD DATA ──
 async function loadSignals(forceRefresh = false) {
     const grid = document.getElementById('cards-grid');
@@ -718,9 +747,7 @@ async function loadSignals(forceRefresh = false) {
         `&sparkline=true&price_change_percentage=7d`;
 
     try {
-        const resp = await fetch(url, { headers: { 'Accept': 'application/json' } });
-        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-        const data = await resp.json();
+        const data = await fetchJSON(url);
 
         allCoins = enrichCoins(data);
         saveCache(allCoins);
