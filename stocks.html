@@ -166,6 +166,8 @@
         .trend-item { font-size:11px; color:#555; font-weight:700; display:inline-flex; align-items:center; gap:5px; }
         .trend-item span { color:#22c55e; }
         .trend-label { font-size:10px; font-weight:800; color:#333; text-transform:uppercase; letter-spacing:1px; margin-right:8px; }
+            .nav-link[href="calendar.html"].active   { background:#1a0d00; border-color:#f97316; color:#f97316; box-shadow:0 0 14px rgba(249,115,22,.25); }
+        .nav-link[href="calendar.html"]:not(.active):hover   { color:#f97316; }
     </style>
 </head>
 <body>
@@ -182,6 +184,7 @@
     <a href="signals.html"   class="nav-link">📡 Signals</a>
     <a href="whales.html"    class="nav-link">🐋 Whales</a>
     <a href="defi.html"      class="nav-link">🌊 DeFi</a>
+    <a href="calendar.html"  class="nav-link">📅 Calendar</a>
     <a href="pulse.html"     class="nav-link">⚡ Pulse</a>
     <button class="theme-toggle" onclick="toggleTheme()">☀️</button>
 </nav>

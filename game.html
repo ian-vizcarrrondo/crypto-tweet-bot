@@ -148,6 +148,8 @@
         /* LOADING */
         .loading { text-align:center; padding:60px; color:#444; font-size:24px; animation:pulse 1.5s ease-in-out infinite; }
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+            .nav-link[href="calendar.html"].active   { background:#1a0d00; border-color:#f97316; color:#f97316; box-shadow:0 0 14px rgba(249,115,22,.25); }
+        .nav-link[href="calendar.html"]:not(.active):hover   { color:#f97316; }
     </style>
 </head>
 <body>
@@ -163,6 +165,7 @@
     <a href="signals.html"   class="nav-link">📡 Signals</a>
     <a href="whales.html"    class="nav-link">🐋 Whales</a>
     <a href="defi.html"      class="nav-link">🌊 DeFi</a>
+    <a href="calendar.html"  class="nav-link">📅 Calendar</a>
     <a href="pulse.html"     class="nav-link">⚡ Pulse</a>
     <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()">☀️</button>
 </nav>

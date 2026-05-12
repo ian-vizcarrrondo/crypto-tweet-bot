@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📅 CryptoDoggy Event Calendar</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #0a0a14; color: #e8e8f0; font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; }
+
+        /* ── NAV ── */
+        .site-nav {
+            background: #06060f; border-bottom: 1px solid #1a1a30;
+            padding: 10px 24px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+        }
+        .nav-brand { font-size: 22px; margin-right: 12px; }
+        .nav-link {
+            padding: 9px 18px; font-size: 14px; font-weight: 800; color: #666;
+            text-decoration: none; border-radius: 10px; border: 1px solid transparent;
+            transition: all 0.18s; white-space: nowrap; letter-spacing: 0.2px;
+        }
+        .nav-link:hover { color: #ccc; background: #13132a; border-color: #1f1f3a; }
+        .nav-link[href="index.html"].active      { background:#1a1200; border-color:#f5a623; color:#f5a623; box-shadow:0 0 14px rgba(245,166,35,.25); }
+        .nav-link[href="game.html"].active       { background:#0a1a10; border-color:#00d4aa; color:#00d4aa; box-shadow:0 0 14px rgba(0,212,170,.25); }
+        .nav-link[href="meme.html"].active       { background:#140a20; border-color:#a855f7; color:#a855f7; box-shadow:0 0 14px rgba(168,85,247,.25); }
+        .nav-link[href="portfolio.html"].active  { background:#0a1520; border-color:#38bdf8; color:#38bdf8; box-shadow:0 0 14px rgba(56,189,248,.25); }
+        .nav-link[href="news.html"].active       { background:#1a0808; border-color:#ff6b6b; color:#ff6b6b; box-shadow:0 0 14px rgba(255,107,107,.25); }
+        .nav-link[href="stocks.html"].active     { background:#061a0a; border-color:#22c55e; color:#22c55e; box-shadow:0 0 14px rgba(34,197,94,.25); }
+        .nav-link[href="signals.html"].active    { background:#001a20; border-color:#06b6d4; color:#06b6d4; box-shadow:0 0 14px rgba(6,182,212,.25); }
+        .nav-link[href="whales.html"].active     { background:#070f2a; border-color:#3b82f6; color:#3b82f6; box-shadow:0 0 14px rgba(59,130,246,.25); }
+        .nav-link[href="defi.html"].active       { background:#120a28; border-color:#8b5cf6; color:#8b5cf6; box-shadow:0 0 14px rgba(139,92,246,.25); }
+        .nav-link[href="calendar.html"].active   { background:#1a0d00; border-color:#f97316; color:#f97316; box-shadow:0 0 14px rgba(249,115,22,.25); }
+        .nav-link[href="index.html"]:not(.active):hover      { color:#f5a623; }
+        .nav-link[href="game.html"]:not(.active):hover       { color:#00d4aa; }
+        .nav-link[href="meme.html"]:not(.active):hover       { color:#a855f7; }
+        .nav-link[href="portfolio.html"]:not(.active):hover  { color:#38bdf8; }
+        .nav-link[href="news.html"]:not(.active):hover       { color:#ff6b6b; }
+        .nav-link[href="stocks.html"]:not(.active):hover     { color:#22c55e; }
+        .nav-link[href="signals.html"]:not(.active):hover    { color:#06b6d4; }
+        .nav-link[href="whales.html"]:not(.active):hover     { color:#3b82f6; }
+        .nav-link[href="defi.html"]:not(.active):hover       { color:#8b5cf6; }
+        .nav-link[href="calendar.html"]:not(.active):hover   { color:#f97316; }
+        .theme-toggle {
+            margin-left: auto; background: none; border: 1px solid #1f1f3a;
+            border-radius: 20px; padding: 6px 13px; color: #666; cursor: pointer;
+            font-size: 15px; transition: all .18s; flex-shrink: 0;
+        }
+        .theme-toggle:hover { border-color: #444; color: #ccc; }
+
+        /* ── MOOD BAR ── */
+        .mood-bar { height: 3px; background: #f97316; box-shadow: 0 0 12px #f97316; }
+
+        /* ── HEADER ── */
+        .header {
+            background: linear-gradient(135deg, #1a0d00 0%, #0a0a1a 100%);
+            border-bottom: 2px solid #f97316; padding: 20px 28px;
+            display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+        }
+        .logo { display: flex; align-items: center; gap: 14px; }
+        .logo-emoji { font-size: 44px; filter: drop-shadow(0 0 12px rgba(249,115,22,.5)); }
+        .logo-text h1 {
+            font-size: 26px; font-weight: 900;
+            background: linear-gradient(135deg, #f97316, #fdba74);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .logo-text p { font-size: 13px; color: #7c4a1a; margin-top: 2px; }
+        .live-pill { display: flex; align-items: center; gap: 7px; font-size: 12px; color: #7c4a1a; }
+        .live-dot { width: 8px; height: 8px; border-radius: 50%; background: #f97316; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.8)} }
+
+        /* ── MAIN ── */
+        .main { max-width: 1200px; margin: 0 auto; padding: 24px; }
+
+        /* ── COUNTDOWN STRIP ── */
+        .countdown-strip {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 14px; margin-bottom: 28px;
+        }
+        .countdown-card {
+            background: #0d0d1f; border: 1px solid #1a1a35; border-radius: 18px;
+            padding: 20px 22px; position: relative; overflow: hidden;
+            transition: all .2s;
+        }
+        .countdown-card:hover { transform: translateY(-2px); }
+        .countdown-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+        }
+        .cd-halving::before  { background: linear-gradient(90deg, #f59e0b, #f97316); }
+        .cd-fomc::before     { background: linear-gradient(90deg, #ef4444, #f97316); }
+        .cd-cpi::before      { background: linear-gradient(90deg, #06b6d4, #3b82f6); }
+        .cd-label {
+            font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .9px;
+            color: #555; margin-bottom: 6px;
+        }
+        .cd-event { font-size: 15px; font-weight: 800; color: #e8e8f0; margin-bottom: 10px; }
+        .cd-timer {
+            display: flex; gap: 10px; align-items: baseline;
+        }
+        .cd-block {
+            display: flex; flex-direction: column; align-items: center;
+        }
+        .cd-num {
+            font-size: 28px; font-weight: 900; line-height: 1;
+            background: linear-gradient(135deg, #f97316, #fdba74);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            font-variant-numeric: tabular-nums;
+        }
+        .cd-halving .cd-num  { background: linear-gradient(135deg, #f59e0b, #f97316); -webkit-background-clip: text; }
+        .cd-fomc .cd-num     { background: linear-gradient(135deg, #ef4444, #f97316); -webkit-background-clip: text; }
+        .cd-cpi .cd-num      { background: linear-gradient(135deg, #06b6d4, #38bdf8); -webkit-background-clip: text; }
+        .cd-sep { font-size: 20px; font-weight: 900; color: #333; align-self: flex-start; padding-top: 4px; }
+        .cd-unit { font-size: 9px; font-weight: 700; color: #444; text-transform: uppercase; letter-spacing: .7px; margin-top: 2px; }
+        .cd-date { font-size: 11px; color: #555; margin-top: 8px; }
+        .cd-progress {
+            height: 4px; background: #111125; border-radius: 2px; margin-top: 12px; overflow: hidden;
+        }
+        .cd-bar {
+            height: 100%; border-radius: 2px; transition: width .4s;
+        }
+        .cd-halving .cd-bar  { background: linear-gradient(90deg, #f59e0b, #f97316); }
+        .cd-fomc .cd-bar     { background: linear-gradient(90deg, #ef4444, #f97316); }
+        .cd-cpi .cd-bar      { background: linear-gradient(90deg, #06b6d4, #3b82f6); }
+        .cd-sub { font-size: 11px; color: #7c4a1a; margin-top: 6px; }
+
+        /* ── FILTER BAR ── */
+        .filter-bar {
+            display: flex; align-items: center; gap: 8px; margin-bottom: 20px; flex-wrap: wrap;
+        }
+        .filter-label { font-size: 11px; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: .7px; margin-right: 4px; }
+        .filter-btn {
+            padding: 7px 16px; font-size: 13px; font-weight: 700; border-radius: 20px;
+            border: 1px solid #1f1f3a; background: none; color: #555; cursor: pointer;
+            transition: all .18s;
+        }
+        .filter-btn:hover { border-color: #333; color: #aaa; }
+        .filter-btn.active { border-color: #f97316; color: #f97316; background: rgba(249,115,22,.1); }
+        .filter-btn[data-cat="Crypto"].active    { border-color: #f59e0b; color: #f59e0b; background: rgba(245,158,11,.1); }
+        .filter-btn[data-cat="Macro"].active     { border-color: #ef4444; color: #ef4444; background: rgba(239,68,68,.1); }
+        .filter-btn[data-cat="Tokenomics"].active{ border-color: #a855f7; color: #a855f7; background: rgba(168,85,247,.1); }
+        .filter-btn[data-cat="DeFi"].active      { border-color: #8b5cf6; color: #8b5cf6; background: rgba(139,92,246,.1); }
+
+        /* ── TIMELINE ── */
+        .timeline { position: relative; padding-left: 28px; }
+        .timeline::before {
+            content: ''; position: absolute; left: 10px; top: 0; bottom: 0;
+            width: 2px; background: linear-gradient(180deg, #f97316 0%, #1a1a35 100%);
+        }
+
+        /* Month group */
+        .month-group { margin-bottom: 10px; }
+        .month-header {
+            font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 1.2px;
+            color: #555; padding: 10px 0 8px 0; position: relative;
+        }
+        .month-header::before {
+            content: ''; position: absolute; left: -23px; top: 50%; transform: translateY(-50%);
+            width: 8px; height: 8px; border-radius: 50%; background: #1a1a35; border: 2px solid #333;
+        }
+
+        /* Event row */
+        .event-row {
+            display: flex; align-items: flex-start; gap: 14px;
+            padding: 12px 14px; border-radius: 14px; margin-bottom: 8px;
+            background: #0d0d1f; border: 1px solid #1a1a35;
+            transition: all .2s; position: relative; cursor: default;
+        }
+        .event-row:hover { border-color: #2a2a45; background: #0f0f24; transform: translateX(2px); }
+        .event-row.past { opacity: 0.4; }
+        .event-row.today { border-color: #f97316; box-shadow: 0 0 18px rgba(249,115,22,.15); }
+        .event-row.today .event-date-col .date-num { color: #f97316; }
+
+        /* Dot on timeline */
+        .event-row::before {
+            content: ''; position: absolute; left: -22px; top: 20px;
+            width: 10px; height: 10px; border-radius: 50%; border: 2px solid #f97316; background: #0a0a14;
+            transition: all .2s;
+        }
+        .event-row:hover::before { background: #f97316; }
+        .event-row.past::before  { border-color: #333; }
+        .event-row.today::before { background: #f97316; box-shadow: 0 0 8px #f97316; }
+
+        .event-date-col { min-width: 48px; text-align: center; flex-shrink: 0; }
+        .date-num { font-size: 22px; font-weight: 900; line-height: 1; color: #e8e8f0; }
+        .date-day { font-size: 10px; font-weight: 700; color: #444; text-transform: uppercase; letter-spacing: .5px; }
+        .event-body { flex: 1; min-width: 0; }
+        .event-title { font-size: 15px; font-weight: 800; color: #e8e8f0; margin-bottom: 4px; }
+        .event-desc  { font-size: 12px; color: #555; line-height: 1.5; }
+        .event-meta  { display: flex; align-items: center; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+        .cat-badge {
+            font-size: 10px; font-weight: 800; padding: 3px 9px; border-radius: 10px;
+            text-transform: uppercase; letter-spacing: .5px;
+        }
+        .cat-Crypto     { background:rgba(245,158,11,.15); border:1px solid rgba(245,158,11,.3); color:#f59e0b; }
+        .cat-Macro      { background:rgba(239,68,68,.15);  border:1px solid rgba(239,68,68,.3);  color:#ef4444; }
+        .cat-Tokenomics { background:rgba(168,85,247,.15); border:1px solid rgba(168,85,247,.3); color:#a855f7; }
+        .cat-DeFi       { background:rgba(139,92,246,.15); border:1px solid rgba(139,92,246,.3); color:#8b5cf6; }
+        .today-badge {
+            font-size: 10px; font-weight: 800; padding: 3px 9px; border-radius: 10px;
+            background: rgba(249,115,22,.2); border: 1px solid #f97316; color: #f97316;
+            animation: pulse 2s infinite;
+        }
+        .gcal-btn {
+            font-size: 10px; font-weight: 800; padding: 3px 10px; border-radius: 8px;
+            background: rgba(255,255,255,.05); border: 1px solid #1f1f3a; color: #666;
+            cursor: pointer; text-decoration: none; transition: all .18s;
+        }
+        .gcal-btn:hover { border-color: #f97316; color: #f97316; background: rgba(249,115,22,.08); }
+        .src-btn {
+            font-size: 10px; font-weight: 800; padding: 3px 10px; border-radius: 8px;
+            background: rgba(255,255,255,.04); border: 1px solid #1a1a35; color: #555;
+            cursor: pointer; text-decoration: none; transition: all .18s;
+        }
+        .src-btn:hover { border-color: #555; color: #aaa; }
+        .importance-dot {
+            width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 1px;
+        }
+        .imp-high   { background: #ef4444; box-shadow: 0 0 6px rgba(239,68,68,.6); }
+        .imp-medium { background: #f59e0b; }
+        .imp-low    { background: #555; }
+        .impact-label { font-size: 10px; font-weight: 700; color: #555; }
+
+        /* BTC block counter */
+        .btc-extra { font-size: 11px; color: #7c4a1a; margin-top: 6px; }
+        .btc-blocks { font-size: 14px; font-weight: 900; color: #f59e0b; }
+
+        /* Section title */
+        .section-title {
+            font-size: 13px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;
+            color: #7c4a1a; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+        }
+        .section-bar { width: 3px; height: 14px; background: #f97316; border-radius: 2px; }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center; padding: 60px 20px; color: #333;
+            font-size: 14px; font-weight: 700;
+        }
+        .empty-state .empty-icon { font-size: 48px; margin-bottom: 12px; }
+
+        @media(max-width: 600px) {
+            .countdown-strip { grid-template-columns: 1fr 1fr; }
+            .event-desc { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="site-nav">
+    <span class="nav-brand">🐕</span>
+    <a href="index.html"     class="nav-link">🏠 Home</a>
+    <a href="game.html"      class="nav-link">🎮 Game</a>
+    <a href="meme.html"      class="nav-link">🎭 Memes</a>
+    <a href="portfolio.html" class="nav-link">💼 Portfolio</a>
+    <a href="news.html"      class="nav-link">📰 News</a>
+    <a href="stocks.html"    class="nav-link">📈 Stocks</a>
+    <a href="signals.html"   class="nav-link">📡 Signals</a>
+    <a href="whales.html"    class="nav-link">🐋 Whales</a>
+    <a href="defi.html"      class="nav-link">🌊 DeFi</a>
+    <a href="calendar.html"  class="nav-link active">📅 Calendar</a>
+    <button class="theme-toggle" onclick="document.body.classList.toggle('light')">☀️</button>
+</nav>
+<div class="mood-bar"></div>
+
+<!-- HEADER -->
+<div class="header">
+    <div class="logo">
+        <div class="logo-emoji">📅</div>
+        <div class="logo-text">
+            <h1>Crypto Event Calendar</h1>
+            <p>Halvings · FOMC · CPI · Token Unlocks · DeFi Milestones</p>
+        </div>
+    </div>
+    <div class="live-pill">
+        <div class="live-dot"></div>
+        <span id="last-update">Loading...</span>
+    </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+    <!-- COUNTDOWN STRIP -->
+    <div class="countdown-strip">
+        <!-- BTC Halving -->
+        <div class="countdown-card cd-halving">
+            <div class="cd-label">⏳ Next BTC Halving</div>
+            <div class="cd-event">Bitcoin Block Reward Halving</div>
+            <div class="cd-timer" id="halving-timer">
+                <div class="cd-block"><div class="cd-num" id="h-days">--</div><div class="cd-unit">days</div></div>
+                <span class="cd-sep">:</span>
+                <div class="cd-block"><div class="cd-num" id="h-hrs">--</div><div class="cd-unit">hrs</div></div>
+                <span class="cd-sep">:</span>
+                <div class="cd-block"><div class="cd-num" id="h-min">--</div><div class="cd-unit">min</div></div>
+                <span class="cd-sep">:</span>
+                <div class="cd-block"><div class="cd-num" id="h-sec">--</div><div class="cd-unit">sec</div></div>
+            </div>
+            <div class="cd-progress"><div class="cd-bar" id="halving-bar" style="width:0%"></div></div>
+            <div class="cd-date" id="halving-date">Est. ~April 2028</div>
+            <div class="cd-sub" id="halving-blocks">Fetching block height…</div>
+        </div>
+
+        <!-- Next FOMC -->
+        <div class="countdown-card cd-fomc" id="fomc-card">
+            <div class="cd-label">🏛️ Next FOMC Meeting</div>
+            <div class="cd-event" id="fomc-title">Fed Rate Decision</div>
+            <div class="cd-timer">
+                <div class="cd-block"><div class="cd-num" id="f-days">--</div><div class="cd-unit">days</div></div>
+                <span class="cd-sep">:</span>
+                <div class="cd-block"><div class="cd-num" id="f-hrs">--</div><div class="cd-unit">hrs</div></div>
+                <span class="cd-sep">:</span>
+                <div class="cd-block"><div class="cd-num" id="f-min">--</div><div class="cd-unit">min</div></div>
+            </div>
+            <div class="cd-progress"><div class="cd-bar" id="fomc-bar" style="width:0%"></div></div>
+            <div class="cd-date" id="fomc-date">Loading…</div>
+        </div>
+
+        <!-- Next CPI -->
+        <div class="countdown-card cd-cpi" id="cpi-card">
+            <div class="cd-label">📊 Next CPI Release</div>
+            <div class="cd-event" id="cpi-title">US CPI Inflation Data</div>
+            <div class="cd-timer">
+                <div class="cd-block"><div class="cd-num" id="c-days">--</div><div class="cd-unit">days</div></div>
+                <span class="cd-sep">:</span>
+                <div class="cd-block"><div class="cd-num" id="c-hrs">--</div><div class="cd-unit">hrs</div></div>
+                <span class="cd-sep">:</span>
+                <div class="cd-block"><div class="cd-num" id="c-min">--</div><div class="cd-unit">min</div></div>
+            </div>
+            <div class="cd-progress"><div class="cd-bar" id="cpi-bar" style="width:0%"></div></div>
+            <div class="cd-date" id="cpi-date">Loading…</div>
+        </div>
+    </div>
+
+    <!-- FILTER BAR -->
+    <div class="filter-bar">
+        <span class="filter-label">Filter:</span>
+        <button class="filter-btn active" data-cat="All"        onclick="setFilter('All')">🗓 All</button>
+        <button class="filter-btn"        data-cat="Crypto"     onclick="setFilter('Crypto')">₿ Crypto</button>
+        <button class="filter-btn"        data-cat="Macro"      onclick="setFilter('Macro')">🏛 Macro</button>
+        <button class="filter-btn"        data-cat="Tokenomics" onclick="setFilter('Tokenomics')">🔓 Tokenomics</button>
+        <button class="filter-btn"        data-cat="DeFi"       onclick="setFilter('DeFi')">🌊 DeFi</button>
+    </div>
+
+    <!-- SECTION TITLE -->
+    <div class="section-title">
+        <div class="section-bar"></div>
+        <span>📆 2026 Event Timeline</span>
+    </div>
+
+    <!-- TIMELINE -->
+    <div class="timeline" id="timeline"></div>
+</div>
+
+<script>
+/* ──────────────────────────────────────────────────────
+   EVENT DATA  (extend freely)
+────────────────────────────────────────────────────── */
+const EVENTS = [
+    // ── FOMC 2026 (remaining) ──
+    { date:'2026-06-17', title:'FOMC Meeting — Day 1', cat:'Macro', imp:'medium',
+      desc:'Federal Open Market Committee two-day policy meeting begins.',
+      src:'https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html',
+      gcal: true },
+    { date:'2026-06-18', title:'FOMC Rate Decision', cat:'Macro', imp:'high',
+      desc:'Fed announces interest rate decision. High volatility expected across risk assets.',
+      src:'https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html',
+      gcal: true },
+    { date:'2026-07-28', title:'FOMC Meeting — Day 1', cat:'Macro', imp:'medium',
+      desc:'Federal Open Market Committee two-day policy meeting begins.',
+      src:'https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html', gcal: true },
+    { date:'2026-07-29', title:'FOMC Rate Decision', cat:'Macro', imp:'high',
+      desc:'Fed announces rate decision. Watch BTC and ETH for immediate reaction.',
+      src:'https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html', gcal: true },
+    { date:'2026-09-15', title:'FOMC Meeting — Day 1', cat:'Macro', imp:'medium',
+      desc:'Federal Open Market Committee two-day policy meeting begins.',
+      src:'https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html', gcal: true },
+    { date:'2026-09-16', title:'FOMC Rate Decision', cat:'Macro', imp:'high',
+      desc:'Fed announces rate decision. September historically volatile for crypto.',
+      src:'https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html', gcal: true },
+    { date:'2026-11-03', title:'FOMC Meeting — Day 1', cat:'Macro', imp:'medium',
+      desc:'Federal Open Market Committee two-day policy meeting begins.',
+      src:'https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html', gcal: true },
+    { date:'2026-11-04', title:'FOMC Rate Decision', cat:'Macro', imp:'high',
+      desc:'Fed announces rate decision — post-midterm cycle decision.',
+      src:'https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html', gcal: true },
+    { date:'2026-12-15', title:'FOMC Meeting — Day 1', cat:'Macro', imp:'medium',
+      desc:'Federal Open Market Committee two-day policy meeting begins.',
+      src:'https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html', gcal: true },
+    { date:'2026-12-16', title:'FOMC Rate Decision', cat:'Macro', imp:'high',
+      desc:'Final Fed rate decision of 2026. Sets tone for Q1 2027.',
+      src:'https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html', gcal: true },
+
+    // ── CPI 2026 (remaining) ──
+    { date:'2026-06-10', title:'US CPI Report — May Data', cat:'Macro', imp:'high',
+      desc:'Bureau of Labor Statistics releases Consumer Price Index for May 2026. Key inflation gauge watched by the Fed.',
+      src:'https://www.bls.gov/cpi/', gcal: true },
+    { date:'2026-07-14', title:'US CPI Report — Jun Data', cat:'Macro', imp:'high',
+      desc:'Bureau of Labor Statistics releases Consumer Price Index for June 2026.',
+      src:'https://www.bls.gov/cpi/', gcal: true },
+    { date:'2026-08-12', title:'US CPI Report — Jul Data', cat:'Macro', imp:'high',
+      desc:'Bureau of Labor Statistics releases Consumer Price Index for July 2026.',
+      src:'https://www.bls.gov/cpi/', gcal: true },
+    { date:'2026-09-11', title:'US CPI Report — Aug Data', cat:'Macro', imp:'high',
+      desc:'Bureau of Labor Statistics releases Consumer Price Index for August 2026.',
+      src:'https://www.bls.gov/cpi/', gcal: true },
+    { date:'2026-10-13', title:'US CPI Report — Sep Data', cat:'Macro', imp:'high',
+      desc:'Bureau of Labor Statistics releases Consumer Price Index for September 2026.',
+      src:'https://www.bls.gov/cpi/', gcal: true },
+    { date:'2026-11-12', title:'US CPI Report — Oct Data', cat:'Macro', imp:'high',
+      desc:'Bureau of Labor Statistics releases Consumer Price Index for October 2026.',
+      src:'https://www.bls.gov/cpi/', gcal: true },
+    { date:'2026-12-10', title:'US CPI Report — Nov Data', cat:'Macro', imp:'high',
+      desc:'Bureau of Labor Statistics releases Consumer Price Index for November 2026.',
+      src:'https://www.bls.gov/cpi/', gcal: true },
+
+    // ── CRYPTO EVENTS ──
+    { date:'2026-06-01', title:'BTC Options Expiry — June', cat:'Crypto', imp:'high',
+      desc:'Monthly Bitcoin options expiration on Deribit. ~$3B+ notional. Often creates intraday volatility.',
+      src:'https://deribit.com/', gcal: true },
+    { date:'2026-06-27', title:'ETH Options Expiry — June', cat:'Crypto', imp:'medium',
+      desc:'Ethereum options expiry on Deribit. Watch ETH/BTC ratio around this date.',
+      src:'https://deribit.com/', gcal: true },
+    { date:'2026-07-03', title:'BTC Options Expiry — July', cat:'Crypto', imp:'high',
+      desc:'Monthly Bitcoin options expiration. Max pain price typically influences spot action.',
+      src:'https://deribit.com/', gcal: true },
+    { date:'2026-08-07', title:'BTC Options Expiry — August', cat:'Crypto', imp:'high',
+      desc:'Monthly Bitcoin options expiration. Summer liquidity can amplify moves.',
+      src:'https://deribit.com/', gcal: true },
+    { date:'2026-09-25', title:'BTC Options Expiry — September', cat:'Crypto', imp:'high',
+      desc:'Monthly Bitcoin options expiration. End-of-quarter rebalancing adds pressure.',
+      src:'https://deribit.com/', gcal: true },
+    { date:'2026-09-26', title:'Ethereum Devcon 2026 (Est.)', cat:'Crypto', imp:'medium',
+      desc:'Annual Ethereum developer conference — typically major ETH protocol announcements.',
+      src:'https://devcon.org/', gcal: true },
+    { date:'2026-12-25', title:'BTC Options Expiry — December (Year-End)', cat:'Crypto', imp:'high',
+      desc:'Year-end quarterly BTC options expiry. Often the largest notional of the year.',
+      src:'https://deribit.com/', gcal: true },
+
+    // ── TOKENOMICS ──
+    { date:'2026-06-15', title:'ARB Token Unlock — Team/Investors', cat:'Tokenomics', imp:'high',
+      desc:'Arbitrum investor/team vesting unlock. Supply increase may create short-term selling pressure.',
+      src:'https://tokenunlocks.app/', gcal: true },
+    { date:'2026-07-20', title:'APT Token Unlock — Aptos', cat:'Tokenomics', imp:'medium',
+      desc:'Aptos ecosystem and team token unlock. Watch APT price action in lead-up.',
+      src:'https://tokenunlocks.app/', gcal: true },
+    { date:'2026-08-01', title:'SUI Token Unlock', cat:'Tokenomics', imp:'medium',
+      desc:'SUI network token unlock event. Potential supply overhang for SUI holders.',
+      src:'https://tokenunlocks.app/', gcal: true },
+    { date:'2026-09-01', title:'OP Token Unlock — Optimism', cat:'Tokenomics', imp:'high',
+      desc:'Optimism large token unlock. One of the largest scheduled unlocks in L2 space.',
+      src:'https://tokenunlocks.app/', gcal: true },
+
+    // ── DEFI ──
+    { date:'2026-06-30', title:'Uniswap v4 Governance Vote (Est.)', cat:'DeFi', imp:'medium',
+      desc:'Estimated timeline for major Uniswap v4 hook parameter governance vote.',
+      src:'https://app.uniswap.org/vote', gcal: true },
+    { date:'2026-07-15', title:'Aave v4 Launch Window (Est.)', cat:'DeFi', imp:'high',
+      desc:'Estimated Aave v4 mainnet launch — cross-chain liquidity layer and new risk engine.',
+      src:'https://aave.com/', gcal: true },
+    { date:'2026-08-20', title:'Curve Gauge Vote — Monthly', cat:'DeFi', imp:'low',
+      desc:'Monthly Curve Finance gauge weight vote determines CRV emissions distribution.',
+      src:'https://curve.fi/', gcal: true },
+];
+
+/* ──────────────────────────────────────────────────────
+   FOMC & CPI LOOKUP HELPERS
+────────────────────────────────────────────────────── */
+const FOMC_DECISION_DATES = [
+    '2026-06-18','2026-07-29','2026-09-16','2026-11-04','2026-12-16'
+];
+const CPI_DATES = [
+    '2026-06-10','2026-07-14','2026-08-12','2026-09-11',
+    '2026-10-13','2026-11-12','2026-12-10'
+];
+
+function nextDate(arr) {
+    const now = new Date();
+    now.setHours(0,0,0,0);
+    return arr.map(d => new Date(d + 'T14:00:00Z')).find(d => d >= now) || null;
+}
+
+/* ──────────────────────────────────────────────────────
+   COUNTDOWN ENGINE
+────────────────────────────────────────────────────── */
+function pad(n) { return String(Math.max(0,Math.floor(n))).padStart(2,'0'); }
+
+function diffMs(target) { return Math.max(0, target - Date.now()); }
+
+function renderCountdown(ms, ids, barId, totalMs) {
+    const d = Math.floor(ms / 86400000);
+    const h = Math.floor((ms % 86400000) / 3600000);
+    const m = Math.floor((ms % 3600000) / 60000);
+    const s = Math.floor((ms % 60000) / 1000);
+    if (ids[0]) document.getElementById(ids[0]).textContent = pad(d);
+    if (ids[1]) document.getElementById(ids[1]).textContent = pad(h);
+    if (ids[2]) document.getElementById(ids[2]).textContent = pad(m);
+    if (ids[3]) document.getElementById(ids[3]).textContent = pad(s);
+    const bar = document.getElementById(barId);
+    if (bar && totalMs > 0) bar.style.width = Math.min(100, (1 - ms/totalMs)*100) + '%';
+}
+
+let halvingTarget = null;
+let halvingTotalMs = null;
+const HALVING_BLOCK = 1050000;
+const SECS_PER_BLOCK = 600;
+
+async function fetchBlockHeight() {
+    try {
+        const r = await fetch('https://blockchain.info/latestblock?cors=true', { signal: AbortSignal.timeout(8000) });
+        const j = await r.json();
+        const height = j.height;
+        const remaining = HALVING_BLOCK - height;
+        const secsRemaining = remaining * SECS_PER_BLOCK;
+        halvingTarget = Date.now() + secsRemaining * 1000;
+        halvingTotalMs = (HALVING_BLOCK - 840000) * SECS_PER_BLOCK * 1000; // 4yr cycle
+        const estDate = new Date(halvingTarget);
+        document.getElementById('halving-date').textContent =
+            `Est. ${estDate.toLocaleDateString('en-US',{month:'long',year:'numeric'})} · Block ${HALVING_BLOCK.toLocaleString()}`;
+        document.getElementById('halving-blocks').textContent =
+            `${remaining.toLocaleString()} blocks remaining · current block ${height.toLocaleString()}`;
+    } catch(e) {
+        // Fallback: estimate Apr 2028
+        halvingTarget = new Date('2028-04-20T00:00:00Z').getTime();
+        halvingTotalMs = (HALVING_BLOCK - 840000) * SECS_PER_BLOCK * 1000;
+        document.getElementById('halving-date').textContent = 'Est. April 2028 · Block 1,050,000';
+        document.getElementById('halving-blocks').textContent = 'Could not fetch live block height';
+    }
+}
+
+function tickCountdowns() {
+    // BTC halving
+    if (halvingTarget) {
+        const ms = diffMs(halvingTarget);
+        renderCountdown(ms, ['h-days','h-hrs','h-min','h-sec'], 'halving-bar', halvingTotalMs);
+    }
+
+    // FOMC
+    const nextFomc = nextDate(FOMC_DECISION_DATES);
+    if (nextFomc) {
+        const ms = diffMs(nextFomc);
+        renderCountdown(ms, ['f-days','f-hrs','f-min', null], 'fomc-bar', 42*86400000);
+        document.getElementById('fomc-date').textContent =
+            nextFomc.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+    }
+
+    // CPI
+    const nextCpi = nextDate(CPI_DATES);
+    if (nextCpi) {
+        const ms = diffMs(nextCpi);
+        renderCountdown(ms, ['c-days','c-hrs','c-min', null], 'cpi-bar', 31*86400000);
+        document.getElementById('cpi-date').textContent =
+            nextCpi.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+    }
+}
+
+/* ──────────────────────────────────────────────────────
+   TIMELINE RENDERER
+────────────────────────────────────────────────────── */
+let currentFilter = 'All';
+
+function setFilter(cat) {
+    currentFilter = cat;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b.dataset.cat === cat));
+    renderTimeline();
+}
+
+function gcalUrl(ev) {
+    const d = ev.date.replace(/-/g,'');
+    const nextD = incrementDate(ev.date).replace(/-/g,'');
+    return `https://calendar.google.com/calendar/render?action=TEMPLATE`
+        + `&text=${encodeURIComponent('[CryptoDoggy] ' + ev.title)}`
+        + `&details=${encodeURIComponent(ev.desc + '\n\nSource: ' + (ev.src||''))}`
+        + `&dates=${d}/${nextD}`;
+}
+function incrementDate(dateStr) {
+    const d = new Date(dateStr + 'T12:00:00Z');
+    d.setDate(d.getDate() + 1);
+    return d.toISOString().slice(0,10);
+}
+
+function renderTimeline() {
+    const tl = document.getElementById('timeline');
+    const today = new Date(); today.setHours(0,0,0,0);
+    const todayStr = today.toISOString().slice(0,10);
+
+    const filtered = EVENTS.filter(e => currentFilter === 'All' || e.cat === currentFilter)
+        .sort((a,b) => a.date.localeCompare(b.date));
+
+    if (!filtered.length) {
+        tl.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div>No events in this category.</div>`;
+        return;
+    }
+
+    // Group by month
+    const groups = {};
+    for (const ev of filtered) {
+        const [y, m] = ev.date.split('-');
+        const key = `${y}-${m}`;
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(ev);
+    }
+
+    const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+    let html = '';
+    for (const [key, evs] of Object.entries(groups)) {
+        const [y, m] = key.split('-');
+        const monthName = `${MONTHS[parseInt(m,10)-1]} ${y}`;
+        html += `<div class="month-group"><div class="month-header">${monthName}</div>`;
+
+        for (const ev of evs) {
+            const evDate = new Date(ev.date + 'T12:00:00');
+            const dayNum = evDate.getDate();
+            const dayName = DAYS[evDate.getDay()];
+            const isPast = ev.date < todayStr;
+            const isToday = ev.date === todayStr;
+
+            const impClass = `imp-${ev.imp}`;
+            const impLabel = ev.imp === 'high' ? '🔴 High Impact' : ev.imp === 'medium' ? '🟡 Medium' : '⚪ Low';
+
+            let metaHtml = `<span class="cat-badge cat-${ev.cat}">${ev.cat}</span>`;
+            metaHtml += `<span class="importance-dot ${impClass}"></span><span class="impact-label">${impLabel}</span>`;
+            if (isToday) metaHtml += `<span class="today-badge">TODAY</span>`;
+            if (ev.src) metaHtml += `<a class="src-btn" href="${ev.src}" target="_blank" rel="noopener">🔗 Source</a>`;
+            if (ev.gcal) metaHtml += `<a class="gcal-btn" href="${gcalUrl(ev)}" target="_blank" rel="noopener">📅 +Cal</a>`;
+
+            html += `
+            <div class="event-row ${isPast?'past':''} ${isToday?'today':''}">
+                <div class="event-date-col">
+                    <div class="date-num">${dayNum}</div>
+                    <div class="date-day">${dayName}</div>
+                </div>
+                <div class="event-body">
+                    <div class="event-title">${ev.title}</div>
+                    <div class="event-desc">${ev.desc}</div>
+                    <div class="event-meta">${metaHtml}</div>
+                </div>
+            </div>`;
+        }
+        html += '</div>';
+    }
+
+    tl.innerHTML = html;
+}
+
+/* ──────────────────────────────────────────────────────
+   INIT
+────────────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', async () => {
+    document.getElementById('last-update').textContent =
+        'Updated ' + new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+
+    // Fetch live block height for halving countdown
+    await fetchBlockHeight();
+
+    // Render timeline
+    renderTimeline();
+
+    // Start countdown ticks
+    tickCountdowns();
+    setInterval(tickCountdowns, 1000);
+});
+</script>
+</body>
+</html>
