@@ -84,7 +84,55 @@ function renderCards(){const top=[...marketData].sort((a,b)=>(b.price_change_per
 function renderHeatmap(){document.getElementById('heatmap').innerHTML=marketData.map(c=>{const p=c.price_change_percentage_24h||0;const bg=p>=0?`rgba(34,197,94,${Math.min(.35,.1+Math.abs(p)/45)})`:`rgba(255,71,87,${Math.min(.35,.1+Math.abs(p)/45)})`;return`<div class="heat-tile" style="background:${bg}"><div class="heat-symbol">${c.symbol.toUpperCase()}</div><div><div>${c.name}</div><div class="heat-change ${cls(p)}">${pct(p)}</div></div></div>`}).join('')}
 function renderPumps(){const pumps=[...marketData].map(c=>({...c,score:Math.abs(c.price_change_percentage_24h||0)*((c.total_volume||1)/(c.market_cap||1))*100})).sort((a,b)=>b.score-a.score).slice(0,5);document.getElementById('pump-list').innerHTML=pumps.map(c=>`<div class="row-card"><div><div class="row-title">${c.symbol.toUpperCase()} · ${c.name}</div><div class="row-meta">24h ${pct(c.price_change_percentage_24h)} · Vol/MCap ${(((c.total_volume||0)/(c.market_cap||1))*100).toFixed(2)}%</div></div><span class="badge watch">WATCH</span></div>`).join('')}
 function renderSignals(){document.getElementById('signal-list').innerHTML=marketData.slice(0,8).map(c=>{const [s,b,n]=signalFor(c);return`<div class="row-card"><div><div class="row-title">${c.symbol.toUpperCase()} · ${c.name}</div><div class="row-meta">Price ${money(c.current_price)} · 24h ${pct(c.price_change_percentage_24h)} · ${n}</div></div><span class="badge ${b}">${s}</span></div>`}).join('')}
-function renderCalendar(){const items=[['Today','Watch BTC + ETH trend after U.S. market close','Market'],['This Week','Check CPI / inflation calendar before leverage trades','Macro'],['This Week','Watch FOMC speaker headlines and rate-cut odds','Macro'],['Daily','Scan token unlocks and major exchange listings','Crypto']];document.getElementById('calendar-list').innerHTML=items.map(i=>`<div class="row-card"><div><div class="row-title">${i[0]} · ${i[2]}</div><div class="row-meta">${i[1]}</div></div><span class="badge hold">EVENT</span></div>`).join('')}
+function renderCalendar(){
+  const today=new Date();
+  const fmt=d=>d.toISOString().replace(/[-:.]/g,'').slice(0,15)+'Z';
+  const todayFmt=fmt(today);
+  const tmrFmt=fmt(new Date(today.getTime()+86400000));
+  const gcalUrl=(title,details,recur='')=>{
+    const base=`https://calendar.google.com/calendar/render?action=TEMPLATE`
+      +`&text=${encodeURIComponent(title)}`
+      +`&details=${encodeURIComponent('CryptoDoggy reminder: '+details)}`
+      +`&dates=${todayFmt}/${tmrFmt}`;
+    return recur?base+'&recur='+encodeURIComponent(recur):base;
+  };
+  const items=[
+    {period:'Today',tag:'Market',
+     desc:'Watch BTC + ETH trend after U.S. market close',
+     url:'https://www.tradingview.com/chart/?symbol=BTCUSDT',
+     cal:gcalUrl('Watch BTC + ETH at Market Close','Watch BTC + ETH trend after US market close')},
+    {period:'This Week',tag:'Macro',
+     desc:'Check CPI / inflation calendar before leverage trades',
+     url:'https://www.investing.com/economic-calendar/',
+     cal:gcalUrl('CPI / Inflation Calendar Check','Review economic calendar before any leverage trades')},
+    {period:'This Week',tag:'Macro',
+     desc:'Watch FOMC speaker headlines and rate-cut odds',
+     url:'https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html',
+     cal:gcalUrl('FOMC Speakers + Rate-Cut Odds','Monitor FOMC headlines and rate-cut odds on CME FedWatch')},
+    {period:'Daily',tag:'Crypto',
+     desc:'Scan token unlocks and major exchange listings',
+     url:'https://tokenunlocks.app/',
+     cal:gcalUrl('Daily Token Unlocks + Listings Scan','Scan token unlocks and new exchange listings','RRULE:FREQ=DAILY')},
+  ];
+  document.getElementById('calendar-list').innerHTML=items.map(i=>`
+    <div class="row-card" style="gap:10px">
+      <div style="flex:1">
+        <div class="row-title">${i.period} · ${i.tag}</div>
+        <div class="row-meta">${i.desc}</div>
+      </div>
+      <div style="display:flex;gap:7px;align-items:center;flex-shrink:0">
+        <a href="${i.url}" target="_blank" rel="noopener noreferrer"
+           class="badge hold"
+           style="text-decoration:none;cursor:pointer;white-space:nowrap">🔗 Source</a>
+        <a href="${i.cal}" target="_blank" rel="noopener noreferrer"
+           style="text-decoration:none;display:inline-flex;align-items:center;gap:4px;
+                  background:rgba(66,133,244,0.14);border:1px solid rgba(66,133,244,0.35);
+                  color:#4a9eff;padding:5px 11px;border-radius:6px;font-size:11px;
+                  font-weight:800;white-space:nowrap;cursor:pointer;
+                  transition:background .18s">📅 +Cal</a>
+      </div>
+    </div>`).join('');
+}
 function demoData(){return[{symbol:'btc',name:'Bitcoin',current_price:103250,price_change_percentage_24h:1.8,total_volume:39000000000,market_cap:2000000000000},{symbol:'eth',name:'Ethereum',current_price:4200,price_change_percentage_24h:2.6,total_volume:22000000000,market_cap:500000000000},{symbol:'sol',name:'Solana',current_price:188,price_change_percentage_24h:7.4,total_volume:6800000000,market_cap:94000000000},{symbol:'doge',name:'Dogecoin',current_price:.18,price_change_percentage_24h:-3.2,total_volume:1200000000,market_cap:25000000000},{symbol:'sui',name:'Sui',current_price:3.6,price_change_percentage_24h:9.2,total_volume:900000000,market_cap:12000000000},{symbol:'pepe',name:'Pepe',current_price:.000012,price_change_percentage_24h:14.3,total_volume:760000000,market_cap:5200000000}]}
 loadPulse();setInterval(loadPulse,300000);
 </script>
