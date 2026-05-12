@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌊 CryptoDoggy DeFi Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #0a0a14; color: #e8e8f0; font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; }
+
+        /* ── NAV ── */
+        .site-nav {
+            background: #06060f; border-bottom: 1px solid #1a1a30;
+            padding: 10px 24px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+        }
+        .nav-brand { font-size: 22px; margin-right: 12px; }
+        .nav-link {
+            padding: 9px 18px; font-size: 14px; font-weight: 800; color: #666;
+            text-decoration: none; border-radius: 10px; border: 1px solid transparent;
+            transition: all 0.18s; white-space: nowrap; letter-spacing: 0.2px;
+        }
+        .nav-link:hover { color: #ccc; background: #13132a; border-color: #1f1f3a; }
+        .nav-link[href="index.html"].active      { background:#1a1200; border-color:#f5a623; color:#f5a623; box-shadow:0 0 14px rgba(245,166,35,.25); }
+        .nav-link[href="game.html"].active       { background:#0a1a10; border-color:#00d4aa; color:#00d4aa; box-shadow:0 0 14px rgba(0,212,170,.25); }
+        .nav-link[href="meme.html"].active       { background:#140a20; border-color:#a855f7; color:#a855f7; box-shadow:0 0 14px rgba(168,85,247,.25); }
+        .nav-link[href="portfolio.html"].active  { background:#0a1520; border-color:#38bdf8; color:#38bdf8; box-shadow:0 0 14px rgba(56,189,248,.25); }
+        .nav-link[href="news.html"].active       { background:#1a0808; border-color:#ff6b6b; color:#ff6b6b; box-shadow:0 0 14px rgba(255,107,107,.25); }
+        .nav-link[href="stocks.html"].active     { background:#061a0a; border-color:#22c55e; color:#22c55e; box-shadow:0 0 14px rgba(34,197,94,.25); }
+        .nav-link[href="signals.html"].active    { background:#001a20; border-color:#06b6d4; color:#06b6d4; box-shadow:0 0 14px rgba(6,182,212,.25); }
+        .nav-link[href="whales.html"].active     { background:#070f2a; border-color:#3b82f6; color:#3b82f6; box-shadow:0 0 14px rgba(59,130,246,.25); }
+        .nav-link[href="defi.html"].active       { background:#120a28; border-color:#8b5cf6; color:#8b5cf6; box-shadow:0 0 14px rgba(139,92,246,.25); }
+        .nav-link[href="index.html"]:not(.active):hover      { color:#f5a623; }
+        .nav-link[href="game.html"]:not(.active):hover       { color:#00d4aa; }
+        .nav-link[href="meme.html"]:not(.active):hover       { color:#a855f7; }
+        .nav-link[href="portfolio.html"]:not(.active):hover  { color:#38bdf8; }
+        .nav-link[href="news.html"]:not(.active):hover       { color:#ff6b6b; }
+        .nav-link[href="stocks.html"]:not(.active):hover     { color:#22c55e; }
+        .nav-link[href="signals.html"]:not(.active):hover    { color:#06b6d4; }
+        .nav-link[href="whales.html"]:not(.active):hover     { color:#3b82f6; }
+        .nav-link[href="defi.html"]:not(.active):hover       { color:#8b5cf6; }
+        .theme-toggle {
+            margin-left: auto; background: none; border: 1px solid #1f1f3a;
+            border-radius: 20px; padding: 6px 13px; color: #666; cursor: pointer;
+            font-size: 15px; transition: all .18s; flex-shrink: 0;
+        }
+        .theme-toggle:hover { border-color: #444; color: #ccc; }
+
+        /* ── MOOD BAR ── */
+        .mood-bar { height: 3px; background: #8b5cf6; box-shadow: 0 0 12px #8b5cf6; }
+
+        /* ── HEADER ── */
+        .header {
+            background: linear-gradient(135deg, #120a28 0%, #0a0a1a 100%);
+            border-bottom: 2px solid #8b5cf6; padding: 20px 28px;
+            display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+        }
+        .logo { display: flex; align-items: center; gap: 14px; }
+        .logo-emoji { font-size: 44px; filter: drop-shadow(0 0 12px rgba(139,92,246,.5)); }
+        .logo-text h1 {
+            font-size: 26px; font-weight: 900;
+            background: linear-gradient(135deg, #8b5cf6, #c4b5fd);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .logo-text p { font-size: 13px; color: #6a4fa0; margin-top: 2px; }
+        .header-right { display: flex; align-items: center; gap: 14px; }
+        .live-pill {
+            display: flex; align-items: center; gap: 7px; font-size: 12px; color: #6a4fa0;
+        }
+        .live-dot { width: 8px; height: 8px; border-radius: 50%; background: #8b5cf6; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.8)} }
+        .refresh-btn {
+            padding: 8px 18px; font-size: 13px; font-weight: 700;
+            background: rgba(139,92,246,.12); border: 1px solid rgba(139,92,246,.3);
+            color: #8b5cf6; border-radius: 10px; cursor: pointer; transition: all .2s;
+        }
+        .refresh-btn:hover { background: rgba(139,92,246,.22); border-color: #8b5cf6; }
+
+        /* ── MAIN ── */
+        .main { max-width: 1400px; margin: 0 auto; padding: 24px; }
+
+        /* ── STAT STRIP ── */
+        .stat-strip {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px; margin-bottom: 24px;
+        }
+        .stat-card {
+            background: #0d0d1f; border: 1px solid #1a1a35; border-radius: 14px;
+            padding: 18px 20px; transition: all .2s;
+        }
+        .stat-card:hover { border-color: #8b5cf6; box-shadow: 0 0 20px rgba(139,92,246,.1); }
+        .stat-label { font-size: 11px; color: #6a4fa0; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; margin-bottom: 6px; }
+        .stat-value { font-size: 26px; font-weight: 900; }
+        .stat-sub { font-size: 11px; color: #444; margin-top: 4px; }
+        .c-violet { color: #8b5cf6; }
+        .c-green  { color: #22c55e; }
+        .c-red    { color: #ff4757; }
+        .c-gold   { color: #f5a623; }
+        .c-muted  { color: #888; }
+
+        /* ── SECTION TITLE ── */
+        .section-title {
+            font-size: 13px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;
+            color: #6a4fa0; margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
+        }
+        .section-bar { width: 3px; height: 14px; background: #8b5cf6; border-radius: 2px; }
+
+        /* ── LAYOUT ── */
+        .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+        .three-col { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 20px; }
+        @media(max-width:900px) { .two-col, .three-col { grid-template-columns: 1fr; } }
+
+        /* ── PANEL ── */
+        .panel {
+            background: #0d0d1f; border: 1px solid #1a1a35; border-radius: 18px; padding: 20px;
+        }
+
+        /* ── PROTOCOL TABLE ── */
+        .proto-table { width: 100%; border-collapse: collapse; }
+        .proto-table th {
+            font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .7px;
+            color: #444; padding: 0 8px 10px; text-align: left; border-bottom: 1px solid #111126;
+        }
+        .proto-table th.right { text-align: right; }
+        .proto-table td { padding: 11px 8px; border-bottom: 1px solid #0f0f25; vertical-align: middle; }
+        .proto-table tr:last-child td { border-bottom: none; }
+        .proto-table tr:hover td { background: rgba(139,92,246,.04); }
+        .rank-num { font-size: 12px; color: #333; font-weight: 700; width: 24px; }
+        .proto-logo {
+            width: 30px; height: 30px; border-radius: 50%; background: #1a1a35;
+            overflow: hidden; display: inline-flex; align-items: center; justify-content: center;
+            font-size: 14px; flex-shrink: 0;
+        }
+        .proto-logo img { width: 100%; height: 100%; border-radius: 50%; }
+        .proto-name { font-size: 14px; font-weight: 800; }
+        .proto-cat {
+            display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 7px;
+            border-radius: 10px; margin-top: 2px; background: rgba(139,92,246,.15);
+            border: 1px solid rgba(139,92,246,.25); color: #a78bfa;
+        }
+        .proto-tvl { font-size: 14px; font-weight: 800; text-align: right; color: #e8e8f0; }
+        .proto-chg { font-size: 13px; font-weight: 700; text-align: right; }
+        .pos { color: #22c55e; } .neg { color: #ff4757; } .neu { color: #888; }
+        .tvl-bar-wrap { padding: 0 8px; }
+        .tvl-mini-bar { height: 4px; background: #1a1a35; border-radius: 2px; }
+        .tvl-mini-fill { height: 100%; border-radius: 2px; background: #8b5cf6; }
+
+        /* ── CHAIN ROWS ── */
+        .chain-row {
+            display: flex; align-items: center; gap: 12px; padding: 12px 0;
+            border-bottom: 1px solid #0f0f25;
+        }
+        .chain-row:last-child { border-bottom: none; }
+        .chain-emoji { font-size: 22px; width: 32px; text-align: center; flex-shrink: 0; }
+        .chain-info { flex: 1; }
+        .chain-name { font-size: 14px; font-weight: 800; }
+        .chain-tvl  { font-size: 13px; color: #8b5cf6; font-weight: 700; margin-top: 2px; }
+        .chain-bar-track { height: 5px; background: #1a1a35; border-radius: 3px; margin-top: 7px; }
+        .chain-bar-fill  { height: 100%; border-radius: 3px; background: linear-gradient(90deg,#8b5cf6,#c4b5fd); transition: width .8s ease; }
+        .chain-pct { font-size: 12px; color: #555; text-align: right; flex-shrink: 0; }
+
+        /* ── CATEGORY GRID ── */
+        .cat-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(130px,1fr)); gap: 10px;
+        }
+        .cat-card {
+            background: #11112a; border: 1px solid #1a1a35; border-radius: 12px;
+            padding: 14px 12px; text-align: center; transition: all .2s;
+        }
+        .cat-card:hover { border-color: #8b5cf6; transform: translateY(-2px); }
+        .cat-icon  { font-size: 24px; margin-bottom: 6px; }
+        .cat-name  { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; color: #888; margin-bottom: 4px; }
+        .cat-tvl   { font-size: 15px; font-weight: 900; color: #c4b5fd; }
+        .cat-count { font-size: 10px; color: #444; margin-top: 3px; }
+
+        /* ── SKELETON ── */
+        .skel {
+            background: linear-gradient(90deg,#0d0d1f 25%,#13132a 50%,#0d0d1f 75%);
+            background-size: 200% 100%; animation: shimmer 1.5s infinite;
+            border-radius: 10px;
+        }
+        @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+        /* ── ERROR ── */
+        .error-box { text-align:center; padding:40px; color:#555; }
+        .error-box .ei { font-size:40px; margin-bottom:10px; }
+        .error-box button {
+            margin-top:14px; padding:9px 22px; background:rgba(139,92,246,.15);
+            border:1px solid #8b5cf6; color:#8b5cf6; border-radius:10px;
+            font-size:13px; font-weight:700; cursor:pointer;
+        }
+
+        /* ── DISCLAIMER ── */
+        .disclaimer { text-align:center; font-size:11px; color:#2a2a45; padding:20px; margin-top:8px; border-top:1px solid #1a1a35; }
+
+        /* ── LIGHT THEME ── */
+        body.light { background:#f5f7fa; color:#1a1a2e; }
+        body.light .site-nav { background:#fff; border-color:#e0e0f0; }
+        body.light .header { background:linear-gradient(135deg,#ede9fe 0%,#f5f3ff 100%); }
+        body.light .panel,.stat-card,.cat-card { background:#fff; border-color:#e0e0f0; }
+        body.light .proto-table th { color:#bbb; border-color:#eee; }
+        body.light .proto-table td { border-color:#f0f0f8; }
+        body.light .chain-bar-track,.tvl-mini-bar { background:#e0e0f0; }
+        body.light .cat-card { background:#f9f8ff; }
+        body.light .rank-num { color:#ccc; }
+        body.light .chain-pct { color:#bbb; }
+        body.light .theme-toggle { border-color:#e0e0f0; }
+        body.light .section-title { color:#9a7fc0; }
+        body.light .disclaimer { border-color:#e0e0f0; color:#ccc; }
+
+        @media(max-width:600px) {
+            .site-nav { gap:3px; padding:8px 10px; }
+            .nav-link { padding:6px 10px; font-size:11px; }
+            .main { padding:14px; }
+            .cat-grid { grid-template-columns:repeat(auto-fill,minmax(100px,1fr)); }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ── NAV ── -->
+<nav class="site-nav">
+    <span class="nav-brand">🐶</span>
+    <a href="index.html"     class="nav-link">🏠 Home</a>
+    <a href="game.html"      class="nav-link">🎮 Game</a>
+    <a href="meme.html"      class="nav-link">🐸 Memes</a>
+    <a href="portfolio.html" class="nav-link">💼 Portfolio</a>
+    <a href="news.html"      class="nav-link">📰 News Hub</a>
+    <a href="stocks.html"    class="nav-link">📊 Stocks</a>
+    <a href="signals.html"   class="nav-link">📡 Signals</a>
+    <a href="whales.html"    class="nav-link">🐋 Whales</a>
+    <a href="defi.html"      class="nav-link active">🌊 DeFi</a>
+    <button class="theme-toggle" onclick="toggleTheme()">☀️</button>
+</nav>
+<div class="mood-bar"></div>
+
+<!-- ── HEADER ── -->
+<div class="header">
+    <div class="logo">
+        <div class="logo-emoji">🌊</div>
+        <div class="logo-text">
+            <h1>DeFi Dashboard</h1>
+            <p>Total Value Locked · Top Protocols · Chain Breakdown</p>
+        </div>
+    </div>
+    <div class="header-right">
+        <div class="live-pill">
+            <div class="live-dot"></div>
+            <span id="last-update">Loading…</span>
+        </div>
+        <button class="refresh-btn" onclick="loadDefi()">🔄 Refresh</button>
+    </div>
+</div>
+
+<!-- ── MAIN ── -->
+<div class="main">
+
+    <!-- Stats strip -->
+    <div class="stat-strip" id="stat-strip">
+        <div class="stat-card"><div class="stat-label">🌊 Total DeFi TVL</div><div class="stat-value c-violet" id="s-tvl">—</div><div class="stat-sub">across all chains</div></div>
+        <div class="stat-card"><div class="stat-label">📈 24h Change</div><div class="stat-value" id="s-24h">—</div><div class="stat-sub" id="s-24h-sub">vs yesterday</div></div>
+        <div class="stat-card"><div class="stat-label">📊 7d Change</div><div class="stat-value" id="s-7d">—</div><div class="stat-sub">weekly trend</div></div>
+        <div class="stat-card"><div class="stat-label">🏗️ Top Protocol</div><div class="stat-value c-violet" id="s-top" style="font-size:18px">—</div><div class="stat-sub" id="s-top-sub">—</div></div>
+        <div class="stat-card"><div class="stat-label">⛓️ Top Chain</div><div class="stat-value c-violet" id="s-chain" style="font-size:18px">—</div><div class="stat-sub" id="s-chain-sub">—</div></div>
+    </div>
+
+    <!-- Protocols + Chains -->
+    <div class="three-col">
+
+        <!-- Protocols table -->
+        <div class="panel">
+            <div class="section-title"><div class="section-bar"></div>🏗️ Top Protocols by TVL</div>
+            <div id="proto-wrap">
+                <div class="skel" style="height:380px"></div>
+            </div>
+        </div>
+
+        <!-- Chains -->
+        <div class="panel">
+            <div class="section-title"><div class="section-bar"></div>⛓️ Chain Breakdown</div>
+            <div id="chain-wrap">
+                <div class="skel" style="height:380px"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Category breakdown -->
+    <div class="panel" style="margin-bottom:20px">
+        <div class="section-title"><div class="section-bar"></div>🗂️ TVL by Category</div>
+        <div class="cat-grid" id="cat-grid">
+            <div class="skel" style="height:80px"></div>
+            <div class="skel" style="height:80px"></div>
+            <div class="skel" style="height:80px"></div>
+            <div class="skel" style="height:80px"></div>
+            <div class="skel" style="height:80px"></div>
+            <div class="skel" style="height:80px"></div>
+        </div>
+    </div>
+
+    <div class="disclaimer">🌊 Data from DeFiLlama — the leading open-source DeFi analytics platform. Not financial advice. 🐶</div>
+</div>
+
+<script>
+// ── HELPERS ──
+function fmtTVL(v) {
+    if (!v && v !== 0) return '—';
+    if (v >= 1e12) return '$' + (v/1e12).toFixed(2) + 'T';
+    if (v >= 1e9)  return '$' + (v/1e9).toFixed(2)  + 'B';
+    if (v >= 1e6)  return '$' + (v/1e6).toFixed(1)  + 'M';
+    return '$' + (v/1e3).toFixed(0) + 'K';
+}
+function fmtPct(v) {
+    if (v === null || v === undefined || isNaN(v)) return '—';
+    return (v >= 0 ? '+' : '') + Number(v).toFixed(2) + '%';
+}
+function chgClass(v) { return v > 0 ? 'pos' : v < 0 ? 'neg' : 'neu'; }
+
+// Category metadata
+const CAT_META = {
+    'Liquid Staking': { icon: '🥩', short: 'Liq. Staking' },
+    'Lending':        { icon: '🏦', short: 'Lending'      },
+    'Dexes':          { icon: '🔄', short: 'DEXes'        },
+    'Bridge':         { icon: '🌉', short: 'Bridges'      },
+    'CDP':            { icon: '💸', short: 'CDP'          },
+    'Yield':          { icon: '🌾', short: 'Yield'        },
+    'Derivatives':    { icon: '📈', short: 'Derivatives'  },
+    'RWA':            { icon: '🏛️', short: 'RWA'          },
+    'Restaking':      { icon: '🔁', short: 'Restaking'    },
+    'Launchpad':      { icon: '🚀', short: 'Launchpad'    },
+    'Staking':        { icon: '📌', short: 'Staking'      },
+    'Options':        { icon: '🎯', short: 'Options'      },
+    'Algo-Stables':   { icon: '⚖️', short: 'Algo-Stable'  },
+    'Indexes':        { icon: '📊', short: 'Indexes'      },
+    'Other':          { icon: '🔧', short: 'Other'        },
+};
+
+const CHAIN_EMOJI = {
+    'Ethereum':  '⟠',  'BSC':       '🟡', 'Tron':      '🔴',
+    'Solana':    '◎',  'Arbitrum':  '🔵', 'Polygon':   '🟣',
+    'Avalanche': '🔺', 'Optimism':  '🔴', 'Base':      '🔵',
+    'Sui':       '💧', 'Aptos':     '🌀', 'Blast':     '💥',
+    'Mantle':    '🧤', 'Scroll':    '📜', 'zkSync Era':'⚡',
+};
+
+// ── FETCH (direct — DeFiLlama has open CORS) ──
+async function fetchJSON(url) {
+    const r = await fetch(url, { headers: { 'Accept': 'application/json' }, cache: 'no-store' });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    return r.json();
+}
+
+// ── RENDER PROTOCOLS ──
+function renderProtocols(protocols) {
+    const top20 = protocols
+        .filter(p => p.tvl > 0)
+        .sort((a,b) => b.tvl - a.tvl)
+        .slice(0, 20);
+
+    const maxTVL = top20[0]?.tvl || 1;
+
+    const rows = top20.map((p, i) => {
+        const chg1d = p.change_1d ?? null;
+        const chg7d = p.change_7d ?? null;
+        const catMeta = CAT_META[p.category] || { icon:'🔧', short: p.category || 'DeFi' };
+        const logoUrl = p.logo || '';
+        const barW = Math.max(2, (p.tvl / maxTVL * 100)).toFixed(1);
+        return `
+        <tr>
+            <td><span class="rank-num">${i+1}</span></td>
+            <td>
+                <div style="display:flex;align-items:center;gap:10px">
+                    <div class="proto-logo">
+                        ${logoUrl ? `<img src="${logoUrl}" alt="${p.name}" onerror="this.parentNode.textContent='🏗️'">` : '🏗️'}
+                    </div>
+                    <div>
+                        <div class="proto-name">${p.name}</div>
+                        <span class="proto-cat">${catMeta.icon} ${catMeta.short}</span>
+                    </div>
+                </div>
+            </td>
+            <td>
+                <div class="tvl-bar-wrap">
+                    <div class="tvl-mini-bar"><div class="tvl-mini-fill" style="width:${barW}%"></div></div>
+                </div>
+            </td>
+            <td class="proto-tvl">${fmtTVL(p.tvl)}</td>
+            <td class="proto-chg ${chgClass(chg1d)}">${chg1d !== null ? fmtPct(chg1d) : '—'}</td>
+            <td class="proto-chg ${chgClass(chg7d)}">${chg7d !== null ? fmtPct(chg7d) : '—'}</td>
+        </tr>`;
+    }).join('');
+
+    document.getElementById('proto-wrap').innerHTML = `
+        <table class="proto-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Protocol</th>
+                    <th></th>
+                    <th class="right">TVL</th>
+                    <th class="right">24h</th>
+                    <th class="right">7d</th>
+                </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+        </table>`;
+}
+
+// ── RENDER CHAINS ──
+function renderChains(chains) {
+    const top12 = chains
+        .filter(c => c.tvl > 0)
+        .sort((a,b) => b.tvl - a.tvl)
+        .slice(0, 12);
+    const totalChainTVL = top12.reduce((s,c) => s + c.tvl, 0);
+    const maxTVL = top12[0]?.tvl || 1;
+
+    document.getElementById('chain-wrap').innerHTML = top12.map(c => {
+        const emoji = CHAIN_EMOJI[c.name] || '⛓️';
+        const pct = ((c.tvl / totalChainTVL) * 100).toFixed(1);
+        const barW = ((c.tvl / maxTVL) * 100).toFixed(1);
+        return `
+        <div class="chain-row">
+            <div class="chain-emoji">${emoji}</div>
+            <div class="chain-info">
+                <div class="chain-name">${c.name}</div>
+                <div class="chain-tvl">${fmtTVL(c.tvl)}</div>
+                <div class="chain-bar-track">
+                    <div class="chain-bar-fill" style="width:${barW}%"></div>
+                </div>
+            </div>
+            <div class="chain-pct">${pct}%</div>
+        </div>`;
+    }).join('');
+
+    return top12[0];
+}
+
+// ── RENDER CATEGORIES ──
+function renderCategories(protocols) {
+    const catMap = {};
+    for (const p of protocols) {
+        if (!p.category || p.tvl <= 0) continue;
+        if (!catMap[p.category]) catMap[p.category] = { tvl: 0, count: 0 };
+        catMap[p.category].tvl += p.tvl;
+        catMap[p.category].count++;
+    }
+    const cats = Object.entries(catMap)
+        .sort((a,b) => b[1].tvl - a[1].tvl)
+        .slice(0, 12);
+
+    document.getElementById('cat-grid').innerHTML = cats.map(([name, data]) => {
+        const meta = CAT_META[name] || { icon:'🔧', short: name };
+        return `
+        <div class="cat-card">
+            <div class="cat-icon">${meta.icon}</div>
+            <div class="cat-name">${meta.short}</div>
+            <div class="cat-tvl">${fmtTVL(data.tvl)}</div>
+            <div class="cat-count">${data.count} protocols</div>
+        </div>`;
+    }).join('');
+}
+
+// ── UPDATE STATS ──
+function updateStats(protocols, topChain) {
+    const totalTVL = protocols.filter(p => p.tvl > 0).reduce((s,p) => s + p.tvl, 0);
+    const avg1d = protocols.filter(p => p.change_1d != null).reduce((s,p) => s + p.change_1d, 0) /
+                  protocols.filter(p => p.change_1d != null).length;
+    const avg7d = protocols.filter(p => p.change_7d != null).reduce((s,p) => s + p.change_7d, 0) /
+                  protocols.filter(p => p.change_7d != null).length;
+    const top = protocols.filter(p => p.tvl > 0).sort((a,b) => b.tvl - a.tvl)[0];
+
+    document.getElementById('s-tvl').textContent    = fmtTVL(totalTVL);
+
+    const el24 = document.getElementById('s-24h');
+    el24.textContent   = fmtPct(avg1d);
+    el24.className     = 'stat-value ' + (avg1d >= 0 ? 'c-green' : 'c-red');
+    document.getElementById('s-24h-sub').textContent = avg1d >= 0 ? '↑ DeFi TVL growing' : '↓ DeFi TVL shrinking';
+
+    const el7d = document.getElementById('s-7d');
+    el7d.textContent   = fmtPct(avg7d);
+    el7d.className     = 'stat-value ' + (avg7d >= 0 ? 'c-green' : 'c-red');
+
+    if (top) {
+        document.getElementById('s-top').textContent     = top.name;
+        document.getElementById('s-top-sub').textContent = fmtTVL(top.tvl) + ' locked';
+    }
+    if (topChain) {
+        document.getElementById('s-chain').textContent     = topChain.name;
+        document.getElementById('s-chain-sub').textContent = fmtTVL(topChain.tvl) + ' TVL';
+    }
+}
+
+// ── MAIN LOAD ──
+async function loadDefi() {
+    document.getElementById('last-update').textContent = 'Fetching…';
+    try {
+        // DeFiLlama has open CORS — no proxy needed
+        const [protocols, chains] = await Promise.all([
+            fetchJSON('https://api.llama.fi/protocols'),
+            fetchJSON('https://api.llama.fi/v2/chains'),
+        ]);
+
+        renderProtocols(protocols);
+        const topChain = renderChains(chains);
+        renderCategories(protocols);
+        updateStats(protocols, topChain);
+
+        const now = new Date();
+        document.getElementById('last-update').textContent =
+            'Live · ' + now.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'});
+
+    } catch(err) {
+        console.error('DeFi load error:', err);
+        document.getElementById('last-update').textContent = '⚠️ Failed to load';
+        ['proto-wrap','chain-wrap','cat-grid'].forEach(id => {
+            document.getElementById(id).innerHTML = `
+                <div class="error-box">
+                    <div class="ei">🌊</div>
+                    <p>Could not reach DeFiLlama.<br>Check connection and retry.</p>
+                    <button onclick="loadDefi()">🔄 Retry</button>
+                </div>`;
+        });
+    }
+}
+
+// ── THEME ──
+function toggleTheme() {
+    document.body.classList.toggle('light');
+    document.querySelector('.theme-toggle').textContent = document.body.classList.contains('light') ? '🌙' : '☀️';
+    localStorage.setItem('theme', document.body.classList.contains('light') ? 'light' : 'dark');
+}
+if (localStorage.getItem('theme') === 'light') {
+    document.body.classList.add('light');
+    document.querySelector('.theme-toggle').textContent = '🌙';
+}
+
+// ── INIT ──
+loadDefi();
+</script>
+</body>
+</html>
