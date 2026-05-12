@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🐋 CryptoDoggy Whale Watch</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #0a0a14; color: #e8e8f0; font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; }
+
+        /* ── NAV ── */
+        .site-nav {
+            background: #06060f; border-bottom: 1px solid #1a1a30;
+            padding: 10px 24px; display: flex; align-items: center; gap: 6px;
+        }
+        .nav-brand { font-size: 22px; margin-right: 12px; }
+        .nav-link {
+            padding: 9px 18px; font-size: 14px; font-weight: 800; color: #666;
+            text-decoration: none; border-radius: 10px; border: 1px solid transparent;
+            transition: all 0.18s; white-space: nowrap; letter-spacing: 0.2px;
+        }
+        .nav-link:hover { color: #ccc; background: #13132a; border-color: #1f1f3a; }
+        .nav-link[href="index.html"].active      { background:#1a1200; border-color:#f5a623; color:#f5a623; box-shadow:0 0 14px rgba(245,166,35,.25); }
+        .nav-link[href="game.html"].active       { background:#0a1a10; border-color:#00d4aa; color:#00d4aa; box-shadow:0 0 14px rgba(0,212,170,.25); }
+        .nav-link[href="meme.html"].active       { background:#140a20; border-color:#a855f7; color:#a855f7; box-shadow:0 0 14px rgba(168,85,247,.25); }
+        .nav-link[href="portfolio.html"].active  { background:#0a1520; border-color:#38bdf8; color:#38bdf8; box-shadow:0 0 14px rgba(56,189,248,.25); }
+        .nav-link[href="news.html"].active       { background:#1a0808; border-color:#ff6b6b; color:#ff6b6b; box-shadow:0 0 14px rgba(255,107,107,.25); }
+        .nav-link[href="stocks.html"].active     { background:#061a0a; border-color:#22c55e; color:#22c55e; box-shadow:0 0 14px rgba(34,197,94,.25); }
+        .nav-link[href="signals.html"].active    { background:#001a20; border-color:#06b6d4; color:#06b6d4; box-shadow:0 0 14px rgba(6,182,212,.25); }
+        .nav-link[href="whales.html"].active     { background:#070f2a; border-color:#3b82f6; color:#3b82f6; box-shadow:0 0 14px rgba(59,130,246,.25); }
+        .nav-link[href="index.html"]:not(.active):hover     { color:#f5a623; }
+        .nav-link[href="game.html"]:not(.active):hover      { color:#00d4aa; }
+        .nav-link[href="meme.html"]:not(.active):hover      { color:#a855f7; }
+        .nav-link[href="portfolio.html"]:not(.active):hover { color:#38bdf8; }
+        .nav-link[href="news.html"]:not(.active):hover      { color:#ff6b6b; }
+        .nav-link[href="stocks.html"]:not(.active):hover    { color:#22c55e; }
+        .nav-link[href="signals.html"]:not(.active):hover   { color:#06b6d4; }
+        .nav-link[href="whales.html"]:not(.active):hover    { color:#3b82f6; }
+        .theme-toggle {
+            margin-left:auto; background:none; border:1px solid #1f1f3a;
+            border-radius:20px; padding:6px 13px; color:#666; cursor:pointer;
+            font-size:15px; transition:all .18s; flex-shrink:0;
+        }
+        .theme-toggle:hover { border-color:#444; color:#ccc; }
+
+        /* ── MOOD BAR ── */
+        .mood-bar { height:3px; background:#3b82f6; box-shadow:0 0 12px #3b82f6; }
+
+        /* ── ALERT BANNER ── */
+        .alert-banner {
+            display:none; align-items:center; gap:14px; padding:12px 28px;
+            background:linear-gradient(90deg,#07102a,#0a1540,#07102a);
+            border-bottom:1px solid rgba(59,130,246,0.3);
+            animation:bannerPulse 1.8s ease-in-out infinite;
+        }
+        .alert-banner.visible { display:flex; }
+        @keyframes bannerPulse { 0%,100%{opacity:1} 50%{opacity:.75} }
+        .alert-icon { font-size:22px; }
+        .alert-text { font-size:14px; font-weight:800; color:#93c5fd; flex:1; }
+        .alert-count {
+            background:rgba(59,130,246,.2); border:1px solid rgba(59,130,246,.4);
+            color:#60a5fa; padding:5px 14px; border-radius:20px;
+            font-size:13px; font-weight:900;
+        }
+
+        /* ── HEADER ── */
+        .header {
+            background:linear-gradient(135deg,#07102a 0%,#0a0a1a 100%);
+            border-bottom:2px solid #3b82f6; padding:20px 28px;
+            display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;
+        }
+        .logo { display:flex; align-items:center; gap:14px; }
+        .logo-emoji { font-size:44px; filter:drop-shadow(0 0 12px rgba(59,130,246,.5)); }
+        .logo-text h1 {
+            font-size:26px; font-weight:900;
+            background:linear-gradient(135deg,#3b82f6,#93c5fd);
+            -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+        }
+        .logo-text p { font-size:13px; color:#4a6fa0; margin-top:2px; }
+        .header-right { display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+        .live-dot { width:9px; height:9px; border-radius:50%; background:#3b82f6; animation:livePulse 1.5s infinite; }
+        @keyframes livePulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.4);opacity:.6} }
+        .last-update { font-size:12px; color:#4a6fa0; }
+        .refresh-btn {
+            padding:8px 18px; font-size:13px; font-weight:700;
+            background:rgba(59,130,246,.12); border:1px solid rgba(59,130,246,.3);
+            color:#3b82f6; border-radius:10px; cursor:pointer; transition:all .2s;
+        }
+        .refresh-btn:hover { background:rgba(59,130,246,.22); border-color:#3b82f6; }
+        .refresh-btn:disabled { opacity:.5; cursor:not-allowed; }
+
+        /* ── MAIN ── */
+        .main { max-width:1400px; margin:0 auto; padding:24px; }
+
+        /* ── SUMMARY STRIP ── */
+        .summary-strip {
+            display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
+            gap:12px; margin-bottom:24px;
+        }
+        .stat-card {
+            background:#0d0d1f; border:1px solid #1a1a35; border-radius:14px;
+            padding:16px 20px; transition:all .2s;
+        }
+        .stat-card:hover { border-color:#3b82f6; box-shadow:0 0 20px rgba(59,130,246,.1); }
+        .stat-label { font-size:11px; color:#4a6fa0; font-weight:700; text-transform:uppercase; letter-spacing:.8px; margin-bottom:6px; }
+        .stat-value { font-size:26px; font-weight:900; }
+        .stat-sub { font-size:11px; color:#444; margin-top:4px; }
+        .c-blue   { color:#3b82f6; }
+        .c-red    { color:#ff4757; }
+        .c-green  { color:#22c55e; }
+        .c-orange { color:#f5a623; }
+        .c-muted  { color:#888; }
+
+        /* ── SECTION ── */
+        .section-title {
+            font-size:13px; font-weight:900; text-transform:uppercase; letter-spacing:1px;
+            color:#4a6fa0; margin-bottom:14px; display:flex; align-items:center; gap:8px;
+        }
+        .section-title span { width:3px; height:14px; background:#3b82f6; border-radius:2px; display:inline-block; }
+
+        /* ── MAIN LAYOUT ── */
+        .grid-layout {
+            display:grid; grid-template-columns:1fr 1fr;
+            gap:20px; margin-bottom:24px;
+        }
+        @media(max-width:900px){ .grid-layout { grid-template-columns:1fr; } }
+
+        /* ── WHALE CARD ── */
+        .whale-card {
+            background:#0d0d1f; border:1px solid #1a1a35;
+            border-radius:18px; padding:20px;
+        }
+
+        /* ── SPIKE ROW ── */
+        .spike-row {
+            display:flex; align-items:center; gap:14px; padding:13px 0;
+            border-bottom:1px solid #111126; transition:background .15s;
+            cursor:default;
+        }
+        .spike-row:last-child { border-bottom:none; }
+        .spike-row:hover { background:rgba(59,130,246,.04); border-radius:10px; padding-left:8px; padding-right:8px; margin:0 -8px; }
+        .coin-img { width:36px; height:36px; border-radius:50%; background:#1a1a35; flex-shrink:0; overflow:hidden; }
+        .coin-img img { width:100%; height:100%; border-radius:50%; }
+        .coin-meta { flex:1; min-width:0; }
+        .coin-name-row { display:flex; align-items:center; gap:8px; }
+        .coin-sym { font-size:15px; font-weight:800; }
+        .coin-full { font-size:11px; color:#555; }
+        .coin-price { font-size:12px; color:#888; margin-top:2px; }
+        .spike-right { text-align:right; flex-shrink:0; }
+        .spike-badge {
+            display:inline-block; padding:4px 10px; border-radius:20px;
+            font-size:11px; font-weight:900; letter-spacing:.3px; margin-bottom:4px;
+        }
+        .badge-whale  { background:rgba(59,130,246,.2);  border:1px solid rgba(59,130,246,.4);  color:#60a5fa; }
+        .badge-alert  { background:rgba(255,71,87,.2);   border:1px solid rgba(255,71,87,.4);   color:#ff6b7a; }
+        .badge-elevated { background:rgba(245,166,35,.15); border:1px solid rgba(245,166,35,.35); color:#f5a623; }
+        .vol-ratio { font-size:13px; font-weight:800; }
+        .vol-bar-track { height:4px; background:#1a1a35; border-radius:2px; margin-top:6px; overflow:hidden; }
+        .vol-bar-fill  { height:100%; border-radius:2px; background:#3b82f6; transition:width .8s ease; }
+
+        /* ── MOVER ROW ── */
+        .mover-row {
+            display:flex; align-items:center; gap:12px; padding:11px 0;
+            border-bottom:1px solid #111126;
+        }
+        .mover-row:last-child { border-bottom:none; }
+        .mover-rank { font-size:12px; font-weight:900; color:#333; width:18px; text-align:center; flex-shrink:0; }
+        .mover-img { width:32px; height:32px; border-radius:50%; background:#1a1a35; overflow:hidden; flex-shrink:0; }
+        .mover-img img { width:100%; height:100%; border-radius:50%; }
+        .mover-info { flex:1; min-width:0; }
+        .mover-sym  { font-size:14px; font-weight:800; }
+        .mover-name { font-size:11px; color:#555; }
+        .mover-right { text-align:right; flex-shrink:0; }
+        .mover-price { font-size:13px; font-weight:700; color:#e8e8f0; }
+        .mover-pct   { font-size:14px; font-weight:900; margin-top:1px; }
+        .pos { color:#22c55e; } .neg { color:#ff4757; }
+
+        /* ── HEATMAP ── */
+        .heatmap-grid {
+            display:grid;
+            grid-template-columns:repeat(auto-fill,minmax(110px,1fr));
+            gap:8px; margin-top:4px;
+        }
+        .heat-tile {
+            border-radius:12px; padding:14px 10px; text-align:center;
+            cursor:default; transition:transform .15s, box-shadow .15s;
+            border:1px solid transparent;
+        }
+        .heat-tile:hover { transform:translateY(-2px); box-shadow:0 4px 20px rgba(0,0,0,.4); }
+        .heat-sym  { font-size:14px; font-weight:900; margin-bottom:4px; }
+        .heat-pct  { font-size:12px; font-weight:700; }
+        .heat-vol  { font-size:10px; color:rgba(255,255,255,.5); margin-top:2px; }
+
+        /* ── SKELETON ── */
+        .skeleton {
+            background:linear-gradient(90deg,#0d0d1f 25%,#13132a 50%,#0d0d1f 75%);
+            background-size:200% 100%; animation:shimmer 1.5s infinite;
+            border-radius:18px; height:320px; border:1px solid #1a1a35;
+        }
+        @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+        /* ── EMPTY / ERROR ── */
+        .empty { text-align:center; padding:40px; color:#444; }
+        .empty .e-icon { font-size:40px; margin-bottom:10px; }
+
+        /* ── DISCLAIMER ── */
+        .disclaimer { text-align:center; font-size:11px; color:#2a2a45; padding:20px; margin-top:8px; border-top:1px solid #1a1a35; }
+
+        /* ── LIGHT THEME ── */
+        body.light { background:#f5f7fa; color:#1a1a2e; }
+        body.light .site-nav { background:#fff; border-color:#e0e0f0; }
+        body.light .header { background:linear-gradient(135deg,#dbeafe 0%,#f0f5ff 100%); }
+        body.light .stat-card, body.light .whale-card { background:#fff; border-color:#e0e0f0; }
+        body.light .spike-row, body.light .mover-row { border-color:#eee; }
+        body.light .vol-bar-track { background:#e0e0f0; }
+        body.light .heat-vol { color:rgba(0,0,0,.4); }
+        body.light .disclaimer { border-color:#e0e0f0; color:#ccc; }
+        body.light .coin-full, body.light .coin-price, body.light .mover-name { color:#aaa; }
+        body.light .mover-rank { color:#ccc; }
+        body.light .c-muted { color:#999; }
+        body.light .theme-toggle { border-color:#e0e0f0; }
+        body.light .section-title { color:#7a9fc0; }
+
+        @media(max-width:600px){
+            .site-nav { gap:3px; padding:8px 10px; }
+            .nav-link { padding:6px 10px; font-size:11px; }
+            .main { padding:14px; }
+            .heatmap-grid { grid-template-columns:repeat(auto-fill,minmax(85px,1fr)); }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ── NAV ── -->
+<nav class="site-nav">
+    <span class="nav-brand">🐶</span>
+    <a href="index.html"     class="nav-link">🏠 Home</a>
+    <a href="game.html"      class="nav-link">🎮 Game</a>
+    <a href="meme.html"      class="nav-link">🐸 Memes</a>
+    <a href="portfolio.html" class="nav-link">💼 Portfolio</a>
+    <a href="news.html"      class="nav-link">📰 News Hub</a>
+    <a href="stocks.html"    class="nav-link">📊 Stocks</a>
+    <a href="signals.html"   class="nav-link">📡 Signals</a>
+    <a href="whales.html"    class="nav-link active">🐋 Whales</a>
+    <button class="theme-toggle" onclick="toggleTheme()">☀️</button>
+</nav>
+<div class="mood-bar"></div>
+
+<!-- ── ALERT BANNER ── -->
+<div class="alert-banner" id="alert-banner">
+    <div class="alert-icon">🚨</div>
+    <div class="alert-text" id="alert-text">Unusual volume detected</div>
+    <div class="alert-count" id="alert-count">0 spikes</div>
+</div>
+
+<!-- ── HEADER ── -->
+<div class="header">
+    <div class="logo">
+        <div class="logo-emoji">🐋</div>
+        <div class="logo-text">
+            <h1>Whale Watch</h1>
+            <p>Volume spikes · Unusual moves · Who's swimming hard</p>
+        </div>
+    </div>
+    <div class="header-right">
+        <div class="live-dot"></div>
+        <span class="last-update" id="last-update">Loading…</span>
+        <button class="refresh-btn" id="refresh-btn" onclick="loadWhales(true)">🔄 Refresh</button>
+    </div>
+</div>
+
+<!-- ── MAIN ── -->
+<div class="main">
+
+    <!-- Stats -->
+    <div class="summary-strip" id="stats-strip">
+        <div class="stat-card"><div class="stat-label">🔍 Tracking</div><div class="stat-value c-blue" id="s-total">—</div><div class="stat-sub">coins by volume</div></div>
+        <div class="stat-card"><div class="stat-label">🚨 Volume Spikes</div><div class="stat-value c-red" id="s-spikes">—</div><div class="stat-sub">unusual activity</div></div>
+        <div class="stat-card"><div class="stat-label">🚀 Top Gainer</div><div class="stat-value c-green" id="s-gainer" style="font-size:20px">—</div><div class="stat-sub" id="s-gainer-sub">—</div></div>
+        <div class="stat-card"><div class="stat-label">📉 Top Loser</div><div class="stat-value c-red" id="s-loser" style="font-size:20px">—</div><div class="stat-sub" id="s-loser-sub">—</div></div>
+        <div class="stat-card"><div class="stat-label">📊 Avg 24h Move</div><div class="stat-value" id="s-avg" style="font-size:22px">—</div><div class="stat-sub">across all tracked</div></div>
+    </div>
+
+    <!-- Volume Spikes + Movers -->
+    <div class="grid-layout">
+
+        <!-- Left: Volume Spikes -->
+        <div class="whale-card">
+            <div class="section-title"><span></span>🐋 Volume Spikes</div>
+            <div id="spike-list"><div class="skeleton" style="height:280px"></div></div>
+        </div>
+
+        <!-- Right: Gainers + Losers -->
+        <div style="display:flex;flex-direction:column;gap:20px;">
+            <div class="whale-card">
+                <div class="section-title"><span style="background:#22c55e"></span>🚀 Top Gainers</div>
+                <div id="gainers-list"><div class="skeleton" style="height:120px"></div></div>
+            </div>
+            <div class="whale-card">
+                <div class="section-title"><span style="background:#ff4757"></span>📉 Top Losers</div>
+                <div id="losers-list"><div class="skeleton" style="height:120px"></div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Heatmap -->
+    <div class="whale-card" style="margin-bottom:20px">
+        <div class="section-title"><span></span>🗺️ Market Heatmap — 24h Performance</div>
+        <div class="heatmap-grid" id="heatmap"></div>
+    </div>
+
+    <div class="disclaimer">🐋 Whale Watch tracks volume/market-cap ratios to detect unusual activity. Not financial advice. Always DYOR. 🐶</div>
+</div>
+
+<script>
+// ── STATE ──
+let coinsData = [];
+let refreshTimer = null;
+let countdownVal = 60;
+
+// ── PROXY FETCH ──
+const PROXIES = [
+    { name:'direct',     build: u => u,                                                             json:false },
+    { name:'corsproxy',  build: u => `https://corsproxy.io/?${encodeURIComponent(u)}`,              json:false },
+    { name:'allorigins', build: u => `https://api.allorigins.win/get?url=${encodeURIComponent(u)}`, json:true  },
+    { name:'codetabs',   build: u => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`, json:false },
+];
+async function fetchJSON(url) {
+    for (const p of PROXIES) {
+        try {
+            const r = await fetch(p.build(url), {
+                headers: { 'Accept': 'application/json' },
+                signal: AbortSignal.timeout(10000),
+            });
+            if (!r.ok) throw new Error(`HTTP ${r.status}`);
+            if (p.json) { const w = await r.json(); return JSON.parse(w.contents); }
+            return r.json();
+        } catch(e) { console.warn(`[${p.name}]`, e.message); }
+    }
+    throw new Error('All proxies failed');
+}
+
+// ── HELPERS ──
+function fmtPrice(p) {
+    if (!p && p !== 0) return '—';
+    if (p >= 1000)  return '$' + p.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+    if (p >= 1)     return '$' + p.toFixed(3);
+    if (p >= 0.001) return '$' + p.toFixed(5);
+    return '$' + p.toExponential(2);
+}
+function fmtPct(v) {
+    if (v === null || v === undefined) return '—';
+    return (v >= 0 ? '+' : '') + v.toFixed(2) + '%';
+}
+function fmtVol(v) {
+    if (v >= 1e9) return '$' + (v/1e9).toFixed(2) + 'B';
+    if (v >= 1e6) return '$' + (v/1e6).toFixed(0) + 'M';
+    return '$' + (v/1e3).toFixed(0) + 'K';
+}
+
+// ── VOLUME INTENSITY SCORE ──
+// vol/mcap ratio — higher = more unusual activity
+function volIntensity(coin) {
+    if (!coin.market_cap || coin.market_cap === 0) return 0;
+    return coin.total_volume / coin.market_cap;
+}
+function spikeBadge(intensity) {
+    if (intensity > 0.25) return { cls:'badge-alert',   label:'🚨 Extreme' };
+    if (intensity > 0.12) return { cls:'badge-whale',   label:'🐋 Whale'   };
+    if (intensity > 0.06) return { cls:'badge-elevated',label:'📈 Elevated' };
+    return null;
+}
+
+// ── RENDER SPIKES ──
+function renderSpikes(coins) {
+    const withBadge = coins
+        .map(c => ({ c, intensity: volIntensity(c), badge: spikeBadge(volIntensity(c)) }))
+        .filter(x => x.badge)
+        .sort((a,b) => b.intensity - a.intensity)
+        .slice(0,10);
+
+    if (withBadge.length === 0) {
+        document.getElementById('spike-list').innerHTML =
+            `<div class="empty"><div class="e-icon">🌊</div><p>No unusual volume right now.<br>Markets are calm.</p></div>`;
+        return 0;
+    }
+
+    const maxIntensity = withBadge[0].intensity;
+    document.getElementById('spike-list').innerHTML = withBadge.map(({c, intensity, badge}) => `
+        <div class="spike-row">
+            <div class="coin-img">
+                <img src="${c.image}" alt="${c.symbol}" onerror="this.parentNode.textContent='🪙'">
+            </div>
+            <div class="coin-meta">
+                <div class="coin-name-row">
+                    <span class="coin-sym">${c.symbol.toUpperCase()}</span>
+                    <span class="coin-full">${c.name}</span>
+                </div>
+                <div class="coin-price">${fmtPrice(c.current_price)} · Vol ${fmtVol(c.total_volume)}</div>
+                <div class="vol-bar-track">
+                    <div class="vol-bar-fill" style="width:${Math.min(100,(intensity/maxIntensity)*100).toFixed(1)}%;
+                         background:${badge.cls === 'badge-alert' ? '#ff4757' : badge.cls === 'badge-whale' ? '#3b82f6' : '#f5a623'}">
+                    </div>
+                </div>
+            </div>
+            <div class="spike-right">
+                <span class="spike-badge ${badge.cls}">${badge.label}</span>
+                <div class="vol-ratio" style="color:${badge.cls==='badge-alert'?'#ff4757':badge.cls==='badge-whale'?'#60a5fa':'#f5a623'}">
+                    ${(intensity * 100).toFixed(1)}%
+                </div>
+                <div style="font-size:11px;color:#555">of mkt cap</div>
+            </div>
+        </div>
+    `).join('');
+    return withBadge.length;
+}
+
+// ── RENDER MOVERS ──
+function renderMovers(coins) {
+    const sorted = [...coins].sort((a,b) =>
+        (b.price_change_percentage_24h||0) - (a.price_change_percentage_24h||0));
+    const gainers = sorted.filter(c => (c.price_change_percentage_24h||0) > 0).slice(0,5);
+    const losers  = sorted.filter(c => (c.price_change_percentage_24h||0) < 0).reverse().slice(0,5);
+
+    const moverHtml = (list, positive) => list.length === 0
+        ? `<div class="empty" style="padding:20px"><p>No ${positive?'gainers':'losers'} right now</p></div>`
+        : list.map((c,i) => `
+            <div class="mover-row">
+                <span class="mover-rank">#${i+1}</span>
+                <div class="mover-img">
+                    <img src="${c.image}" alt="${c.symbol}" onerror="this.parentNode.textContent='🪙'">
+                </div>
+                <div class="mover-info">
+                    <div class="mover-sym">${c.symbol.toUpperCase()}</div>
+                    <div class="mover-name">${c.name}</div>
+                </div>
+                <div class="mover-right">
+                    <div class="mover-price">${fmtPrice(c.current_price)}</div>
+                    <div class="mover-pct ${positive?'pos':'neg'}">${fmtPct(c.price_change_percentage_24h)}</div>
+                </div>
+            </div>`).join('');
+
+    document.getElementById('gainers-list').innerHTML = moverHtml(gainers, true);
+    document.getElementById('losers-list').innerHTML  = moverHtml(losers, false);
+
+    return { gainers, losers };
+}
+
+// ── RENDER HEATMAP ──
+function renderHeatmap(coins) {
+    // Sort by market cap, take top 30
+    const top = [...coins].sort((a,b) => (b.market_cap||0)-(a.market_cap||0)).slice(0,30);
+    document.getElementById('heatmap').innerHTML = top.map(c => {
+        const p = c.price_change_percentage_24h || 0;
+        const intensity = Math.min(0.9, 0.1 + Math.abs(p) / 30);
+        const bg = p >= 0
+            ? `rgba(34,197,94,${intensity})`
+            : `rgba(255,71,87,${intensity})`;
+        const border = p >= 0 ? 'rgba(34,197,94,0.3)' : 'rgba(255,71,87,0.3)';
+        const vi = volIntensity(c);
+        const volTag = vi > 0.12 ? '🐋' : vi > 0.06 ? '📈' : '';
+        return `
+            <div class="heat-tile" style="background:${bg};border-color:${border}" title="${c.name}: ${fmtPct(p)} · Vol ${fmtVol(c.total_volume)}">
+                <div class="heat-sym">${volTag}${c.symbol.toUpperCase()}</div>
+                <div class="heat-pct ${p>=0?'pos':'neg'}">${fmtPct(p)}</div>
+                <div class="heat-vol">${fmtVol(c.total_volume)}</div>
+            </div>`;
+    }).join('');
+}
+
+// ── UPDATE STATS ──
+function updateStats(coins, spikeCount) {
+    const byChg = [...coins].sort((a,b)=>
+        (b.price_change_percentage_24h||0)-(a.price_change_percentage_24h||0));
+    const top    = byChg[0];
+    const bottom = byChg[byChg.length-1];
+    const avg    = coins.reduce((s,c)=>s+(c.price_change_percentage_24h||0),0)/coins.length;
+
+    document.getElementById('s-total').textContent  = coins.length;
+    document.getElementById('s-spikes').textContent = spikeCount;
+
+    if (top) {
+        document.getElementById('s-gainer').textContent     = top.symbol.toUpperCase();
+        document.getElementById('s-gainer-sub').textContent = fmtPct(top.price_change_percentage_24h) + ' today';
+        document.getElementById('s-gainer').style.color     = '#22c55e';
+    }
+    if (bottom) {
+        document.getElementById('s-loser').textContent     = bottom.symbol.toUpperCase();
+        document.getElementById('s-loser-sub').textContent = fmtPct(bottom.price_change_percentage_24h) + ' today';
+        document.getElementById('s-loser').style.color     = '#ff4757';
+    }
+
+    const avgEl = document.getElementById('s-avg');
+    avgEl.textContent  = fmtPct(avg);
+    avgEl.style.color  = avg >= 0 ? '#22c55e' : '#ff4757';
+
+    // Alert banner
+    if (spikeCount >= 3) {
+        const banner = document.getElementById('alert-banner');
+        banner.classList.add('visible');
+        document.getElementById('alert-text').textContent =
+            `🐋 Unusual volume detected across ${spikeCount} coins — whales may be moving`;
+        document.getElementById('alert-count').textContent = `${spikeCount} spikes`;
+    } else {
+        document.getElementById('alert-banner').classList.remove('visible');
+    }
+}
+
+// ── COUNTDOWN ──
+function startCountdown() {
+    clearInterval(refreshTimer);
+    countdownVal = 60;
+    updateBtn();
+    refreshTimer = setInterval(() => {
+        countdownVal--;
+        updateBtn();
+        if (countdownVal <= 0) {
+            loadWhales(false);
+        }
+    }, 1000);
+}
+function updateBtn() {
+    const btn = document.getElementById('refresh-btn');
+    if (btn) btn.textContent = countdownVal > 0 ? `🔄 Refresh (${countdownVal}s)` : '🔄 Refreshing…';
+}
+
+// ── MAIN LOAD ──
+async function loadWhales(manual = false) {
+    if (manual) {
+        clearInterval(refreshTimer);
+        countdownVal = 0;
+        updateBtn();
+    }
+    document.getElementById('last-update').textContent = 'Fetching…';
+    const btn = document.getElementById('refresh-btn');
+    if (btn) btn.disabled = true;
+
+    // Fetch top 50 coins by volume
+    const url = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd' +
+        '&order=volume_desc&per_page=50&page=1&sparkline=false&price_change_percentage=24h';
+
+    try {
+        const data = await fetchJSON(url);
+        coinsData = data;
+
+        const spikeCount = renderSpikes(data);
+        renderMovers(data);
+        renderHeatmap(data);
+        updateStats(data, spikeCount);
+
+        const now = new Date();
+        document.getElementById('last-update').textContent =
+            'Live · ' + now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+
+    } catch(err) {
+        console.error('Whale load error:', err);
+        document.getElementById('last-update').textContent = '⚠️ Failed to load';
+        if (coinsData.length === 0) {
+            ['spike-list','gainers-list','losers-list'].forEach(id => {
+                document.getElementById(id).innerHTML =
+                    `<div class="empty"><div class="e-icon">🌊</div><p>CoinGecko rate limit — retrying in 60s…</p></div>`;
+            });
+        }
+    } finally {
+        if (btn) btn.disabled = false;
+        startCountdown();
+    }
+}
+
+// ── THEME ──
+function toggleTheme() {
+    document.body.classList.toggle('light');
+    const btn = document.querySelector('.theme-toggle');
+    btn.textContent = document.body.classList.contains('light') ? '🌙' : '☀️';
+    localStorage.setItem('theme', document.body.classList.contains('light') ? 'light' : 'dark');
+}
+if (localStorage.getItem('theme') === 'light') {
+    document.body.classList.add('light');
+    document.querySelector('.theme-toggle').textContent = '🌙';
+}
+
+// ── INIT ──
+loadWhales(false);
+</script>
+</body>
+</html>

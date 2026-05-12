@@ -44,7 +44,9 @@
         .nav-link[href="portfolio.html"]:not(.active):hover  { color: #38bdf8; }
         .nav-link[href="news.html"]:not(.active):hover       { color: #ff6b6b; }
         .nav-link[href="stocks.html"]:not(.active):hover     { color: #22c55e; }
-        .nav-link[href="signals.html"]:not(.active):hover    { color: #06b6d4; }
+        .nav-link[href="signals.html"]:not(.active):hover   { color: #06b6d4; }
+        .nav-link[href="whales.html"].active     { background: #070f2a; border-color: #3b82f6; color: #3b82f6; box-shadow: 0 0 14px rgba(59,130,246,.25); }
+        .nav-link[href="whales.html"]:not(.active):hover    { color: #3b82f6; }
         .theme-toggle {
             margin-left: auto; background: none; border: 1px solid #1f1f3a;
             border-radius: 20px; padding: 6px 13px; color: #666; cursor: pointer;
@@ -311,6 +313,7 @@
     <a href="news.html"      class="nav-link">📰 News Hub</a>
     <a href="stocks.html"    class="nav-link">📊 Stocks</a>
     <a href="signals.html"   class="nav-link active">📡 Signals</a>
+    <a href="whales.html"    class="nav-link">🐋 Whales</a>
     <a href="pulse.html"     class="nav-link">⚡ Pulse</a>
     <button class="theme-toggle" onclick="toggleTheme()">☀️</button>
 </nav>
