@@ -1,17 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>📡 CryptoDoggy Signals</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: #0a0a14; color: #e8e8f0; font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; }
+        body { background: #0d1117; color: #e8e8f0; font-family: 'Inter', 'Segoe UI', system-ui, sans-serif; min-height: 100vh; }
 
         /* ── NAV ── */
         .site-nav {
-            background: #06060f;
-            border-bottom: 1px solid #1a1a30;
+            background: #0d1117;
+            border-bottom: 1px solid #21262d;
             padding: 10px 24px;
             display: flex;
             align-items: center;
@@ -30,14 +32,14 @@
             white-space: nowrap;
             letter-spacing: 0.2px;
         }
-        .nav-link:hover { color: #ccc; background: #13132a; border-color: #1f1f3a; }
-        .nav-link[href="index.html"].active      { background: #1a1200; border-color: #f5a623; color: #f5a623; box-shadow: 0 0 14px rgba(245,166,35,0.25); }
-        .nav-link[href="game.html"].active       { background: #0a1a10; border-color: #00d4aa; color: #00d4aa; box-shadow: 0 0 14px rgba(0,212,170,0.25); }
-        .nav-link[href="meme.html"].active       { background: #140a20; border-color: #a855f7; color: #a855f7; box-shadow: 0 0 14px rgba(168,85,247,0.25); }
-        .nav-link[href="portfolio.html"].active  { background: #0a1520; border-color: #38bdf8; color: #38bdf8; box-shadow: 0 0 14px rgba(56,189,248,0.25); }
-        .nav-link[href="news.html"].active       { background: #1a0808; border-color: #ff6b6b; color: #ff6b6b; box-shadow: 0 0 14px rgba(255,107,107,0.25); }
-        .nav-link[href="stocks.html"].active     { background: #061a0a; border-color: #22c55e; color: #22c55e; box-shadow: 0 0 14px rgba(34,197,94,0.25); }
-        .nav-link[href="signals.html"].active    { background: #001a20; border-color: #06b6d4; color: #06b6d4; box-shadow: 0 0 14px rgba(6,182,212,0.25); }
+        .nav-link:hover { color: #aaa; background: #161b22; border-color: #21262d; }
+        .nav-link[href="index.html"].active      { background: #1a1200; border-color: #f5a623; color: #f5a623; }
+        .nav-link[href="game.html"].active       { background: #0a1a10; border-color: #00d4aa; color: #00d4aa; }
+        .nav-link[href="meme.html"].active       { background: #140a20; border-color: #a855f7; color: #a855f7; }
+        .nav-link[href="portfolio.html"].active  { background: #0a1520; border-color: #38bdf8; color: #38bdf8; }
+        .nav-link[href="news.html"].active       { background: #1a0808; border-color: #ff6b6b; color: #ff6b6b; }
+        .nav-link[href="stocks.html"].active     { background: #061a0a; border-color: #22c55e; color: #22c55e; }
+        .nav-link[href="signals.html"].active    { background: #001a20; border-color: #06b6d4; color: #06b6d4; }
         .nav-link[href="index.html"]:not(.active):hover      { color: #f5a623; }
         .nav-link[href="game.html"]:not(.active):hover       { color: #00d4aa; }
         .nav-link[href="meme.html"]:not(.active):hover       { color: #a855f7; }
@@ -45,9 +47,9 @@
         .nav-link[href="news.html"]:not(.active):hover       { color: #ff6b6b; }
         .nav-link[href="stocks.html"]:not(.active):hover     { color: #22c55e; }
         .nav-link[href="signals.html"]:not(.active):hover   { color: #06b6d4; }
-        .nav-link[href="whales.html"].active     { background: #070f2a; border-color: #3b82f6; color: #3b82f6; box-shadow: 0 0 14px rgba(59,130,246,.25); }
+        .nav-link[href="whales.html"].active     { background: #070f2a; border-color: #3b82f6; color: #3b82f6; }
         .nav-link[href="whales.html"]:not(.active):hover     { color: #3b82f6; }
-        .nav-link[href="defi.html"].active       { background: #120a28; border-color: #8b5cf6; color: #8b5cf6; box-shadow: 0 0 14px rgba(139,92,246,.25); }
+        .nav-link[href="defi.html"].active       { background: #120a28; border-color: #8b5cf6; color: #8b5cf6; }
         .nav-link[href="defi.html"]:not(.active):hover       { color: #8b5cf6; }
         .theme-toggle {
             margin-left: auto; background: none; border: 1px solid #1f1f3a;
@@ -60,7 +62,7 @@
         .mood-bar {
             height: 3px;
             background: #06b6d4;
-            box-shadow: 0 0 12px #06b6d4;
+            
         }
 
         /* ── HEADER ── */
@@ -104,7 +106,7 @@
             gap: 12px; margin-bottom: 24px;
         }
         .summary-card {
-            background: #0d0d1f; border: 1px solid #1a1a35; border-radius: 14px;
+            background: #161b22; border: 1px solid #21262d; border-radius: 14px;
             padding: 16px 20px; text-align: center; transition: all 0.2s;
         }
         .summary-card:hover { border-color: #06b6d4; box-shadow: 0 0 20px rgba(6,182,212,0.1); }
@@ -123,7 +125,7 @@
         .filter-label { font-size: 13px; color: #5a8fa0; font-weight: 700; margin-right: 4px; }
         .filter-btn {
             padding: 8px 20px; font-size: 13px; font-weight: 800;
-            border-radius: 20px; border: 1px solid #1f1f3a; background: #0d0d1f;
+            border-radius: 20px; border: 1px solid #1f1f3a; background: #161b22;
             color: #666; cursor: pointer; transition: all 0.18s;
         }
         .filter-btn:hover { border-color: #333; color: #ccc; }
@@ -133,7 +135,7 @@
         .filter-btn.active-sell   { background: rgba(255,71,87,0.15); border-color: #ff4757; color: #ff4757; }
         .sort-label { font-size: 13px; color: #5a8fa0; font-weight: 700; margin-left: 12px; }
         .sort-select {
-            background: #0d0d1f; border: 1px solid #1f1f3a; border-radius: 10px;
+            background: #161b22; border: 1px solid #1f1f3a; border-radius: 10px;
             color: #aaa; font-size: 13px; padding: 7px 12px; cursor: pointer;
         }
 
@@ -146,8 +148,8 @@
 
         /* ── SIGNAL CARD ── */
         .signal-card {
-            background: #0d0d1f;
-            border: 1px solid #1a1a35;
+            background: #161b22;
+            border: 1px solid #21262d;
             border-radius: 18px;
             padding: 20px;
             transition: all 0.22s;
@@ -247,7 +249,7 @@
 
         /* ── SKELETON LOADER ── */
         .skeleton {
-            background: #0d0d1f; border: 1px solid #1a1a35; border-radius: 18px;
+            background: #161b22; border: 1px solid #21262d; border-radius: 18px;
             padding: 20px; height: 320px;
             background: linear-gradient(90deg, #0d0d1f 25%, #13132a 50%, #0d0d1f 75%);
             background-size: 200% 100%;
@@ -301,8 +303,10 @@
             .main { padding: 16px; }
             .cards-grid { grid-template-columns: 1fr; }
         }
-            .nav-link[href="calendar.html"].active   { background:#1a0d00; border-color:#f97316; color:#f97316; box-shadow:0 0 14px rgba(249,115,22,.25); }
+            .nav-link[href="calendar.html"].active   { background:#1a0d00; border-color:#f97316; color:#f97316; }
         .nav-link[href="calendar.html"]:not(.active):hover   { color:#f97316; }
+        .nav-link[href="funding.html"].active    { background: #061a12; border-color: #10b981; color: #10b981; }
+        .nav-link[href="funding.html"]:not(.active):hover { color: #10b981; }
     </style>
 </head>
 <body>
@@ -320,6 +324,7 @@
     <a href="whales.html"    class="nav-link">🐋 Whales</a>
     <a href="defi.html"      class="nav-link">🌊 DeFi</a>
     <a href="calendar.html"  class="nav-link">📅 Calendar</a>
+    <a href="funding.html" class="nav-link">📈 Funding</a>
     <a href="pulse.html"     class="nav-link">⚡ Pulse</a>
     <button class="theme-toggle" onclick="toggleTheme()">☀️</button>
 </nav>

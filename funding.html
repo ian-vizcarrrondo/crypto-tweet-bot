@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CryptoDoggy — Funding Rates</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #0d1117; color: #e2e8f0; font-family: 'Inter', 'Segoe UI', system-ui, sans-serif; min-height: 100vh; }
+
+        /* ── NAV ── */
+        .site-nav {
+            background: #0d1117; border-bottom: 1px solid #21262d;
+            padding: 10px 24px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+        }
+        .nav-brand { font-size: 20px; margin-right: 10px; }
+        .nav-link {
+            padding: 8px 16px; font-size: 13px; font-weight: 600; color: #586069;
+            text-decoration: none; border-radius: 8px; border: 1px solid transparent;
+            transition: all 0.15s; white-space: nowrap;
+        }
+        .nav-link:hover { color: #aaa; background: #161b22; border-color: #21262d; }
+        .nav-link[href="index.html"].active      { background:#161b22; border-color:#f5a623; color:#f5a623; }
+        .nav-link[href="game.html"].active       { background:#161b22; border-color:#00d4aa; color:#00d4aa; }
+        .nav-link[href="meme.html"].active       { background:#161b22; border-color:#a855f7; color:#a855f7; }
+        .nav-link[href="portfolio.html"].active  { background:#161b22; border-color:#38bdf8; color:#38bdf8; }
+        .nav-link[href="news.html"].active       { background:#161b22; border-color:#ff6b6b; color:#ff6b6b; }
+        .nav-link[href="stocks.html"].active     { background:#161b22; border-color:#22c55e; color:#22c55e; }
+        .nav-link[href="signals.html"].active    { background:#161b22; border-color:#06b6d4; color:#06b6d4; }
+        .nav-link[href="whales.html"].active     { background:#161b22; border-color:#3b82f6; color:#3b82f6; }
+        .nav-link[href="defi.html"].active       { background:#161b22; border-color:#8b5cf6; color:#8b5cf6; }
+        .nav-link[href="calendar.html"].active   { background:#161b22; border-color:#f97316; color:#f97316; }
+        .nav-link[href="funding.html"].active    { background:#161b22; border-color:#10b981; color:#10b981; }
+        .nav-link[href="index.html"]:not(.active):hover      { color:#f5a623; }
+        .nav-link[href="game.html"]:not(.active):hover       { color:#00d4aa; }
+        .nav-link[href="meme.html"]:not(.active):hover       { color:#a855f7; }
+        .nav-link[href="portfolio.html"]:not(.active):hover  { color:#38bdf8; }
+        .nav-link[href="news.html"]:not(.active):hover       { color:#ff6b6b; }
+        .nav-link[href="stocks.html"]:not(.active):hover     { color:#22c55e; }
+        .nav-link[href="signals.html"]:not(.active):hover    { color:#06b6d4; }
+        .nav-link[href="whales.html"]:not(.active):hover     { color:#3b82f6; }
+        .nav-link[href="defi.html"]:not(.active):hover       { color:#8b5cf6; }
+        .nav-link[href="calendar.html"]:not(.active):hover   { color:#f97316; }
+        .nav-link[href="funding.html"]:not(.active):hover    { color:#10b981; }
+        .theme-toggle {
+            margin-left: auto; background: none; border: 1px solid #21262d;
+            border-radius: 8px; padding: 6px 12px; color: #586069; cursor: pointer;
+            font-size: 14px; transition: all .15s; flex-shrink: 0;
+        }
+        .theme-toggle:hover { border-color: #444; color: #aaa; }
+
+        /* ── TOP BAR ── */
+        .top-bar {
+            height: 3px;
+            background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+        }
+
+        /* ── HEADER ── */
+        .header {
+            background: #161b22;
+            border-bottom: 1px solid #21262d;
+            padding: 18px 28px;
+            display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+        }
+        .header-left { display: flex; align-items: center; gap: 12px; }
+        .header-icon { font-size: 28px; }
+        .header-title { font-size: 20px; font-weight: 800; color: #e2e8f0; letter-spacing: -0.3px; }
+        .header-sub { font-size: 12px; color: #586069; margin-top: 2px; font-weight: 500; }
+        .header-right { display: flex; align-items: center; gap: 12px; }
+        .status-pill {
+            display: flex; align-items: center; gap: 6px;
+            font-size: 12px; color: #586069; font-weight: 500;
+        }
+        .status-dot {
+            width: 7px; height: 7px; border-radius: 50%; background: #10b981;
+            animation: blink 2s infinite;
+        }
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.4} }
+        .refresh-btn {
+            padding: 7px 14px; font-size: 12px; font-weight: 600;
+            background: #21262d; border: 1px solid #30363d;
+            color: #8b949e; border-radius: 8px; cursor: pointer; transition: all .15s;
+        }
+        .refresh-btn:hover { background: #2d333b; color: #e2e8f0; border-color: #444; }
+
+        /* ── MAIN ── */
+        .main { max-width: 1200px; margin: 0 auto; padding: 24px; }
+
+        /* ── MARKET SENTIMENT STRIP ── */
+        .sentiment-strip {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 12px; margin-bottom: 24px;
+        }
+        .sent-card {
+            background: #161b22; border: 1px solid #21262d; border-radius: 12px;
+            padding: 16px 18px;
+        }
+        .sent-label { font-size: 10px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: .8px; color: #586069; margin-bottom: 6px; }
+        .sent-value { font-size: 24px; font-weight: 900; letter-spacing: -0.5px; }
+        .sent-sub { font-size: 11px; color: #586069; margin-top: 4px; font-weight: 500; }
+        .c-green  { color: #10b981; }
+        .c-red    { color: #ef4444; }
+        .c-yellow { color: #f59e0b; }
+        .c-blue   { color: #3b82f6; }
+        .c-muted  { color: #8b949e; }
+
+        /* ── SECTION HEADER ── */
+        .section-hdr {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 12px;
+        }
+        .section-title {
+            font-size: 12px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: .9px; color: #586069;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .section-title::before {
+            content: ''; width: 3px; height: 13px; background: #10b981;
+            border-radius: 2px; display: inline-block;
+        }
+        .exchange-tabs { display: flex; gap: 6px; }
+        .tab-btn {
+            padding: 5px 12px; font-size: 12px; font-weight: 600; border-radius: 6px;
+            border: 1px solid #21262d; background: none; color: #586069;
+            cursor: pointer; transition: all .15s;
+        }
+        .tab-btn.active { background: #21262d; color: #e2e8f0; border-color: #30363d; }
+        .tab-btn:hover:not(.active) { color: #aaa; border-color: #30363d; }
+
+        /* ── TABLE ── */
+        .table-wrap {
+            background: #161b22; border: 1px solid #21262d; border-radius: 12px;
+            overflow: hidden; margin-bottom: 24px;
+        }
+        table { width: 100%; border-collapse: collapse; }
+        thead th {
+            padding: 11px 16px; text-align: left;
+            font-size: 10px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: .7px; color: #586069;
+            border-bottom: 1px solid #21262d; background: #0d1117;
+        }
+        thead th.right { text-align: right; }
+        thead th.center { text-align: center; }
+        tbody tr { border-bottom: 1px solid #21262d; transition: background .12s; }
+        tbody tr:last-child { border-bottom: none; }
+        tbody tr:hover { background: rgba(255,255,255,.02); }
+        tbody td { padding: 13px 16px; vertical-align: middle; }
+        tbody td.right { text-align: right; }
+        tbody td.center { text-align: center; }
+
+        /* coin cell */
+        .coin-cell { display: flex; align-items: center; gap: 10px; }
+        .coin-logo {
+            width: 28px; height: 28px; border-radius: 50%;
+            background: #21262d; overflow: hidden; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center; font-size: 13px;
+        }
+        .coin-logo img { width: 100%; height: 100%; border-radius: 50%; }
+        .coin-name { font-size: 14px; font-weight: 700; color: #e2e8f0; }
+        .coin-sym  { font-size: 11px; color: #586069; font-weight: 500; margin-top: 1px; }
+
+        /* funding rate */
+        .rate-cell { font-size: 15px; font-weight: 800; font-variant-numeric: tabular-nums; }
+        .rate-pos { color: #10b981; }
+        .rate-neg { color: #ef4444; }
+        .rate-neu { color: #8b949e; }
+
+        /* annualized */
+        .ann-cell { font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+        /* sentiment badge */
+        .badge {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 700;
+        }
+        .badge-longs { background: rgba(16,185,129,.12); border: 1px solid rgba(16,185,129,.25); color: #10b981; }
+        .badge-shorts { background: rgba(239,68,68,.12); border: 1px solid rgba(239,68,68,.25); color: #ef4444; }
+        .badge-neutral { background: rgba(139,148,158,.1); border: 1px solid #30363d; color: #8b949e; }
+
+        /* mini bar */
+        .bar-wrap { display: flex; align-items: center; gap: 8px; }
+        .mini-bar {
+            flex: 1; height: 4px; background: #21262d; border-radius: 2px; overflow: hidden;
+        }
+        .mini-fill { height: 100%; border-radius: 2px; transition: width .4s; }
+        .fill-pos { background: #10b981; }
+        .fill-neg { background: #ef4444; }
+        .bar-label { font-size: 11px; color: #586069; font-weight: 500; min-width: 32px; text-align: right; }
+
+        /* open interest */
+        .oi-cell { font-size: 13px; font-weight: 600; color: #8b949e; }
+
+        /* skeleton */
+        .skel {
+            background: linear-gradient(90deg, #161b22 25%, #1c2128 50%, #161b22 75%);
+            background-size: 200% 100%; animation: shimmer 1.5s infinite;
+            border-radius: 6px; height: 14px;
+        }
+        @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+        /* ── EXPLAINER ── */
+        .explainer {
+            background: #161b22; border: 1px solid #21262d; border-radius: 12px;
+            padding: 18px 20px; margin-bottom: 24px;
+        }
+        .explainer h3 { font-size: 13px; font-weight: 700; color: #e2e8f0; margin-bottom: 10px; }
+        .explainer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap: 12px; }
+        .exp-item { display: flex; gap: 10px; }
+        .exp-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+        .exp-dot.green { background: #10b981; }
+        .exp-dot.red   { background: #ef4444; }
+        .exp-dot.gray  { background: #586069; }
+        .exp-text { font-size: 12px; color: #586069; line-height: 1.5; font-weight: 500; }
+        .exp-text b { color: #8b949e; font-weight: 700; }
+
+        /* ── ERROR ── */
+        .error-state { text-align: center; padding: 48px 20px; color: #586069; }
+        .error-state .ei { font-size: 36px; margin-bottom: 12px; }
+        .error-state p { font-size: 13px; margin-bottom: 16px; }
+        .error-state button {
+            padding: 8px 20px; background: #21262d; border: 1px solid #30363d;
+            color: #8b949e; border-radius: 8px; font-size: 13px; font-weight: 600;
+            cursor: pointer; transition: all .15s;
+        }
+        .error-state button:hover { background: #2d333b; color: #e2e8f0; }
+
+        @media(max-width:700px) {
+            thead th.hide-mobile, tbody td.hide-mobile { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="site-nav">
+    <span class="nav-brand">🐕</span>
+    <a href="index.html"     class="nav-link">📊 Dashboard</a>
+    <a href="game.html"      class="nav-link">🎮 Predict</a>
+    <a href="meme.html"      class="nav-link">🐸 Meme Zone</a>
+    <a href="portfolio.html" class="nav-link">💼 Portfolio</a>
+    <a href="news.html"      class="nav-link">📰 News Hub</a>
+    <a href="stocks.html"    class="nav-link">📊 Stocks</a>
+    <a href="signals.html"   class="nav-link">📡 Signals</a>
+    <a href="whales.html"    class="nav-link">🐋 Whales</a>
+    <a href="defi.html"      class="nav-link">🌊 DeFi</a>
+    <a href="calendar.html"  class="nav-link">📅 Calendar</a>
+    <a href="funding.html"   class="nav-link active">📈 Funding</a>
+    <button class="theme-toggle">☀️</button>
+</nav>
+<div class="top-bar"></div>
+
+<div class="header">
+    <div class="header-left">
+        <div class="header-icon">⚡</div>
+        <div>
+            <div class="header-title">Funding Rates</div>
+            <div class="header-sub">Perpetual futures sentiment · Binance · 8-hour settlement</div>
+        </div>
+    </div>
+    <div class="header-right">
+        <div class="status-pill">
+            <div class="status-dot"></div>
+            <span id="last-update">Loading…</span>
+        </div>
+        <button class="refresh-btn" onclick="loadData()">↻ Refresh</button>
+    </div>
+</div>
+
+<div class="main">
+
+    <!-- MARKET SENTIMENT STRIP -->
+    <div class="sentiment-strip" id="sent-strip">
+        <div class="sent-card"><div class="sent-label">Market Bias</div><div class="sent-value skel" style="height:32px;width:80px"></div><div class="sent-sub">—</div></div>
+        <div class="sent-card"><div class="sent-label">Avg Funding</div><div class="sent-value skel" style="height:32px;width:80px"></div><div class="sent-sub">—</div></div>
+        <div class="sent-card"><div class="sent-label">Longs Paying</div><div class="sent-value skel" style="height:32px;width:60px"></div><div class="sent-sub">—</div></div>
+        <div class="sent-card"><div class="sent-label">Extreme Rates</div><div class="sent-value skel" style="height:32px;width:60px"></div><div class="sent-sub">&gt;0.1% or &lt;-0.05%</div></div>
+    </div>
+
+    <!-- EXPLAINER -->
+    <div class="explainer">
+        <h3>How to read funding rates</h3>
+        <div class="explainer-grid">
+            <div class="exp-item"><div class="exp-dot green"></div><div class="exp-text"><b>Positive rate</b> — longs pay shorts. Market is bullish/overleveraged long. High positive rates can signal a local top.</div></div>
+            <div class="exp-item"><div class="exp-dot red"></div><div class="exp-text"><b>Negative rate</b> — shorts pay longs. Market is bearish/overleveraged short. Can signal capitulation or a squeeze setup.</div></div>
+            <div class="exp-item"><div class="exp-dot gray"></div><div class="exp-text"><b>Near zero (±0.01%)</b> — balanced market. No strong directional bias in futures. Often seen in ranging markets.</div></div>
+        </div>
+    </div>
+
+    <!-- TABLE SECTION -->
+    <div class="section-hdr">
+        <div class="section-title">Perpetual Funding Rates</div>
+        <div class="exchange-tabs">
+            <button class="tab-btn active" onclick="switchExchange('binance', this)">Binance</button>
+            <button class="tab-btn" onclick="switchExchange('bybit', this)">Bybit</button>
+        </div>
+    </div>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width:200px">Asset</th>
+                    <th class="right">Current Rate</th>
+                    <th class="right hide-mobile">Annualized</th>
+                    <th class="right hide-mobile">Next Funding</th>
+                    <th class="center">Sentiment</th>
+                    <th class="right hide-mobile">Open Interest</th>
+                    <th>Longs / Shorts</th>
+                </tr>
+            </thead>
+            <tbody id="table-body">
+                <!-- Skeleton rows -->
+                <tr><td colspan="7" style="padding:32px;text-align:center;color:#586069;font-size:13px">Loading funding data…</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+<script>
+/* ──────────────────────────────────────────────────────
+   CONFIG
+────────────────────────────────────────────────────── */
+const SYMBOLS = [
+    { symbol: 'BTCUSDT',  name: 'Bitcoin',   sym: 'BTC',  logo: 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png' },
+    { symbol: 'ETHUSDT',  name: 'Ethereum',  sym: 'ETH',  logo: 'https://assets.coingecko.com/coins/images/279/small/ethereum.png' },
+    { symbol: 'SOLUSDT',  name: 'Solana',    sym: 'SOL',  logo: 'https://assets.coingecko.com/coins/images/4128/small/solana.png' },
+    { symbol: 'BNBUSDT',  name: 'BNB',       sym: 'BNB',  logo: 'https://assets.coingecko.com/coins/images/825/small/bnb-icon2_2x.png' },
+    { symbol: 'XRPUSDT',  name: 'XRP',       sym: 'XRP',  logo: 'https://assets.coingecko.com/coins/images/44/small/xrp-symbol-white-128.png' },
+    { symbol: 'ADAUSDT',  name: 'Cardano',   sym: 'ADA',  logo: 'https://assets.coingecko.com/coins/images/975/small/cardano.png' },
+    { symbol: 'DOGEUSDT', name: 'Dogecoin',  sym: 'DOGE', logo: 'https://assets.coingecko.com/coins/images/5/small/dogecoin.png' },
+    { symbol: 'AVAXUSDT', name: 'Avalanche', sym: 'AVAX', logo: 'https://assets.coingecko.com/coins/images/12559/small/Avalanche_Circle_RedWhite_Trans.png' },
+    { symbol: 'LINKUSDT', name: 'Chainlink', sym: 'LINK', logo: 'https://assets.coingecko.com/coins/images/877/small/chainlink-new-logo.png' },
+    { symbol: 'DOTUSDT',  name: 'Polkadot',  sym: 'DOT',  logo: 'https://assets.coingecko.com/coins/images/12171/small/polkadot.png' },
+    { symbol: 'UNIUSDT',  name: 'Uniswap',   sym: 'UNI',  logo: 'https://assets.coingecko.com/coins/images/12504/small/uniswap-uni.png' },
+    { symbol: 'AAVEUSDT', name: 'Aave',      sym: 'AAVE', logo: 'https://assets.coingecko.com/coins/images/12645/small/AAVE.png' },
+    { symbol: 'APTUSDT',  name: 'Aptos',     sym: 'APT',  logo: 'https://assets.coingecko.com/coins/images/26455/small/aptos_round.png' },
+    { symbol: 'SUIUSDT',  name: 'Sui',       sym: 'SUI',  logo: 'https://assets.coingecko.com/coins/images/26375/small/sui_asset.jpeg' },
+    { symbol: 'ARBUSDT',  name: 'Arbitrum',  sym: 'ARB',  logo: 'https://assets.coingecko.com/coins/images/16547/small/photo_2023-03-29_21.47.00.jpeg' },
+];
+
+const BINANCE_FUNDING = 'https://fapi.binance.com/fapi/v1/premiumIndex';
+const BINANCE_OI      = 'https://fapi.binance.com/fapi/v1/openInterest';
+const BYBIT_FUNDING   = 'https://api.bybit.com/v5/market/tickers?category=linear';
+
+let currentExchange = 'binance';
+let cachedData = {};
+
+/* ──────────────────────────────────────────────────────
+   FETCH
+────────────────────────────────────────────────────── */
+async function fetchBinanceFunding() {
+    const r = await fetch(BINANCE_FUNDING, { signal: AbortSignal.timeout(10000) });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const all = await r.json();
+    // Filter to our symbols
+    const map = {};
+    for (const item of all) {
+        map[item.symbol] = {
+            rate:        parseFloat(item.lastFundingRate),
+            nextTime:    parseInt(item.nextFundingTime),
+            markPrice:   parseFloat(item.markPrice),
+        };
+    }
+    return map;
+}
+
+async function fetchBinanceOI(symbol) {
+    try {
+        const r = await fetch(`${BINANCE_OI}?symbol=${symbol}`, { signal: AbortSignal.timeout(5000) });
+        if (!r.ok) return null;
+        const j = await r.json();
+        return parseFloat(j.openInterest) * parseFloat(j.openInterest > 0 ? 1 : 0);
+    } catch { return null; }
+}
+
+async function fetchBybitFunding() {
+    const r = await fetch(BYBIT_FUNDING, { signal: AbortSignal.timeout(10000) });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const j = await r.json();
+    const map = {};
+    for (const item of (j.result?.list || [])) {
+        map[item.symbol] = {
+            rate:      parseFloat(item.fundingRate),
+            nextTime:  parseInt(item.nextFundingTime),
+            markPrice: parseFloat(item.markPrice),
+            oi:        parseFloat(item.openInterestValue),
+        };
+    }
+    return map;
+}
+
+/* ──────────────────────────────────────────────────────
+   FORMAT HELPERS
+────────────────────────────────────────────────────── */
+function fmtRate(r) {
+    const pct = (r * 100).toFixed(4);
+    return `${r >= 0 ? '+' : ''}${pct}%`;
+}
+
+function fmtAnn(r) {
+    // 3 payments/day × 365 days
+    const ann = r * 3 * 365 * 100;
+    return `${ann >= 0 ? '+' : ''}${ann.toFixed(1)}%/yr`;
+}
+
+function rateClass(r) {
+    if (r > 0.0005) return 'rate-pos';
+    if (r < -0.0001) return 'rate-neg';
+    return 'rate-neu';
+}
+
+function annClass(r) {
+    if (r > 0.0005) return 'c-green';
+    if (r < -0.0001) return 'c-red';
+    return 'c-muted';
+}
+
+function sentiment(r) {
+    if (r > 0.001)  return { label: 'Extreme Longs',  cls: 'badge-longs',   icon: '🔥' };
+    if (r > 0.0003) return { label: 'Longs Paying',   cls: 'badge-longs',   icon: '📈' };
+    if (r < -0.001) return { label: 'Extreme Shorts', cls: 'badge-shorts',  icon: '🧊' };
+    if (r < -0.0001)return { label: 'Shorts Paying',  cls: 'badge-shorts',  icon: '📉' };
+    return           { label: 'Neutral',              cls: 'badge-neutral', icon: '—'  };
+}
+
+function fmtOI(v) {
+    if (!v || v === 0) return '—';
+    if (v >= 1e9) return `$${(v/1e9).toFixed(2)}B`;
+    if (v >= 1e6) return `$${(v/1e6).toFixed(0)}M`;
+    return `$${v.toFixed(0)}`;
+}
+
+function fmtCountdown(ms) {
+    if (ms <= 0) return 'Now';
+    const h = Math.floor(ms / 3600000);
+    const m = Math.floor((ms % 3600000) / 60000);
+    return h > 0 ? `${h}h ${m}m` : `${m}m`;
+}
+
+/* Longs/Shorts bar: positive rate → longs heavy */
+function longShortBar(r) {
+    const longPct = Math.min(95, Math.max(5, 50 + r * 5000));
+    const shortPct = 100 - longPct;
+    const cls = r >= 0 ? 'fill-pos' : 'fill-neg';
+    return `
+        <div class="bar-wrap">
+            <div class="mini-bar"><div class="mini-fill ${cls}" style="width:${longPct}%"></div></div>
+            <div class="bar-label c-${r>=0?'green':'red'}" style="font-size:10px">${longPct.toFixed(0)}L</div>
+        </div>`;
+}
+
+/* ──────────────────────────────────────────────────────
+   RENDER
+────────────────────────────────────────────────────── */
+function renderTable(fundingMap) {
+    const tbody = document.getElementById('table-body');
+    const now = Date.now();
+    let rows = '';
+
+    const rates = SYMBOLS.map(s => {
+        const d = fundingMap[s.symbol];
+        return { ...s, data: d };
+    }).filter(x => x.data);
+
+    // Sort by abs funding rate descending
+    rates.sort((a, b) => Math.abs(b.data.rate) - Math.abs(a.data.rate));
+
+    for (const coin of rates) {
+        const d = coin.data;
+        const r = d.rate;
+        const sent = sentiment(r);
+        const oiVal = d.oi || 0;
+        const countdown = d.nextTime ? fmtCountdown(d.nextTime - now) : '—';
+        const annualized = fmtAnn(r);
+
+        rows += `
+        <tr>
+            <td>
+                <div class="coin-cell">
+                    <div class="coin-logo">
+                        <img src="${coin.logo}" alt="${coin.sym}" onerror="this.style.display='none'">
+                    </div>
+                    <div>
+                        <div class="coin-name">${coin.name}</div>
+                        <div class="coin-sym">${coin.sym}-PERP</div>
+                    </div>
+                </div>
+            </td>
+            <td class="right">
+                <div class="rate-cell ${rateClass(r)}">${fmtRate(r)}</div>
+            </td>
+            <td class="right hide-mobile">
+                <div class="ann-cell ${annClass(r)}">${annualized}</div>
+            </td>
+            <td class="right hide-mobile c-muted" style="font-size:12px;font-weight:500">${countdown}</td>
+            <td class="center">
+                <span class="badge ${sent.cls}">${sent.icon} ${sent.label}</span>
+            </td>
+            <td class="right hide-mobile">
+                <div class="oi-cell">${fmtOI(oiVal)}</div>
+            </td>
+            <td>${longShortBar(r)}</td>
+        </tr>`;
+    }
+
+    tbody.innerHTML = rows || '<tr><td colspan="7" style="padding:32px;text-align:center;color:#586069">No data available</td></tr>';
+}
+
+function renderSentiment(fundingMap) {
+    const rates = SYMBOLS.map(s => fundingMap[s.symbol]?.rate).filter(r => r !== undefined);
+    if (!rates.length) return;
+
+    const avg = rates.reduce((a, b) => a + b, 0) / rates.length;
+    const longsCount  = rates.filter(r => r > 0.0003).length;
+    const shortsCount = rates.filter(r => r < -0.0001).length;
+    const extremeCount = rates.filter(r => Math.abs(r) > 0.001).length;
+
+    let bias, biasClass;
+    if (avg > 0.0005)       { bias = 'Heavily Long';    biasClass = 'c-green'; }
+    else if (avg > 0.0001)  { bias = 'Mildly Long';     biasClass = 'c-green'; }
+    else if (avg < -0.0003) { bias = 'Heavily Short';   biasClass = 'c-red'; }
+    else if (avg < -0.00005){ bias = 'Mildly Short';    biasClass = 'c-red'; }
+    else                     { bias = 'Neutral';          biasClass = 'c-muted'; }
+
+    document.getElementById('sent-strip').innerHTML = `
+        <div class="sent-card">
+            <div class="sent-label">Market Bias</div>
+            <div class="sent-value ${biasClass}">${bias}</div>
+            <div class="sent-sub">Across ${rates.length} pairs</div>
+        </div>
+        <div class="sent-card">
+            <div class="sent-label">Avg Funding (8h)</div>
+            <div class="sent-value ${avg >= 0 ? 'c-green' : 'c-red'}">${avg >= 0 ? '+' : ''}${(avg*100).toFixed(4)}%</div>
+            <div class="sent-sub">${(avg*3*365*100).toFixed(1)}% annualized</div>
+        </div>
+        <div class="sent-card">
+            <div class="sent-label">Longs Paying</div>
+            <div class="sent-value c-green">${longsCount}</div>
+            <div class="sent-sub">of ${rates.length} markets</div>
+        </div>
+        <div class="sent-card">
+            <div class="sent-label">Extreme Rates</div>
+            <div class="sent-value ${extremeCount > 3 ? 'c-red' : 'c-yellow'}">${extremeCount}</div>
+            <div class="sent-sub">&gt;0.1% or &lt;−0.05%</div>
+        </div>
+    `;
+}
+
+/* ──────────────────────────────────────────────────────
+   LOAD
+────────────────────────────────────────────────────── */
+async function loadData() {
+    document.getElementById('last-update').textContent = 'Loading…';
+    try {
+        let fundingMap;
+        if (currentExchange === 'binance') {
+            fundingMap = await fetchBinanceFunding();
+        } else {
+            fundingMap = await fetchBybitFunding();
+        }
+        cachedData[currentExchange] = fundingMap;
+        renderTable(fundingMap);
+        renderSentiment(fundingMap);
+        document.getElementById('last-update').textContent =
+            'Updated ' + new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    } catch (e) {
+        console.error(e);
+        document.getElementById('table-body').innerHTML = `
+            <tr><td colspan="7">
+                <div class="error-state">
+                    <div class="ei">⚠️</div>
+                    <p>Could not fetch funding data from ${currentExchange}.</p>
+                    <button onclick="loadData()">Try again</button>
+                </div>
+            </td></tr>`;
+        document.getElementById('last-update').textContent = 'Error';
+    }
+}
+
+function switchExchange(ex, btn) {
+    currentExchange = ex;
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    if (cachedData[ex]) {
+        renderTable(cachedData[ex]);
+        renderSentiment(cachedData[ex]);
+    } else {
+        loadData();
+    }
+}
+
+/* Auto-refresh every 5 minutes */
+document.addEventListener('DOMContentLoaded', () => {
+    loadData();
+    setInterval(loadData, 5 * 60 * 1000);
+});
+</script>
+</body>
+</html>

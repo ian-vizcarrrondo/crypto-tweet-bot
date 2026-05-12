@@ -1,24 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>📊 CryptoDoggy — Stock Hub</title>
     <style>
         * { margin:0; padding:0; box-sizing:border-box; }
-        body { background:#0a0a14; color:#e8e8f0; font-family:'Segoe UI',system-ui,sans-serif; min-height:100vh; }
+        body { background:#0d1117; color:#e8e8f0; font-family:'Segoe UI',system-ui,sans-serif; min-height:100vh; }
 
         /* ── NAV ── */
-        .site-nav { background:#06060f; border-bottom:1px solid #1a1a30; padding:10px 24px; display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+        .site-nav { background:#0d1117; border-bottom:1px solid #1a1a30; padding:10px 24px; display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
         .nav-brand { font-size:22px; margin-right:12px; }
         .nav-link { padding:9px 18px; font-size:14px; font-weight:800; color:#666; text-decoration:none; border-radius:10px; border:1px solid transparent; transition:all 0.18s; white-space:nowrap; letter-spacing:0.2px; }
         .nav-link:hover { color:#ccc; background:#13132a; border-color:#1f1f3a; }
-        .nav-link[href="index.html"].active     { background:#1a1200; border-color:#f5a623; color:#f5a623; box-shadow:0 0 14px rgba(245,166,35,0.25); }
-        .nav-link[href="game.html"].active      { background:#0a1a10; border-color:#00d4aa; color:#00d4aa; box-shadow:0 0 14px rgba(0,212,170,0.25); }
-        .nav-link[href="meme.html"].active      { background:#140a20; border-color:#a855f7; color:#a855f7; box-shadow:0 0 14px rgba(168,85,247,0.25); }
-        .nav-link[href="portfolio.html"].active { background:#0a1520; border-color:#38bdf8; color:#38bdf8; box-shadow:0 0 14px rgba(56,189,248,0.25); }
-        .nav-link[href="news.html"].active      { background:#1a0808; border-color:#ff6b6b; color:#ff6b6b; box-shadow:0 0 14px rgba(255,107,107,0.25); }
-        .nav-link[href="stocks.html"].active    { background:#061a0a; border-color:#22c55e; color:#22c55e; box-shadow:0 0 14px rgba(34,197,94,0.25); }
+        .nav-link[href="index.html"].active     { background:#1a1200; border-color:#f5a623; color:#f5a623; }
+        .nav-link[href="game.html"].active      { background:#0a1a10; border-color:#00d4aa; color:#00d4aa; }
+        .nav-link[href="meme.html"].active      { background:#140a20; border-color:#a855f7; color:#a855f7; }
+        .nav-link[href="portfolio.html"].active { background:#0a1520; border-color:#38bdf8; color:#38bdf8; }
+        .nav-link[href="news.html"].active      { background:#1a0808; border-color:#ff6b6b; color:#ff6b6b; }
+        .nav-link[href="stocks.html"].active    { background:#061a0a; border-color:#22c55e; color:#22c55e; }
         .nav-link[href="index.html"]:not(.active):hover     { color:#f5a623; }
         .nav-link[href="game.html"]:not(.active):hover      { color:#00d4aa; }
         .nav-link[href="meme.html"]:not(.active):hover      { color:#a855f7; }
@@ -71,7 +73,7 @@
         @keyframes livePulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.8)} }
 
         /* ── PRICE SECTION ── */
-        .price-section { background:#0d0d1f; border-bottom:1px solid #1a1a35; padding:16px 24px; }
+        .price-section { background:#161b22; border-bottom:1px solid #1a1a35; padding:16px 24px; }
         .price-section-label { font-size:10px; font-weight:800; color:#22c55e; text-transform:uppercase; letter-spacing:2px; border-left:3px solid #22c55e; padding:4px 10px; margin-bottom:14px; }
         .price-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:10px; }
         .price-card { background:#13132a; border:1px solid #1f1f3a; border-radius:12px; padding:14px 16px; cursor:default; transition:all 0.18s; }
@@ -87,13 +89,13 @@
         .price-skel { height:80px; border-radius:12px; }
 
         /* ── STATS STRIP ── */
-        .stats-strip { background:#0d0d1f; border-bottom:1px solid #1a1a35; padding:10px 28px; display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+        .stats-strip { background:#161b22; border-bottom:1px solid #1a1a35; padding:10px 28px; display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
         .stat-pill { background:#13132a; border:1px solid #1f1f3a; border-radius:20px; padding:5px 14px; font-size:12px; color:#aaa; display:flex; align-items:center; gap:6px; }
         .stat-pill strong { color:#e8e8f0; }
         .refresh-note { font-size:11px; color:#444; margin-left:auto; }
 
         /* ── FILTER BAR ── */
-        .filter-bar { background:#0d0d1f; border-bottom:1px solid #1a1a35; padding:12px 28px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+        .filter-bar { background:#161b22; border-bottom:1px solid #1a1a35; padding:12px 28px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
         .filter-label { font-size:10px; font-weight:800; color:#444; text-transform:uppercase; letter-spacing:1.5px; margin-right:4px; }
         .filter-btn { padding:6px 14px; border-radius:8px; font-size:12px; font-weight:700; border:1px solid #1f1f3a; background:#13132a; color:#555; cursor:pointer; transition:all 0.15s; }
         .filter-btn:hover { color:#ccc; border-color:#333; }
@@ -113,7 +115,7 @@
         .news-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:20px; }
         .news-card { background:#13132a; border:1px solid #1f1f3a; border-radius:16px; overflow:hidden; text-decoration:none; color:inherit; display:flex; flex-direction:column; transition:all 0.2s; }
         .news-card:hover { border-color:#22c55e; box-shadow:0 4px 24px rgba(34,197,94,0.12); transform:translateY(-2px); }
-        .news-card-image { width:100%; height:170px; object-fit:cover; background:#0d0d1f; display:block; }
+        .news-card-image { width:100%; height:170px; object-fit:cover; background:#161b22; display:block; }
         .news-card-image-placeholder { width:100%; height:170px; background:linear-gradient(135deg,#061a0a,#050f07); display:flex; align-items:center; justify-content:center; font-size:48px; }
         .news-card-body { padding:16px 18px; flex:1; display:flex; flex-direction:column; gap:10px; }
         .news-top { display:flex; align-items:center; justify-content:space-between; gap:8px; }
@@ -156,7 +158,7 @@
         .error-banner { background:#0a1a0a; border:1px solid #22c55e30; border-radius:12px; padding:14px 20px; color:#22c55e; font-size:13px; margin-bottom:20px; display:none; }
 
         /* ── TRENDING ── */
-        .trending-strip { background:#0d0d1f; border-bottom:1px solid #1a1a35; padding:8px 28px; overflow:hidden; white-space:nowrap; position:relative; }
+        .trending-strip { background:#161b22; border-bottom:1px solid #1a1a35; padding:8px 28px; overflow:hidden; white-space:nowrap; position:relative; }
         .trending-strip::before,.trending-strip::after { content:''; position:absolute; top:0; bottom:0; width:40px; z-index:2; pointer-events:none; }
         .trending-strip::before { left:0; background:linear-gradient(to right,#0d0d1f,transparent); }
         .trending-strip::after  { right:0; background:linear-gradient(to left,#0d0d1f,transparent); }
@@ -166,8 +168,10 @@
         .trend-item { font-size:11px; color:#555; font-weight:700; display:inline-flex; align-items:center; gap:5px; }
         .trend-item span { color:#22c55e; }
         .trend-label { font-size:10px; font-weight:800; color:#333; text-transform:uppercase; letter-spacing:1px; margin-right:8px; }
-            .nav-link[href="calendar.html"].active   { background:#1a0d00; border-color:#f97316; color:#f97316; box-shadow:0 0 14px rgba(249,115,22,.25); }
+            .nav-link[href="calendar.html"].active   { background:#1a0d00; border-color:#f97316; color:#f97316; }
         .nav-link[href="calendar.html"]:not(.active):hover   { color:#f97316; }
+        .nav-link[href="funding.html"].active    { background: #061a12; border-color: #10b981; color: #10b981; }
+        .nav-link[href="funding.html"]:not(.active):hover { color: #10b981; }
     </style>
 </head>
 <body>
@@ -185,6 +189,7 @@
     <a href="whales.html"    class="nav-link">🐋 Whales</a>
     <a href="defi.html"      class="nav-link">🌊 DeFi</a>
     <a href="calendar.html"  class="nav-link">📅 Calendar</a>
+    <a href="funding.html" class="nav-link">📈 Funding</a>
     <a href="pulse.html"     class="nav-link">⚡ Pulse</a>
     <button class="theme-toggle" onclick="toggleTheme()">☀️</button>
 </nav>
