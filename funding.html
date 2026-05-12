@@ -341,8 +341,10 @@ const SYMBOLS = [
     { symbol: 'ARBUSDT',  name: 'Arbitrum',  sym: 'ARB',  logo: 'https://assets.coingecko.com/coins/images/16547/small/photo_2023-03-29_21.47.00.jpeg' },
 ];
 
-const BINANCE_FUNDING = 'https://fapi.binance.com/fapi/v1/premiumIndex';
-const BINANCE_OI      = 'https://fapi.binance.com/fapi/v1/openInterest';
+// fapi.binance.com blocks browser CORS — route through allorigins proxy
+const CORS_PROXY      = 'https://api.allorigins.win/raw?url=';
+const BINANCE_FUNDING = CORS_PROXY + encodeURIComponent('https://fapi.binance.com/fapi/v1/premiumIndex');
+const BINANCE_OI_BASE = 'https://fapi.binance.com/fapi/v1/openInterest';
 const BYBIT_FUNDING   = 'https://api.bybit.com/v5/market/tickers?category=linear';
 
 let currentExchange = 'binance';
@@ -352,10 +354,21 @@ let cachedData = {};
    FETCH
 ────────────────────────────────────────────────────── */
 async function fetchBinanceFunding() {
-    const r = await fetch(BINANCE_FUNDING, { signal: AbortSignal.timeout(10000) });
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    const all = await r.json();
-    // Filter to our symbols
+    // Try allorigins first, fall back to corsproxy.io
+    const proxies = [
+        'https://api.allorigins.win/raw?url=' + encodeURIComponent('https://fapi.binance.com/fapi/v1/premiumIndex'),
+        'https://corsproxy.io/?' + encodeURIComponent('https://fapi.binance.com/fapi/v1/premiumIndex'),
+    ];
+    let all = null;
+    for (const url of proxies) {
+        try {
+            const r = await fetch(url, { signal: AbortSignal.timeout(12000) });
+            if (!r.ok) continue;
+            const data = await r.json();
+            if (Array.isArray(data) && data.length > 0) { all = data; break; }
+        } catch (e) { console.warn('Proxy failed:', url, e); }
+    }
+    if (!all) throw new Error('All proxies failed for Binance');
     const map = {};
     for (const item of all) {
         map[item.symbol] = {
@@ -369,10 +382,11 @@ async function fetchBinanceFunding() {
 
 async function fetchBinanceOI(symbol) {
     try {
-        const r = await fetch(`${BINANCE_OI}?symbol=${symbol}`, { signal: AbortSignal.timeout(5000) });
+        const url = CORS_PROXY + encodeURIComponent(`${BINANCE_OI_BASE}?symbol=${symbol}`);
+        const r = await fetch(url, { signal: AbortSignal.timeout(6000) });
         if (!r.ok) return null;
         const j = await r.json();
-        return parseFloat(j.openInterest) * parseFloat(j.openInterest > 0 ? 1 : 0);
+        return parseFloat(j.openInterest) || null;
     } catch { return null; }
 }
 
