@@ -1,0 +1,30 @@
+name: 🐋 Whale Alert Bot
+
+on:
+  schedule:
+    # Runs every hour at :05 past the hour (UTC)
+    - cron: '5 * * * *'
+  workflow_dispatch:   # Allow manual trigger from GitHub Actions UI
+
+jobs:
+  run-whale-alert:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r bots/requirements.txt
+
+      - name: Run Whale Alert
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID:   ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python bots/whale_alert.py
