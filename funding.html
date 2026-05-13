@@ -341,20 +341,30 @@ const SYMBOLS = [
     { symbol: 'ARBUSDT',  name: 'Arbitrum',  sym: 'ARB',  logo: 'https://assets.coingecko.com/coins/images/16547/small/photo_2023-03-29_21.47.00.jpeg' },
 ];
 
-// CoinGecko derivatives API — CORS-safe, no key needed
-// Returns funding rates + OI for all major exchanges including Binance Futures
+// CoinGecko derivatives API — CORS-safe, no key, covers Binance + Bybit
 const COINGECKO_DERIV = 'https://api.coingecko.com/api/v3/derivatives';
-const BYBIT_FUNDING   = 'https://api.bybit.com/v5/market/tickers?category=linear';
 
 let currentExchange = 'binance';
-let cachedData = {};
+let cachedData      = {};
+let cgCache         = null; // raw CoinGecko response — shared between both tabs
 
 /* ──────────────────────────────────────────────────────
    FETCH
 ────────────────────────────────────────────────────── */
 
-// Binance settles at 00:00, 08:00, 16:00 UTC — calculate next window
-function nextBinanceFundingTime() {
+// Fetch CoinGecko derivatives once and reuse for both tabs
+async function fetchCoinGecko() {
+    if (cgCache) return cgCache;
+    const r = await fetch(COINGECKO_DERIV, { signal: AbortSignal.timeout(15000) });
+    if (!r.ok) throw new Error(`CoinGecko HTTP ${r.status}`);
+    cgCache = await r.json();
+    // Expire cache after 5 min so refresh always gets fresh data
+    setTimeout(() => { cgCache = null; }, 5 * 60 * 1000);
+    return cgCache;
+}
+
+// Next Binance/Bybit funding window: 00:00, 08:00, 16:00 UTC
+function nextFundingTime() {
     const now = Date.now();
     const d = new Date();
     d.setUTCMinutes(0, 0, 0);
@@ -367,27 +377,18 @@ function nextBinanceFundingTime() {
     return d.getTime();
 }
 
-async function fetchBinanceFunding() {
-    const r = await fetch(COINGECKO_DERIV, { signal: AbortSignal.timeout(15000) });
-    if (!r.ok) throw new Error(`CoinGecko HTTP ${r.status}`);
-    const all = await r.json();
-
-    // Filter Binance Futures perpetuals only
-    const nextTime = nextBinanceFundingTime();
+// Build a funding map from CoinGecko data filtered by exchange market name
+function buildMapFromCG(all, marketName) {
+    const nextTime = nextFundingTime();
     const map = {};
-
     for (const t of all) {
-        if (t.market !== 'Binance (Futures)') continue;
+        if (!t.market.toLowerCase().includes(marketName.toLowerCase())) continue;
         if (t.contract_type !== 'perpetual') continue;
         if (t.expired_at !== null) continue;
-
         // CoinGecko symbol: "BTC-USDT" → "BTCUSDT"
         const symbol = t.symbol.replace('-', '');
-
-        // CoinGecko returns funding_rate as a percentage (e.g. 0.01 = 0.01%)
-        // Convert to decimal to match Binance format (0.01% → 0.0001)
+        // funding_rate is a percentage string (0.01 = 0.01%) → convert to decimal
         const rate = parseFloat(t.funding_rate) / 100;
-
         map[symbol] = {
             rate,
             nextTime,
@@ -395,24 +396,20 @@ async function fetchBinanceFunding() {
             oi:        parseFloat(t.open_interest) || 0,
         };
     }
+    return map;
+}
 
-    if (!Object.keys(map).length) throw new Error('No Binance Futures data from CoinGecko');
+async function fetchBinanceFunding() {
+    const all = await fetchCoinGecko();
+    const map = buildMapFromCG(all, 'Binance');
+    if (!Object.keys(map).length) throw new Error('No Binance data from CoinGecko');
     return map;
 }
 
 async function fetchBybitFunding() {
-    const r = await fetch(BYBIT_FUNDING, { signal: AbortSignal.timeout(10000) });
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    const j = await r.json();
-    const map = {};
-    for (const item of (j.result?.list || [])) {
-        map[item.symbol] = {
-            rate:      parseFloat(item.fundingRate),
-            nextTime:  parseInt(item.nextFundingTime),
-            markPrice: parseFloat(item.markPrice),
-            oi:        parseFloat(item.openInterestValue),
-        };
-    }
+    const all = await fetchCoinGecko();
+    const map = buildMapFromCG(all, 'Bybit');
+    if (!Object.keys(map).length) throw new Error('No Bybit data from CoinGecko');
     return map;
 }
 
