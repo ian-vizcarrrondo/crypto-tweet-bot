@@ -341,10 +341,9 @@ const SYMBOLS = [
     { symbol: 'ARBUSDT',  name: 'Arbitrum',  sym: 'ARB',  logo: 'https://assets.coingecko.com/coins/images/16547/small/photo_2023-03-29_21.47.00.jpeg' },
 ];
 
-// fapi.binance.com blocks browser CORS — route through allorigins proxy
-const CORS_PROXY      = 'https://api.allorigins.win/raw?url=';
-const BINANCE_FUNDING = CORS_PROXY + encodeURIComponent('https://fapi.binance.com/fapi/v1/premiumIndex');
-const BINANCE_OI_BASE = 'https://fapi.binance.com/fapi/v1/openInterest';
+// CoinGecko derivatives API — CORS-safe, no key needed
+// Returns funding rates + OI for all major exchanges including Binance Futures
+const COINGECKO_DERIV = 'https://api.coingecko.com/api/v3/derivatives';
 const BYBIT_FUNDING   = 'https://api.bybit.com/v5/market/tickers?category=linear';
 
 let currentExchange = 'binance';
@@ -353,41 +352,52 @@ let cachedData = {};
 /* ──────────────────────────────────────────────────────
    FETCH
 ────────────────────────────────────────────────────── */
-async function fetchBinanceFunding() {
-    // Try allorigins first, fall back to corsproxy.io
-    const proxies = [
-        'https://api.allorigins.win/raw?url=' + encodeURIComponent('https://fapi.binance.com/fapi/v1/premiumIndex'),
-        'https://corsproxy.io/?' + encodeURIComponent('https://fapi.binance.com/fapi/v1/premiumIndex'),
-    ];
-    let all = null;
-    for (const url of proxies) {
-        try {
-            const r = await fetch(url, { signal: AbortSignal.timeout(12000) });
-            if (!r.ok) continue;
-            const data = await r.json();
-            if (Array.isArray(data) && data.length > 0) { all = data; break; }
-        } catch (e) { console.warn('Proxy failed:', url, e); }
+
+// Binance settles at 00:00, 08:00, 16:00 UTC — calculate next window
+function nextBinanceFundingTime() {
+    const now = Date.now();
+    const d = new Date();
+    d.setUTCMinutes(0, 0, 0);
+    for (const h of [0, 8, 16]) {
+        d.setUTCHours(h);
+        if (d.getTime() > now) return d.getTime();
     }
-    if (!all) throw new Error('All proxies failed for Binance');
-    const map = {};
-    for (const item of all) {
-        map[item.symbol] = {
-            rate:        parseFloat(item.lastFundingRate),
-            nextTime:    parseInt(item.nextFundingTime),
-            markPrice:   parseFloat(item.markPrice),
-        };
-    }
-    return map;
+    d.setUTCDate(d.getUTCDate() + 1);
+    d.setUTCHours(0);
+    return d.getTime();
 }
 
-async function fetchBinanceOI(symbol) {
-    try {
-        const url = CORS_PROXY + encodeURIComponent(`${BINANCE_OI_BASE}?symbol=${symbol}`);
-        const r = await fetch(url, { signal: AbortSignal.timeout(6000) });
-        if (!r.ok) return null;
-        const j = await r.json();
-        return parseFloat(j.openInterest) || null;
-    } catch { return null; }
+async function fetchBinanceFunding() {
+    const r = await fetch(COINGECKO_DERIV, { signal: AbortSignal.timeout(15000) });
+    if (!r.ok) throw new Error(`CoinGecko HTTP ${r.status}`);
+    const all = await r.json();
+
+    // Filter Binance Futures perpetuals only
+    const nextTime = nextBinanceFundingTime();
+    const map = {};
+
+    for (const t of all) {
+        if (t.market !== 'Binance (Futures)') continue;
+        if (t.contract_type !== 'perpetual') continue;
+        if (t.expired_at !== null) continue;
+
+        // CoinGecko symbol: "BTC-USDT" → "BTCUSDT"
+        const symbol = t.symbol.replace('-', '');
+
+        // CoinGecko returns funding_rate as a percentage (e.g. 0.01 = 0.01%)
+        // Convert to decimal to match Binance format (0.01% → 0.0001)
+        const rate = parseFloat(t.funding_rate) / 100;
+
+        map[symbol] = {
+            rate,
+            nextTime,
+            markPrice: parseFloat(t.price),
+            oi:        parseFloat(t.open_interest) || 0,
+        };
+    }
+
+    if (!Object.keys(map).length) throw new Error('No Binance Futures data from CoinGecko');
+    return map;
 }
 
 async function fetchBybitFunding() {
