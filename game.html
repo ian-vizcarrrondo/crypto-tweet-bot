@@ -7,34 +7,44 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🎮 CryptoDoggy — Predict</title>
     <style>
+        /* ── DESIGN TOKENS ─────────────────────────────────────── */
+        :root {
+            --bg:          #0d1117;
+            --bg-card:     #161b22;
+            --bg-nav:      #0d1117;
+            --border:      #21262d;
+            --text:        #e6edf3;
+            --text-muted:  #7d8590;
+            --accent:      #3b82f6;
+            --accent-sub:  rgba(59,130,246,0.10);
+            --accent-brd:  rgba(59,130,246,0.25);
+            --c-green:     #3fb950;
+            --c-red:       #f85149;
+        }
+        @media (prefers-color-scheme: light) {
+            :root {
+                --bg:          #ffffff;
+                --bg-card:     #f6f8fa;
+                --bg-nav:      #ffffff;
+                --border:      #d0d7de;
+                --text:        #1f2328;
+                --text-muted:  #656d76;
+                --accent:      #0969da;
+                --accent-sub:  rgba(9,105,218,0.08);
+                --accent-brd:  rgba(9,105,218,0.25);
+                --c-green:     #1a7f37;
+                --c-red:       #cf222e;
+            }
+        }
+
         * { margin:0; padding:0; box-sizing:border-box; }
-        body { background:#0d1117; color:#e8e8f0; font-family:'Segoe UI',system-ui,sans-serif; min-height:100vh; }
+        body { background: var(--bg); color: var(--text); font-family:'Segoe UI',system-ui,sans-serif; min-height:100vh; }
 
         /* NAV */
-        .site-nav { background:#0d1117; border-bottom:1px solid #1a1a30; padding:10px 24px; display:flex; align-items:center; gap:6px; }
+        .site-nav { background: var(--bg-nav); border-bottom:1px solid var(--border); padding:10px 24px; display:flex; align-items:center; gap:6px; }
         .nav-brand { font-size:22px; margin-right:12px; }
-        .nav-link { padding:9px 18px; font-size:14px; font-weight:800; color:#666; text-decoration:none; border-radius:10px; border:1px solid transparent; transition:all 0.18s; white-space:nowrap; letter-spacing:0.2px; }
-        .nav-link:hover { color:#ccc; background:#13132a; border-color:#1f1f3a; }
-        .nav-link[href="index.html"].active  { background:#1a1200; border-color:#f5a623; color:#f5a623; }
-        .nav-link[href="game.html"].active   { background:#0a1a10; border-color:#00d4aa; color:#00d4aa; }
-        .nav-link[href="meme.html"].active   { background:#140a20; border-color:#a855f7; color:#a855f7; }
-        .nav-link[href="index.html"]:not(.active):hover      { color:#f5a623; }
-        .nav-link[href="game.html"]:not(.active):hover       { color:#00d4aa; }
-        .nav-link[href="meme.html"]:not(.active):hover       { color:#a855f7; }
-        .nav-link[href="portfolio.html"].active              { background:#0a1520; border-color:#38bdf8; color:#38bdf8; }
-        .nav-link[href="portfolio.html"]:not(.active):hover  { color:#38bdf8; }
-        .nav-link[href="news.html"].active      { background:#1a0808; border-color:#ff6b6b; color:#ff6b6b; }
-        .nav-link[href="news.html"]:not(.active):hover       { color:#ff6b6b; }
-        .nav-link[href="stocks.html"].active    { background:#061a0a; border-color:#22c55e; color:#22c55e; }
-        .nav-link[href="stocks.html"]:not(.active):hover     { color:#22c55e; }
-        .theme-toggle { margin-left:auto; background:none; border:1px solid #1f1f3a; border-radius:20px; padding:6px 13px; color:#666; cursor:pointer; font-size:15px; transition:all 0.18s; }
-        .theme-toggle:hover { border-color:#444; color:#ccc; }
-        body.light { background:#f0f2f8; color:#1a1a2e; }
-        body.light .site-nav { background:#fff; border-color:#e0e0f0; }
-        body.light .nav-link { color:#999; }
-        body.light .nav-link:hover { background:#f4f4fc; border-color:#dde0ee; }
-        body.light .theme-toggle { border-color:#dde0ee; color:#999; }
-        body.light .theme-toggle:hover { border-color:#aaa; color:#333; }
+        .nav-link { padding:9px 18px; font-size:14px; font-weight:800; color: var(--text-muted); text-decoration:none; border-radius:10px; border:1px solid transparent; transition:all 0.18s; white-space:nowrap; letter-spacing:0.2px; }
+        .nav-link:hover { color: var(--text); background: var(--bg-card); border-color: var(--border); }
         .mood-bar { height:3px; background:#f5a623; }
 
         /* LAYOUT */
@@ -45,7 +55,7 @@
 
         /* STREAK */
         .streak-bar { display:flex; justify-content:center; gap:24px; margin-bottom:36px; flex-wrap:wrap; }
-        .streak-card { background:#13132a; border:1px solid #1f1f3a; border-radius:14px; padding:16px 28px; text-align:center; min-width:130px; }
+        .streak-card { background: var(--bg-card); border:1px solid var(--border); border-radius:14px; padding:16px 28px; text-align:center; min-width:130px; }
         .streak-card .sc-label { font-size:10px; color:#555; text-transform:uppercase; letter-spacing:1.2px; }
         .streak-card .sc-value { font-size:28px; font-weight:900; margin-top:4px; color:#f5a623; }
         .streak-card.best .sc-value { color:#a855f7; }
@@ -54,14 +64,14 @@
         .coin-selector { display:flex; justify-content:center; gap:12px; margin-bottom:32px; flex-wrap:wrap; }
         .coin-tab {
             padding:10px 22px; border-radius:12px; font-size:14px; font-weight:700;
-            border:2px solid #1f1f3a; background:#13132a; color:#555; cursor:pointer; transition:all 0.15s;
+            border:2px solid #1f1f3a; background: var(--bg-card); color:#555; cursor:pointer; transition:all 0.15s;
         }
         .coin-tab.active { border-color:#f5a623; color:#f5a623; background:#1a1608; }
         .coin-tab:hover:not(.active) { color:#aaa; border-color:#333; }
 
         /* MAIN CARD */
         .game-card {
-            background:#13132a; border:1px solid #1f1f3a; border-radius:20px;
+            background: var(--bg-card); border:1px solid var(--border); border-radius:20px;
             padding:36px; text-align:center; max-width:480px; margin:0 auto 32px;
             position:relative; overflow:hidden;
         }
@@ -96,7 +106,7 @@
 
         /* WAITING STATE */
         .waiting-card {
-            background:#13132a; border:1px solid #1f1f3a; border-radius:20px;
+            background: var(--bg-card); border:1px solid var(--border); border-radius:20px;
             padding:36px; text-align:center; max-width:480px; margin:0 auto 32px;
         }
         .waiting-icon { font-size:52px; margin-bottom:12px; }
@@ -104,7 +114,7 @@
         .waiting-pred { font-size:24px; font-weight:900; margin-bottom:20px; }
         .waiting-pred.up   { color:#00d4aa; }
         .waiting-pred.down { color:#ff4757; }
-        .price-row { display:flex; justify-content:space-between; background:#0d1117; border-radius:10px; padding:14px 18px; margin-bottom:12px; font-size:14px; }
+        .price-row { display:flex; justify-content:space-between; background: var(--bg); border-radius:10px; padding:14px 18px; margin-bottom:12px; font-size:14px; }
         .price-row .pr-label { color:#555; }
         .price-row .pr-val   { font-weight:700; }
         .countdown-wrap { margin-top:16px; }
@@ -114,7 +124,7 @@
 
         /* RESULT STATE */
         .result-card {
-            background:#13132a; border-radius:20px;
+            background: var(--bg-card); border-radius:20px;
             padding:40px 36px; text-align:center; max-width:480px; margin:0 auto 32px;
             animation:resultPop 0.4s cubic-bezier(0.175,0.885,0.32,1.275);
         }
@@ -138,7 +148,7 @@
         .history-section { max-width:480px; margin:0 auto; }
         .history-title { font-size:12px; color:#555; text-transform:uppercase; letter-spacing:1.5px; margin-bottom:12px; }
         .history-list { display:flex; flex-direction:column; gap:8px; }
-        .history-item { background:#13132a; border-radius:10px; padding:12px 16px; display:flex; align-items:center; gap:12px; font-size:13px; }
+        .history-item { background: var(--bg-card); border-radius:10px; padding:12px 16px; display:flex; align-items:center; gap:12px; font-size:13px; }
         .history-item .hi-result { font-size:18px; }
         .history-item .hi-info { flex:1; }
         .history-item .hi-coin  { font-weight:700; }
@@ -150,29 +160,30 @@
         /* LOADING */
         .loading { text-align:center; padding:60px; color:#444; font-size:24px; animation:pulse 1.5s ease-in-out infinite; }
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-            .nav-link[href="calendar.html"].active   { background:#1a0d00; border-color:#f97316; color:#f97316; }
-        .nav-link[href="calendar.html"]:not(.active):hover   { color:#f97316; }
-        .nav-link[href="funding.html"].active    { background: #061a12; border-color: #10b981; color: #10b981; }
-        .nav-link[href="funding.html"]:not(.active):hover { color: #10b981; }
-    </style>
+    
+
+        /* ── NAV STATE ─────────────────────────────────────────── */
+        .nav-link.active             { color: var(--accent); background: var(--accent-sub); border-color: var(--accent-brd); }
+        .nav-link:not(.active):hover { color: var(--accent); }
+
+</style>
 </head>
 <body>
 
 <nav class="site-nav">
-    <span class="nav-brand">🐶</span>
-    <a href="index.html" class="nav-link">📊 Dashboard</a>
-    <a href="game.html" class="nav-link active">🎮 Predict</a>
-    <a href="meme.html" class="nav-link">🐸 Meme Zone</a>
-    <a href="portfolio.html" class="nav-link">💼 Portfolio</a>
-    <a href="news.html" class="nav-link">📰 News Hub</a>
-    <a href="stocks.html"    class="nav-link">📊 Stocks</a>
-    <a href="signals.html"   class="nav-link">📡 Signals</a>
-    <a href="whales.html"    class="nav-link">🐋 Whales</a>
-    <a href="defi.html"      class="nav-link">🌊 DeFi</a>
-    <a href="calendar.html"  class="nav-link">📅 Calendar</a>
+    <span class="nav-brand">🐕</span>
+    <a href="index.html" class="nav-link">Dashboard</a>
+    <a href="game.html" class="nav-link active">Predict</a>
+    <a href="meme.html" class="nav-link">🐸 Meme</a>
+    <a href="portfolio.html" class="nav-link">Portfolio</a>
+    <a href="news.html" class="nav-link">News</a>
+    <a href="stocks.html" class="nav-link">Stocks</a>
+    <a href="signals.html" class="nav-link">Signals</a>
+    <a href="whales.html" class="nav-link">🐋 Whales</a>
+    <a href="defi.html" class="nav-link">🌊 DeFi</a>
+    <a href="calendar.html" class="nav-link">📅 Calendar</a>
     <a href="funding.html" class="nav-link">📈 Funding</a>
-    <a href="pulse.html"     class="nav-link">⚡ Pulse</a>
-    <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()">☀️</button>
+    <a href="pulse.html" class="nav-link">Pulse</a>
 </nav>
 <div class="mood-bar"></div>
 
@@ -432,19 +443,8 @@ async function init() {
     }
 }
 
-function initTheme() {
-    if (localStorage.getItem('cryptodoggy_theme') === 'light') {
-        document.body.classList.add('light');
-        document.getElementById('theme-toggle').textContent = '🌙';
-    }
-}
-function toggleTheme() {
-    const isLight = document.body.classList.toggle('light');
-    localStorage.setItem('cryptodoggy_theme', isLight ? 'light' : 'dark');
-    document.getElementById('theme-toggle').textContent = isLight ? '🌙' : '☀️';
 }
 
-initTheme();
 init();
 </script>
 </body>

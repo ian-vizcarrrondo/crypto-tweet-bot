@@ -7,43 +7,51 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🐋 CryptoDoggy Whale Watch</title>
     <style>
+        /* ── DESIGN TOKENS ─────────────────────────────────────── */
+        :root {
+            --bg:          #0d1117;
+            --bg-card:     #161b22;
+            --bg-nav:      #0d1117;
+            --border:      #21262d;
+            --text:        #e6edf3;
+            --text-muted:  #7d8590;
+            --accent:      #3b82f6;
+            --accent-sub:  rgba(59,130,246,0.10);
+            --accent-brd:  rgba(59,130,246,0.25);
+            --c-green:     #3fb950;
+            --c-red:       #f85149;
+        }
+        @media (prefers-color-scheme: light) {
+            :root {
+                --bg:          #ffffff;
+                --bg-card:     #f6f8fa;
+                --bg-nav:      #ffffff;
+                --border:      #d0d7de;
+                --text:        #1f2328;
+                --text-muted:  #656d76;
+                --accent:      #0969da;
+                --accent-sub:  rgba(9,105,218,0.08);
+                --accent-brd:  rgba(9,105,218,0.25);
+                --c-green:     #1a7f37;
+                --c-red:       #cf222e;
+            }
+        }
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: #0d1117; color: #e8e8f0; font-family: 'Inter', 'Segoe UI', system-ui, sans-serif; min-height: 100vh; }
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', 'Segoe UI', system-ui, sans-serif; min-height: 100vh; }
 
         /* ── NAV ── */
         .site-nav {
-            background: #0d1117; border-bottom: 1px solid #21262d;
+            background: var(--bg-nav); border-bottom: 1px solid var(--border);
             padding: 10px 24px; display: flex; align-items: center; gap: 6px;
         }
         .nav-brand { font-size: 22px; margin-right: 12px; }
         .nav-link {
-            padding: 8px 16px; font-size: 13px; font-weight: 600; color: #666;
+            padding: 8px 16px; font-size: 13px; font-weight: 600; color: var(--text-muted);
             text-decoration: none; border-radius: 10px; border: 1px solid transparent;
             transition: all 0.18s; white-space: nowrap; letter-spacing: 0.2px;
         }
-        .nav-link:hover { color: #aaa; background: #161b22; border-color: #21262d; }
-        .nav-link[href="index.html"].active      { background:#1a1200; border-color:#f5a623; color:#f5a623; }
-        .nav-link[href="game.html"].active       { background:#0a1a10; border-color:#00d4aa; color:#00d4aa; }
-        .nav-link[href="meme.html"].active       { background:#140a20; border-color:#a855f7; color:#a855f7; }
-        .nav-link[href="portfolio.html"].active  { background:#0a1520; border-color:#38bdf8; color:#38bdf8; }
-        .nav-link[href="news.html"].active       { background:#1a0808; border-color:#ff6b6b; color:#ff6b6b; }
-        .nav-link[href="stocks.html"].active     { background:#061a0a; border-color:#22c55e; color:#22c55e; }
-        .nav-link[href="signals.html"].active    { background:#001a20; border-color:#06b6d4; color:#06b6d4; }
-        .nav-link[href="whales.html"].active     { background:#070f2a; border-color:#3b82f6; color:#3b82f6; }
-        .nav-link[href="index.html"]:not(.active):hover     { color:#f5a623; }
-        .nav-link[href="game.html"]:not(.active):hover      { color:#00d4aa; }
-        .nav-link[href="meme.html"]:not(.active):hover      { color:#a855f7; }
-        .nav-link[href="portfolio.html"]:not(.active):hover { color:#38bdf8; }
-        .nav-link[href="news.html"]:not(.active):hover      { color:#ff6b6b; }
-        .nav-link[href="stocks.html"]:not(.active):hover    { color:#22c55e; }
-        .nav-link[href="signals.html"]:not(.active):hover   { color:#06b6d4; }
-        .nav-link[href="whales.html"]:not(.active):hover    { color:#3b82f6; }
-        .theme-toggle {
-            margin-left:auto; background:none; border:1px solid #1f1f3a;
-            border-radius:20px; padding:6px 13px; color:#666; cursor:pointer;
-            font-size:15px; transition:all .18s; flex-shrink:0;
-        }
-        .theme-toggle:hover { border-color:#444; color:#ccc; }
+        .nav-link:hover { color: var(--text); background: var(--bg-card); border-color: var(--border); }
 
         /* ── MOOD BAR ── */
         .mood-bar { height:3px; background:#3b82f6;  }
@@ -100,7 +108,7 @@
             gap:12px; margin-bottom:24px;
         }
         .stat-card {
-            background:#161b22; border:1px solid #1a1a35; border-radius:14px;
+            background: var(--bg-card); border:1px solid var(--border); border-radius:14px;
             padding:16px 20px; transition:all .2s;
         }
         .stat-card:hover { border-color:#3b82f6; box-shadow:0 0 20px rgba(59,130,246,.1); }
@@ -129,7 +137,7 @@
 
         /* ── WHALE CARD ── */
         .whale-card {
-            background:#161b22; border:1px solid #1a1a35;
+            background: var(--bg-card); border:1px solid var(--border);
             border-radius:18px; padding:20px;
         }
 
@@ -173,7 +181,7 @@
         .mover-sym  { font-size:14px; font-weight:800; }
         .mover-name { font-size:11px; color:#555; }
         .mover-right { text-align:right; flex-shrink:0; }
-        .mover-price { font-size:13px; font-weight:700; color:#e8e8f0; }
+        .mover-price { font-size:13px; font-weight:700; color: var(--text); }
         .mover-pct   { font-size:14px; font-weight:900; margin-top:1px; }
         .pos { color:#22c55e; } .neg { color:#ff4757; }
 
@@ -197,7 +205,7 @@
         .skeleton {
             background:linear-gradient(90deg,#0d0d1f 25%,#13132a 50%,#0d0d1f 75%);
             background-size:200% 100%; animation:shimmer 1.5s infinite;
-            border-radius:18px; height:320px; border:1px solid #1a1a35;
+            border-radius:18px; height:320px; border:1px solid var(--border);
         }
         @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
 
@@ -206,22 +214,9 @@
         .empty .e-icon { font-size:40px; margin-bottom:10px; }
 
         /* ── DISCLAIMER ── */
-        .disclaimer { text-align:center; font-size:11px; color:#2a2a45; padding:20px; margin-top:8px; border-top:1px solid #1a1a35; }
+        .disclaimer { text-align:center; font-size:11px; color:#2a2a45; padding:20px; margin-top:8px; border-top:1px solid var(--border); }
 
         /* ── LIGHT THEME ── */
-        body.light { background:#f5f7fa; color:#1a1a2e; }
-        body.light .site-nav { background:#fff; border-color:#e0e0f0; }
-        body.light .header { background:linear-gradient(135deg,#dbeafe 0%,#f0f5ff 100%); }
-        body.light .stat-card, body.light .whale-card { background:#fff; border-color:#e0e0f0; }
-        body.light .spike-row, body.light .mover-row { border-color:#eee; }
-        body.light .vol-bar-track { background:#e0e0f0; }
-        body.light .heat-vol { color:rgba(0,0,0,.4); }
-        body.light .disclaimer { border-color:#e0e0f0; color:#ccc; }
-        body.light .coin-full, body.light .coin-price, body.light .mover-name { color:#aaa; }
-        body.light .mover-rank { color:#ccc; }
-        body.light .c-muted { color:#999; }
-        body.light .theme-toggle { border-color:#e0e0f0; }
-        body.light .section-title { color:#7a9fc0; }
 
         @media(max-width:600px){
             .site-nav { gap:3px; padding:8px 10px; }
@@ -229,29 +224,31 @@
             .main { padding:14px; }
             .heatmap-grid { grid-template-columns:repeat(auto-fill,minmax(85px,1fr)); }
         }
-            .nav-link[href="calendar.html"].active   { background:#1a0d00; border-color:#f97316; color:#f97316; }
-        .nav-link[href="calendar.html"]:not(.active):hover   { color:#f97316; }
-        .nav-link[href="funding.html"].active    { background: #061a12; border-color: #10b981; color: #10b981; }
-        .nav-link[href="funding.html"]:not(.active):hover { color: #10b981; }
-    </style>
+    
+
+        /* ── NAV STATE ─────────────────────────────────────────── */
+        .nav-link.active             { color: var(--accent); background: var(--accent-sub); border-color: var(--accent-brd); }
+        .nav-link:not(.active):hover { color: var(--accent); }
+
+</style>
 </head>
 <body>
 
 <!-- ── NAV ── -->
 <nav class="site-nav">
-    <span class="nav-brand">🐶</span>
-    <a href="index.html"     class="nav-link">🏠 Home</a>
-    <a href="game.html"      class="nav-link">🎮 Game</a>
-    <a href="meme.html"      class="nav-link">🐸 Memes</a>
-    <a href="portfolio.html" class="nav-link">💼 Portfolio</a>
-    <a href="news.html"      class="nav-link">📰 News Hub</a>
-    <a href="stocks.html"    class="nav-link">📊 Stocks</a>
-    <a href="signals.html"   class="nav-link">📡 Signals</a>
-    <a href="whales.html"    class="nav-link active">🐋 Whales</a>
-    <a href="defi.html"      class="nav-link">🌊 DeFi</a>
-    <a href="calendar.html"  class="nav-link">📅 Calendar</a>
+    <span class="nav-brand">🐕</span>
+    <a href="index.html" class="nav-link">Dashboard</a>
+    <a href="game.html" class="nav-link">Predict</a>
+    <a href="meme.html" class="nav-link">🐸 Meme</a>
+    <a href="portfolio.html" class="nav-link">Portfolio</a>
+    <a href="news.html" class="nav-link">News</a>
+    <a href="stocks.html" class="nav-link">Stocks</a>
+    <a href="signals.html" class="nav-link">Signals</a>
+    <a href="whales.html" class="nav-link active">🐋 Whales</a>
+    <a href="defi.html" class="nav-link">🌊 DeFi</a>
+    <a href="calendar.html" class="nav-link">📅 Calendar</a>
     <a href="funding.html" class="nav-link">📈 Funding</a>
-    <button class="theme-toggle" onclick="toggleTheme()">☀️</button>
+    <a href="pulse.html" class="nav-link">Pulse</a>
 </nav>
 <div class="mood-bar"></div>
 
@@ -577,15 +574,6 @@ async function loadWhales(manual = false) {
 }
 
 // ── THEME ──
-function toggleTheme() {
-    document.body.classList.toggle('light');
-    const btn = document.querySelector('.theme-toggle');
-    btn.textContent = document.body.classList.contains('light') ? '🌙' : '☀️';
-    localStorage.setItem('theme', document.body.classList.contains('light') ? 'light' : 'dark');
-}
-if (localStorage.getItem('theme') === 'light') {
-    document.body.classList.add('light');
-    document.querySelector('.theme-toggle').textContent = '🌙';
 }
 
 // ── INIT ──

@@ -7,12 +7,42 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CryptoDoggy — Funding Rates</title>
     <style>
+        /* ── DESIGN TOKENS ─────────────────────────────────────── */
+        :root {
+            --bg:          #0d1117;
+            --bg-card:     #161b22;
+            --bg-nav:      #0d1117;
+            --border:      #21262d;
+            --text:        #e6edf3;
+            --text-muted:  #7d8590;
+            --accent:      #3b82f6;
+            --accent-sub:  rgba(59,130,246,0.10);
+            --accent-brd:  rgba(59,130,246,0.25);
+            --c-green:     #3fb950;
+            --c-red:       #f85149;
+        }
+        @media (prefers-color-scheme: light) {
+            :root {
+                --bg:          #ffffff;
+                --bg-card:     #f6f8fa;
+                --bg-nav:      #ffffff;
+                --border:      #d0d7de;
+                --text:        #1f2328;
+                --text-muted:  #656d76;
+                --accent:      #0969da;
+                --accent-sub:  rgba(9,105,218,0.08);
+                --accent-brd:  rgba(9,105,218,0.25);
+                --c-green:     #1a7f37;
+                --c-red:       #cf222e;
+            }
+        }
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: #0d1117; color: #e2e8f0; font-family: 'Inter', 'Segoe UI', system-ui, sans-serif; min-height: 100vh; }
+        body { background: var(--bg); color: #e2e8f0; font-family: 'Inter', 'Segoe UI', system-ui, sans-serif; min-height: 100vh; }
 
         /* ── NAV ── */
         .site-nav {
-            background: #0d1117; border-bottom: 1px solid #21262d;
+            background: var(--bg-nav); border-bottom: 1px solid var(--border);
             padding: 10px 24px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
         }
         .nav-brand { font-size: 20px; margin-right: 10px; }
@@ -21,35 +51,7 @@
             text-decoration: none; border-radius: 8px; border: 1px solid transparent;
             transition: all 0.15s; white-space: nowrap;
         }
-        .nav-link:hover { color: #aaa; background: #161b22; border-color: #21262d; }
-        .nav-link[href="index.html"].active      { background:#161b22; border-color:#f5a623; color:#f5a623; }
-        .nav-link[href="game.html"].active       { background:#161b22; border-color:#00d4aa; color:#00d4aa; }
-        .nav-link[href="meme.html"].active       { background:#161b22; border-color:#a855f7; color:#a855f7; }
-        .nav-link[href="portfolio.html"].active  { background:#161b22; border-color:#38bdf8; color:#38bdf8; }
-        .nav-link[href="news.html"].active       { background:#161b22; border-color:#ff6b6b; color:#ff6b6b; }
-        .nav-link[href="stocks.html"].active     { background:#161b22; border-color:#22c55e; color:#22c55e; }
-        .nav-link[href="signals.html"].active    { background:#161b22; border-color:#06b6d4; color:#06b6d4; }
-        .nav-link[href="whales.html"].active     { background:#161b22; border-color:#3b82f6; color:#3b82f6; }
-        .nav-link[href="defi.html"].active       { background:#161b22; border-color:#8b5cf6; color:#8b5cf6; }
-        .nav-link[href="calendar.html"].active   { background:#161b22; border-color:#f97316; color:#f97316; }
-        .nav-link[href="funding.html"].active    { background:#161b22; border-color:#10b981; color:#10b981; }
-        .nav-link[href="index.html"]:not(.active):hover      { color:#f5a623; }
-        .nav-link[href="game.html"]:not(.active):hover       { color:#00d4aa; }
-        .nav-link[href="meme.html"]:not(.active):hover       { color:#a855f7; }
-        .nav-link[href="portfolio.html"]:not(.active):hover  { color:#38bdf8; }
-        .nav-link[href="news.html"]:not(.active):hover       { color:#ff6b6b; }
-        .nav-link[href="stocks.html"]:not(.active):hover     { color:#22c55e; }
-        .nav-link[href="signals.html"]:not(.active):hover    { color:#06b6d4; }
-        .nav-link[href="whales.html"]:not(.active):hover     { color:#3b82f6; }
-        .nav-link[href="defi.html"]:not(.active):hover       { color:#8b5cf6; }
-        .nav-link[href="calendar.html"]:not(.active):hover   { color:#f97316; }
-        .nav-link[href="funding.html"]:not(.active):hover    { color:#10b981; }
-        .theme-toggle {
-            margin-left: auto; background: none; border: 1px solid #21262d;
-            border-radius: 8px; padding: 6px 12px; color: #586069; cursor: pointer;
-            font-size: 14px; transition: all .15s; flex-shrink: 0;
-        }
-        .theme-toggle:hover { border-color: #444; color: #aaa; }
+        .nav-link:hover { color: var(--text); background: var(--bg-card); border-color: var(--border); }
 
         /* ── TOP BAR ── */
         .top-bar {
@@ -59,8 +61,8 @@
 
         /* ── HEADER ── */
         .header {
-            background: #161b22;
-            border-bottom: 1px solid #21262d;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
             padding: 18px 28px;
             display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
         }
@@ -94,7 +96,7 @@
             gap: 12px; margin-bottom: 24px;
         }
         .sent-card {
-            background: #161b22; border: 1px solid #21262d; border-radius: 12px;
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px;
             padding: 16px 18px;
         }
         .sent-label { font-size: 10px; font-weight: 700; text-transform: uppercase;
@@ -124,7 +126,7 @@
         .exchange-tabs { display: flex; gap: 6px; }
         .tab-btn {
             padding: 5px 12px; font-size: 12px; font-weight: 600; border-radius: 6px;
-            border: 1px solid #21262d; background: none; color: #586069;
+            border: 1px solid var(--border); background: none; color: #586069;
             cursor: pointer; transition: all .15s;
         }
         .tab-btn.active { background: #21262d; color: #e2e8f0; border-color: #30363d; }
@@ -132,7 +134,7 @@
 
         /* ── TABLE ── */
         .table-wrap {
-            background: #161b22; border: 1px solid #21262d; border-radius: 12px;
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px;
             overflow: hidden; margin-bottom: 24px;
         }
         table { width: 100%; border-collapse: collapse; }
@@ -140,11 +142,11 @@
             padding: 11px 16px; text-align: left;
             font-size: 10px; font-weight: 700; text-transform: uppercase;
             letter-spacing: .7px; color: #586069;
-            border-bottom: 1px solid #21262d; background: #0d1117;
+            border-bottom: 1px solid var(--border); background: var(--bg);
         }
         thead th.right { text-align: right; }
         thead th.center { text-align: center; }
-        tbody tr { border-bottom: 1px solid #21262d; transition: background .12s; }
+        tbody tr { border-bottom: 1px solid var(--border); transition: background .12s; }
         tbody tr:last-child { border-bottom: none; }
         tbody tr:hover { background: rgba(255,255,255,.02); }
         tbody td { padding: 13px 16px; vertical-align: middle; }
@@ -203,7 +205,7 @@
 
         /* ── EXPLAINER ── */
         .explainer {
-            background: #161b22; border: 1px solid #21262d; border-radius: 12px;
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px;
             padding: 18px 20px; margin-bottom: 24px;
         }
         .explainer h3 { font-size: 13px; font-weight: 700; color: #e2e8f0; margin-bottom: 10px; }
@@ -230,24 +232,30 @@
         @media(max-width:700px) {
             thead th.hide-mobile, tbody td.hide-mobile { display: none; }
         }
-    </style>
+    
+
+        /* ── NAV STATE ─────────────────────────────────────────── */
+        .nav-link.active             { color: var(--accent); background: var(--accent-sub); border-color: var(--accent-brd); }
+        .nav-link:not(.active):hover { color: var(--accent); }
+
+</style>
 </head>
 <body>
 
 <nav class="site-nav">
     <span class="nav-brand">🐕</span>
-    <a href="index.html"     class="nav-link">📊 Dashboard</a>
-    <a href="game.html"      class="nav-link">🎮 Predict</a>
-    <a href="meme.html"      class="nav-link">🐸 Meme Zone</a>
-    <a href="portfolio.html" class="nav-link">💼 Portfolio</a>
-    <a href="news.html"      class="nav-link">📰 News Hub</a>
-    <a href="stocks.html"    class="nav-link">📊 Stocks</a>
-    <a href="signals.html"   class="nav-link">📡 Signals</a>
-    <a href="whales.html"    class="nav-link">🐋 Whales</a>
-    <a href="defi.html"      class="nav-link">🌊 DeFi</a>
-    <a href="calendar.html"  class="nav-link">📅 Calendar</a>
-    <a href="funding.html"   class="nav-link active">📈 Funding</a>
-    <button class="theme-toggle">☀️</button>
+    <a href="index.html" class="nav-link">Dashboard</a>
+    <a href="game.html" class="nav-link">Predict</a>
+    <a href="meme.html" class="nav-link">🐸 Meme</a>
+    <a href="portfolio.html" class="nav-link">Portfolio</a>
+    <a href="news.html" class="nav-link">News</a>
+    <a href="stocks.html" class="nav-link">Stocks</a>
+    <a href="signals.html" class="nav-link">Signals</a>
+    <a href="whales.html" class="nav-link">🐋 Whales</a>
+    <a href="defi.html" class="nav-link">🌊 DeFi</a>
+    <a href="calendar.html" class="nav-link">📅 Calendar</a>
+    <a href="funding.html" class="nav-link active">📈 Funding</a>
+    <a href="pulse.html" class="nav-link">Pulse</a>
 </nav>
 <div class="top-bar"></div>
 

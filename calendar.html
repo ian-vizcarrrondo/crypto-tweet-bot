@@ -7,49 +7,51 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>📅 CryptoDoggy Event Calendar</title>
     <style>
+        /* ── DESIGN TOKENS ─────────────────────────────────────── */
+        :root {
+            --bg:          #0d1117;
+            --bg-card:     #161b22;
+            --bg-nav:      #0d1117;
+            --border:      #21262d;
+            --text:        #e6edf3;
+            --text-muted:  #7d8590;
+            --accent:      #3b82f6;
+            --accent-sub:  rgba(59,130,246,0.10);
+            --accent-brd:  rgba(59,130,246,0.25);
+            --c-green:     #3fb950;
+            --c-red:       #f85149;
+        }
+        @media (prefers-color-scheme: light) {
+            :root {
+                --bg:          #ffffff;
+                --bg-card:     #f6f8fa;
+                --bg-nav:      #ffffff;
+                --border:      #d0d7de;
+                --text:        #1f2328;
+                --text-muted:  #656d76;
+                --accent:      #0969da;
+                --accent-sub:  rgba(9,105,218,0.08);
+                --accent-brd:  rgba(9,105,218,0.25);
+                --c-green:     #1a7f37;
+                --c-red:       #cf222e;
+            }
+        }
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: #0d1117; color: #e8e8f0; font-family: 'Inter', 'Segoe UI', system-ui, sans-serif; min-height: 100vh; }
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', 'Segoe UI', system-ui, sans-serif; min-height: 100vh; }
 
         /* ── NAV ── */
         .site-nav {
-            background: #0d1117; border-bottom: 1px solid #21262d;
+            background: var(--bg-nav); border-bottom: 1px solid var(--border);
             padding: 10px 24px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
         }
         .nav-brand { font-size: 22px; margin-right: 12px; }
         .nav-link {
-            padding: 8px 16px; font-size: 13px; font-weight: 600; color: #666;
+            padding: 8px 16px; font-size: 13px; font-weight: 600; color: var(--text-muted);
             text-decoration: none; border-radius: 10px; border: 1px solid transparent;
             transition: all 0.18s; white-space: nowrap; letter-spacing: 0.2px;
         }
-        .nav-link:hover { color: #aaa; background: #161b22; border-color: #21262d; }
-        .nav-link[href="index.html"].active      { background:#1a1200; border-color:#f5a623; color:#f5a623; }
-        .nav-link[href="game.html"].active       { background:#0a1a10; border-color:#00d4aa; color:#00d4aa; }
-        .nav-link[href="meme.html"].active       { background:#140a20; border-color:#a855f7; color:#a855f7; }
-        .nav-link[href="portfolio.html"].active  { background:#0a1520; border-color:#38bdf8; color:#38bdf8; }
-        .nav-link[href="news.html"].active       { background:#1a0808; border-color:#ff6b6b; color:#ff6b6b; }
-        .nav-link[href="stocks.html"].active     { background:#061a0a; border-color:#22c55e; color:#22c55e; }
-        .nav-link[href="signals.html"].active    { background:#001a20; border-color:#06b6d4; color:#06b6d4; }
-        .nav-link[href="whales.html"].active     { background:#070f2a; border-color:#3b82f6; color:#3b82f6; }
-        .nav-link[href="defi.html"].active       { background:#120a28; border-color:#8b5cf6; color:#8b5cf6; }
-        .nav-link[href="calendar.html"].active   { background:#1a0d00; border-color:#f97316; color:#f97316; }
-        .nav-link[href="index.html"]:not(.active):hover      { color:#f5a623; }
-        .nav-link[href="game.html"]:not(.active):hover       { color:#00d4aa; }
-        .nav-link[href="meme.html"]:not(.active):hover       { color:#a855f7; }
-        .nav-link[href="portfolio.html"]:not(.active):hover  { color:#38bdf8; }
-        .nav-link[href="news.html"]:not(.active):hover       { color:#ff6b6b; }
-        .nav-link[href="stocks.html"]:not(.active):hover     { color:#22c55e; }
-        .nav-link[href="signals.html"]:not(.active):hover    { color:#06b6d4; }
-        .nav-link[href="whales.html"]:not(.active):hover     { color:#3b82f6; }
-        .nav-link[href="defi.html"]:not(.active):hover       { color:#8b5cf6; }
-        .nav-link[href="calendar.html"]:not(.active):hover   { color:#f97316; }
-        .nav-link[href="funding.html"].active    { background: #061a12; border-color: #10b981; color: #10b981; }
-        .nav-link[href="funding.html"]:not(.active):hover { color: #10b981; }
-        .theme-toggle {
-            margin-left: auto; background: none; border: 1px solid #1f1f3a;
-            border-radius: 20px; padding: 6px 13px; color: #666; cursor: pointer;
-            font-size: 15px; transition: all .18s; flex-shrink: 0;
-        }
-        .theme-toggle:hover { border-color: #444; color: #ccc; }
+        .nav-link:hover { color: var(--text); background: var(--bg-card); border-color: var(--border); }
 
         /* ── MOOD BAR ── */
         .mood-bar { height: 3px; background: #f97316;  }
@@ -81,7 +83,7 @@
             gap: 14px; margin-bottom: 28px;
         }
         .countdown-card {
-            background: #161b22; border: 1px solid #21262d; border-radius: 18px;
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: 18px;
             padding: 20px 22px; position: relative; overflow: hidden;
             transition: all .2s;
         }
@@ -96,7 +98,7 @@
             font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .9px;
             color: #555; margin-bottom: 6px;
         }
-        .cd-event { font-size: 15px; font-weight: 800; color: #e8e8f0; margin-bottom: 10px; }
+        .cd-event { font-size: 15px; font-weight: 800; color: var(--text); margin-bottom: 10px; }
         .cd-timer {
             display: flex; gap: 10px; align-items: baseline;
         }
@@ -133,7 +135,7 @@
         .filter-label { font-size: 11px; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: .7px; margin-right: 4px; }
         .filter-btn {
             padding: 7px 16px; font-size: 13px; font-weight: 700; border-radius: 20px;
-            border: 1px solid #1f1f3a; background: none; color: #555; cursor: pointer;
+            border: 1px solid var(--border); background: none; color: #555; cursor: pointer;
             transition: all .18s;
         }
         .filter-btn:hover { border-color: #333; color: #aaa; }
@@ -165,7 +167,7 @@
         .event-row {
             display: flex; align-items: flex-start; gap: 14px;
             padding: 12px 14px; border-radius: 14px; margin-bottom: 8px;
-            background: #161b22; border: 1px solid #21262d;
+            background: var(--bg-card); border: 1px solid var(--border);
             transition: all .2s; position: relative; cursor: default;
         }
         .event-row:hover { border-color: #2a2a45; background: #0f0f24; transform: translateX(2px); }
@@ -176,7 +178,7 @@
         /* Dot on timeline */
         .event-row::before {
             content: ''; position: absolute; left: -22px; top: 20px;
-            width: 10px; height: 10px; border-radius: 50%; border: 2px solid #f97316; background: #0d1117;
+            width: 10px; height: 10px; border-radius: 50%; border: 2px solid #f97316; background: var(--bg);
             transition: all .2s;
         }
         .event-row:hover::before { background: #f97316; }
@@ -184,10 +186,10 @@
         .event-row.today::before { background: #f97316; }
 
         .event-date-col { min-width: 48px; text-align: center; flex-shrink: 0; }
-        .date-num { font-size: 22px; font-weight: 900; line-height: 1; color: #e8e8f0; }
+        .date-num { font-size: 22px; font-weight: 900; line-height: 1; color: var(--text); }
         .date-day { font-size: 10px; font-weight: 700; color: #444; text-transform: uppercase; letter-spacing: .5px; }
         .event-body { flex: 1; min-width: 0; }
-        .event-title { font-size: 15px; font-weight: 800; color: #e8e8f0; margin-bottom: 4px; }
+        .event-title { font-size: 15px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
         .event-desc  { font-size: 12px; color: #555; line-height: 1.5; }
         .event-meta  { display: flex; align-items: center; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
         .cat-badge {
@@ -205,13 +207,13 @@
         }
         .gcal-btn {
             font-size: 10px; font-weight: 800; padding: 3px 10px; border-radius: 8px;
-            background: rgba(255,255,255,.05); border: 1px solid #1f1f3a; color: #666;
+            background: rgba(255,255,255,.05); border: 1px solid var(--border); color: #666;
             cursor: pointer; text-decoration: none; transition: all .18s;
         }
         .gcal-btn:hover { border-color: #f97316; color: #f97316; background: rgba(249,115,22,.08); }
         .src-btn {
             font-size: 10px; font-weight: 800; padding: 3px 10px; border-radius: 8px;
-            background: rgba(255,255,255,.04); border: 1px solid #21262d; color: #555;
+            background: rgba(255,255,255,.04); border: 1px solid var(--border); color: #555;
             cursor: pointer; text-decoration: none; transition: all .18s;
         }
         .src-btn:hover { border-color: #555; color: #aaa; }
@@ -245,25 +247,31 @@
             .countdown-strip { grid-template-columns: 1fr 1fr; }
             .event-desc { display: none; }
         }
-    </style>
+    
+
+        /* ── NAV STATE ─────────────────────────────────────────── */
+        .nav-link.active             { color: var(--accent); background: var(--accent-sub); border-color: var(--accent-brd); }
+        .nav-link:not(.active):hover { color: var(--accent); }
+
+</style>
 </head>
 <body>
 
 <!-- NAV -->
 <nav class="site-nav">
     <span class="nav-brand">🐕</span>
-    <a href="index.html"     class="nav-link">🏠 Home</a>
-    <a href="game.html"      class="nav-link">🎮 Game</a>
-    <a href="meme.html"      class="nav-link">🎭 Memes</a>
-    <a href="portfolio.html" class="nav-link">💼 Portfolio</a>
-    <a href="news.html"      class="nav-link">📰 News</a>
-    <a href="stocks.html"    class="nav-link">📈 Stocks</a>
-    <a href="signals.html"   class="nav-link">📡 Signals</a>
-    <a href="whales.html"    class="nav-link">🐋 Whales</a>
-    <a href="defi.html"      class="nav-link">🌊 DeFi</a>
-    <a href="calendar.html"  class="nav-link active">📅 Calendar</a>
+    <a href="index.html" class="nav-link">Dashboard</a>
+    <a href="game.html" class="nav-link">Predict</a>
+    <a href="meme.html" class="nav-link">🐸 Meme</a>
+    <a href="portfolio.html" class="nav-link">Portfolio</a>
+    <a href="news.html" class="nav-link">News</a>
+    <a href="stocks.html" class="nav-link">Stocks</a>
+    <a href="signals.html" class="nav-link">Signals</a>
+    <a href="whales.html" class="nav-link">🐋 Whales</a>
+    <a href="defi.html" class="nav-link">🌊 DeFi</a>
+    <a href="calendar.html" class="nav-link active">📅 Calendar</a>
     <a href="funding.html" class="nav-link">📈 Funding</a>
-    <button class="theme-toggle" onclick="document.body.classList.toggle('light')">☀️</button>
+    <a href="pulse.html" class="nav-link">Pulse</a>
 </nav>
 <div class="mood-bar"></div>
 
