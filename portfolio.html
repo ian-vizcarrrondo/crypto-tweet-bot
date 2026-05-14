@@ -210,9 +210,6 @@ let priceData = {};   // { coinId: { price, name, symbol, emoji } }
 let holdings = [];    // [{ id, amount, avgBuy }]
 let pieChart = null;
 
-// ── Theme ──
-}
-
 // ── Storage ──
 function loadHoldings() {
     try { holdings = JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
