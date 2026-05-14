@@ -249,6 +249,51 @@
         }
     
 
+
+        /* ── MOBILE NAV ─────────────────────────────────────────── */
+        .nav-hamburger {
+            display: none;
+            margin-left: auto;
+            background: none;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 7px 10px;
+            cursor: pointer;
+            color: var(--text-muted);
+            font-size: 18px;
+            line-height: 1;
+            transition: all 0.18s;
+            flex-shrink: 0;
+        }
+        .nav-hamburger:hover { color: var(--text); border-color: var(--accent-brd); }
+        .nav-links-wrap { display: flex; align-items: center; gap: 6px; flex-wrap: nowrap; }
+
+        @media (max-width: 860px) {
+            .nav-hamburger { display: flex; align-items: center; justify-content: center; }
+            .nav-links-wrap {
+                display: none;
+                position: absolute;
+                top: 100%;
+                left: 0; right: 0;
+                background: var(--bg-nav);
+                border-bottom: 1px solid var(--border);
+                flex-direction: column;
+                align-items: stretch;
+                gap: 0;
+                padding: 8px 16px 12px;
+                z-index: 999;
+                box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+            }
+            .nav-links-wrap.open { display: flex; }
+            .nav-links-wrap .nav-link {
+                border-radius: 8px;
+                padding: 10px 14px;
+                border: none;
+                border-bottom: 1px solid var(--border);
+            }
+            .nav-links-wrap .nav-link:last-child { border-bottom: none; }
+            .site-nav { position: relative; flex-wrap: nowrap; }
+        }
         /* ── NAV STATE ─────────────────────────────────────────── */
         .nav-link.active             { color: var(--accent); background: var(--accent-sub); border-color: var(--accent-brd); }
         .nav-link:not(.active):hover { color: var(--accent); }
@@ -260,6 +305,8 @@
 <!-- NAV -->
 <nav class="site-nav">
     <span class="nav-brand">🐕</span>
+    <button class="nav-hamburger" id="nav-hamburger" aria-label="Menu" aria-expanded="false">☰</button>
+    <div class="nav-links-wrap" id="nav-links-wrap">
     <a href="index.html" class="nav-link">Dashboard</a>
     <a href="game.html" class="nav-link">Predict</a>
     <a href="meme.html" class="nav-link">🐸 Meme</a>
@@ -272,6 +319,7 @@
     <a href="calendar.html" class="nav-link active">📅 Calendar</a>
     <a href="funding.html" class="nav-link">📈 Funding</a>
     <a href="pulse.html" class="nav-link">Pulse</a>
+    </div>
 </nav>
 <div class="mood-bar"></div>
 
@@ -369,6 +417,41 @@
    EVENT DATA  (extend freely)
 ────────────────────────────────────────────────────── */
 const EVENTS = [
+    // ── FOMC 2026 (past) ──
+    { date:'2026-01-28', title:'FOMC Meeting — Day 1', cat:'Macro', imp:'medium',
+      desc:'Federal Open Market Committee two-day policy meeting.',
+      src:'https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm' },
+    { date:'2026-01-29', title:'FOMC Rate Decision', cat:'Macro', imp:'high',
+      desc:'Fed announces interest rate decision — January 2026.',
+      src:'https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm' },
+    { date:'2026-03-18', title:'FOMC Meeting — Day 1', cat:'Macro', imp:'medium',
+      desc:'Federal Open Market Committee two-day policy meeting.',
+      src:'https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm' },
+    { date:'2026-03-19', title:'FOMC Rate Decision', cat:'Macro', imp:'high',
+      desc:'Fed announces interest rate decision — March 2026.',
+      src:'https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm' },
+    { date:'2026-05-06', title:'FOMC Meeting — Day 1', cat:'Macro', imp:'medium',
+      desc:'Federal Open Market Committee two-day policy meeting.',
+      src:'https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm' },
+    { date:'2026-05-07', title:'FOMC Rate Decision', cat:'Macro', imp:'high',
+      desc:'Fed announces interest rate decision — May 2026.',
+      src:'https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm' },
+    // ── CPI 2026 (past) ──
+    { date:'2026-01-15', title:'US CPI Report — Dec Data', cat:'Macro', imp:'high',
+      desc:'Bureau of Labor Statistics releases Consumer Price Index for December 2025.',
+      src:'https://www.bls.gov/cpi/' },
+    { date:'2026-02-11', title:'US CPI Report — Jan Data', cat:'Macro', imp:'high',
+      desc:'Bureau of Labor Statistics releases Consumer Price Index for January 2026.',
+      src:'https://www.bls.gov/cpi/' },
+    { date:'2026-03-11', title:'US CPI Report — Feb Data', cat:'Macro', imp:'high',
+      desc:'Bureau of Labor Statistics releases Consumer Price Index for February 2026.',
+      src:'https://www.bls.gov/cpi/' },
+    { date:'2026-04-10', title:'US CPI Report — Mar Data', cat:'Macro', imp:'high',
+      desc:'Bureau of Labor Statistics releases Consumer Price Index for March 2026.',
+      src:'https://www.bls.gov/cpi/' },
+    { date:'2026-05-13', title:'US CPI Report — Apr Data', cat:'Macro', imp:'high',
+      desc:'Bureau of Labor Statistics releases Consumer Price Index for April 2026.',
+      src:'https://www.bls.gov/cpi/' },
     // ── FOMC 2026 (remaining) ──
     { date:'2026-06-17', title:'FOMC Meeting — Day 1', cat:'Macro', imp:'medium',
       desc:'Federal Open Market Committee two-day policy meeting begins.',
@@ -675,5 +758,33 @@ document.addEventListener('DOMContentLoaded', async () => {
     setInterval(tickCountdowns, 1000);
 });
 </script>
+
+<script>
+(function() {
+    const btn = document.getElementById('nav-hamburger');
+    const wrap = document.getElementById('nav-links-wrap');
+    if (!btn || !wrap) return;
+    btn.addEventListener('click', function() {
+        const open = wrap.classList.toggle('open');
+        btn.setAttribute('aria-expanded', open);
+        btn.textContent = open ? '✕' : '☰';
+    });
+    // Close on nav link click (mobile)
+    wrap.querySelectorAll('.nav-link').forEach(function(a) {
+        a.addEventListener('click', function() {
+            wrap.classList.remove('open');
+            btn.textContent = '☰';
+        });
+    });
+    // Close on outside click
+    document.addEventListener('click', function(e) {
+        if (!btn.contains(e.target) && !wrap.contains(e.target)) {
+            wrap.classList.remove('open');
+            btn.textContent = '☰';
+        }
+    });
+})();
+</script>
+
 </body>
 </html>

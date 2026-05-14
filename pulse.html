@@ -51,6 +51,8 @@
 <body>
   <nav class="site-nav">
     <span class="nav-brand">🐕</span>
+    <button class="nav-hamburger" id="nav-hamburger" aria-label="Menu" aria-expanded="false">☰</button>
+    <div class="nav-links-wrap" id="nav-links-wrap">
     <a href="index.html" class="nav-link">Dashboard</a>
     <a href="game.html" class="nav-link">Predict</a>
     <a href="meme.html" class="nav-link">🐸 Meme</a>
@@ -63,6 +65,7 @@
     <a href="calendar.html" class="nav-link">📅 Calendar</a>
     <a href="funding.html" class="nav-link">📈 Funding</a>
     <a href="pulse.html" class="nav-link active">Pulse</a>
+    </div>
 </nav>
   <div class="mood-bar"></div>
   <div class="ticker-wrap"><div class="ticker-track" id="ticker-track">Loading market tape...</div></div>
@@ -168,5 +171,33 @@ function renderCalendar(){
 function demoData(){return[{symbol:'btc',name:'Bitcoin',current_price:103250,price_change_percentage_24h:1.8,total_volume:39000000000,market_cap:2000000000000},{symbol:'eth',name:'Ethereum',current_price:4200,price_change_percentage_24h:2.6,total_volume:22000000000,market_cap:500000000000},{symbol:'sol',name:'Solana',current_price:188,price_change_percentage_24h:7.4,total_volume:6800000000,market_cap:94000000000},{symbol:'doge',name:'Dogecoin',current_price:.18,price_change_percentage_24h:-3.2,total_volume:1200000000,market_cap:25000000000},{symbol:'sui',name:'Sui',current_price:3.6,price_change_percentage_24h:9.2,total_volume:900000000,market_cap:12000000000},{symbol:'pepe',name:'Pepe',current_price:.000012,price_change_percentage_24h:14.3,total_volume:760000000,market_cap:5200000000}]}
 loadPulse();setInterval(loadPulse,300000);
 </script>
+
+<script>
+(function() {
+    const btn = document.getElementById('nav-hamburger');
+    const wrap = document.getElementById('nav-links-wrap');
+    if (!btn || !wrap) return;
+    btn.addEventListener('click', function() {
+        const open = wrap.classList.toggle('open');
+        btn.setAttribute('aria-expanded', open);
+        btn.textContent = open ? '✕' : '☰';
+    });
+    // Close on nav link click (mobile)
+    wrap.querySelectorAll('.nav-link').forEach(function(a) {
+        a.addEventListener('click', function() {
+            wrap.classList.remove('open');
+            btn.textContent = '☰';
+        });
+    });
+    // Close on outside click
+    document.addEventListener('click', function(e) {
+        if (!btn.contains(e.target) && !wrap.contains(e.target)) {
+            wrap.classList.remove('open');
+            btn.textContent = '☰';
+        }
+    });
+})();
+</script>
+
 </body>
 </html>

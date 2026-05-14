@@ -29,7 +29,7 @@ CHAT_ID   = os.environ["TELEGRAM_CHAT_ID"]
 # Coins to track (CoinGecko IDs)
 TRACKED = [
     "bitcoin", "ethereum", "solana", "binancecoin", "ripple",
-    "cardano", "dogecoin", "avalanche-2", "chainlink", "polkadot",
+    "render-token", "dogecoin", "avalanche-2", "chainlink", "polkadot",
 ]
 
 # Alert thresholds
