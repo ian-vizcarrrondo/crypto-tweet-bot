@@ -132,10 +132,78 @@
         /* ── FOOTER ── */
         .footer { text-align: center; padding: 20px 24px; color: #333; font-size: 12px; border-top: 1px solid #13132a; margin-top: 8px; }
 
+        /* ── STATUS BAR ── */
+        .status-bar {
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 24px;
+            font-size: 12px; color: var(--text-muted);
+            border-bottom: 1px solid var(--border);
+            background: var(--bg);
+        }
+        .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text-muted); flex-shrink: 0; }
+        .status-dot.live { background: var(--c-green); box-shadow: 0 0 5px var(--c-green); animation: blink 2s infinite; }
+        .status-dot.err  { background: var(--c-red); }
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.35} }
+        .status-bar .spacer { flex: 1; }
+        .refresh-btn {
+            background: none; border: 1px solid var(--border); border-radius: 6px;
+            padding: 3px 9px; font-size: 11px; color: var(--text-muted); cursor: pointer;
+            transition: all .15s;
+        }
+        .refresh-btn:hover { border-color: var(--accent-brd); color: var(--accent); }
+
+        /* ── SHARE BUTTON ── */
+        .share-btn {
+            padding: 9px 18px; border-radius: 10px; border: 1px solid var(--accent-brd);
+            background: var(--accent-sub); color: var(--accent); font-size: 13px; font-weight: 700;
+            cursor: pointer; transition: all .15s; white-space: nowrap;
+        }
+        .share-btn:hover { background: var(--accent); color: #fff; }
+
+        /* ── READ-ONLY BANNER ── */
+        .readonly-banner {
+            background: rgba(59,130,246,0.12);
+            border: 1px solid var(--accent-brd);
+            border-radius: 12px;
+            padding: 14px 18px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            font-size: 13px;
+        }
+        .readonly-banner .rb-icon { font-size: 20px; flex-shrink: 0; }
+        .readonly-banner .rb-text { flex: 1; }
+        .readonly-banner .rb-text strong { display: block; font-size: 14px; font-weight: 700; color: var(--accent); margin-bottom: 2px; }
+        .btn-import {
+            padding: 8px 16px; border-radius: 8px; border: none;
+            background: var(--accent); color: #fff; font-size: 13px; font-weight: 700;
+            cursor: pointer; white-space: nowrap; transition: opacity .15s;
+        }
+        .btn-import:hover { opacity: .85; }
+
+        /* ── TOAST ── */
+        .toast-wrap { position: fixed; bottom: 24px; right: 24px; display: flex; flex-direction: column-reverse; gap: 8px; z-index: 9999; }
+        .toast {
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px;
+            padding: 12px 18px; font-size: 13px; box-shadow: 0 4px 20px rgba(0,0,0,.4);
+            animation: toastin .25s ease; max-width: 280px;
+        }
+        @keyframes toastin { from{opacity:0;transform:translateX(16px)} to{opacity:1;transform:translateX(0)} }
+        .toast.ok   { border-color: rgba(63,185,80,.4); }
+        .toast.warn { border-color: rgba(248,81,73,.4); }
+
+        /* ── 24H CHANGE COLUMN ── */
+        .chg-up { color: var(--c-green); font-weight: 700; }
+        .chg-dn { color: var(--c-red);   font-weight: 700; }
+        .chg-nu { color: var(--text-muted); }
+
         /* ── MOBILE ── */
         @media (max-width: 768px) {
             .page-body { flex-direction: column; }
             .right-col { width: 100%; }
+            .holdings-table th:nth-child(3),
+            .holdings-table td:nth-child(3) { display: none; }  /* hide Avg Buy on small screens */
         }
     
 
@@ -217,9 +285,28 @@
     <p>Track your crypto holdings — all data stays on your device, no account needed.</p>
 </div>
 
+<!-- Live status bar -->
+<div class="status-bar">
+    <div class="status-dot" id="status-dot"></div>
+    <span id="status-text">Loading prices…</span>
+    <button class="refresh-btn" onclick="fetchLivePrices()">↻ Refresh</button>
+    <span class="spacer"></span>
+    <button class="share-btn" id="share-btn" onclick="sharePortfolio()">🔗 Share Portfolio</button>
+</div>
+
 <div class="page-body">
     <!-- Left: summary + holdings table -->
     <div class="left-col">
+        <!-- Read-only banner (shown when viewing a shared portfolio) -->
+        <div class="readonly-banner" id="readonly-banner" style="display:none">
+            <div class="rb-icon">👁️</div>
+            <div class="rb-text">
+                <strong>Viewing a shared portfolio</strong>
+                This is a read-only snapshot. Import it to start tracking it as your own.
+            </div>
+            <button class="btn-import" onclick="importShared()">Import</button>
+        </div>
+
         <!-- Summary cards -->
         <div class="summary-row" id="summary-row">
             <div class="card"><div class="card-label">Total Value</div><div class="card-value blue" id="total-value">—</div></div>
@@ -264,17 +351,61 @@
     </div>
 </div>
 
-<div class="footer">Data from CoinGecko via prices.json • Holdings stored locally in your browser</div>
+<div class="footer">Prices live from CoinGecko API · Holdings in your browser · Share links are client-only</div>
+<div class="toast-wrap" id="toast-wrap"></div>
 
 <script>
+// ── Constants ─────────────────────────────────────────────────────────────────
 const STORAGE_KEY = 'cryptodoggy_portfolio';
 const COLORS = ['#38bdf8','#00d4aa','#f5a623','#a855f7','#ff4757','#ff8c42','#fbbf24','#4ade80','#f472b6','#818cf8','#34d399','#fb923c'];
+const COIN_IDS = [
+    'bitcoin','ethereum','solana','binancecoin','ripple','dogecoin',
+    'avalanche-2','chainlink','polkadot','render-token','sui',
+    'the-open-network','near','shiba-inu','pepe','floki','dogwifcoin','bonk'
+].join(',');
+const REFRESH_MS = 60_000;
 
-let priceData = {};   // { coinId: { price, name, symbol, emoji } }
-let holdings = [];    // [{ id, amount, avgBuy }]
-let pieChart = null;
+// Static metadata for coins not always in prices.json
+const COIN_META = {
+    'bitcoin':          { name:'Bitcoin',    symbol:'BTC',  emoji:'₿'  },
+    'ethereum':         { name:'Ethereum',   symbol:'ETH',  emoji:'Ξ'  },
+    'solana':           { name:'Solana',     symbol:'SOL',  emoji:'◎'  },
+    'binancecoin':      { name:'BNB',        symbol:'BNB',  emoji:'🔶' },
+    'ripple':           { name:'XRP',        symbol:'XRP',  emoji:'💧' },
+    'dogecoin':         { name:'Dogecoin',   symbol:'DOGE', emoji:'🐶' },
+    'avalanche-2':      { name:'Avalanche',  symbol:'AVAX', emoji:'🔺' },
+    'chainlink':        { name:'Chainlink',  symbol:'LINK', emoji:'🔗' },
+    'polkadot':         { name:'Polkadot',   symbol:'DOT',  emoji:'⚫' },
+    'render-token':     { name:'Render',     symbol:'RNDR', emoji:'🎨' },
+    'sui':              { name:'Sui',        symbol:'SUI',  emoji:'💧' },
+    'the-open-network': { name:'Toncoin',    symbol:'TON',  emoji:'💎' },
+    'near':             { name:'NEAR',       symbol:'NEAR', emoji:'🌐' },
+    'shiba-inu':        { name:'Shiba Inu',  symbol:'SHIB', emoji:'🐕' },
+    'pepe':             { name:'Pepe',       symbol:'PEPE', emoji:'🐸' },
+    'floki':            { name:'Floki',      symbol:'FLOKI',emoji:'⚡' },
+    'dogwifcoin':       { name:'dogwifhat',  symbol:'WIF',  emoji:'🎩' },
+    'bonk':             { name:'Bonk',       symbol:'BONK', emoji:'🔨' },
+};
 
-// ── Storage ──
+// ── State ─────────────────────────────────────────────────────────────────────
+let priceData   = {};   // { coinId: { price, name, symbol, emoji, change24h } }
+let holdings    = [];   // [{ id, amount, avgBuy }]
+let pieChart    = null;
+let refreshTimer;
+let isReadOnly  = false;
+let sharedHoldings = null;
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+function showToast(msg, type = '') {
+    const wrap  = document.getElementById('toast-wrap');
+    const toast = document.createElement('div');
+    toast.className = `toast${type ? ' ' + type : ''}`;
+    toast.textContent = msg;
+    wrap.appendChild(toast);
+    setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity .3s'; setTimeout(() => toast.remove(), 350); }, 3000);
+}
+
+// ── Storage ───────────────────────────────────────────────────────────────────
 function loadHoldings() {
     try { holdings = JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
     catch { holdings = []; }
@@ -283,61 +414,99 @@ function saveHoldings() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(holdings));
 }
 
-// ── Format ──
+// ── Format ────────────────────────────────────────────────────────────────────
 function fmt$(n) {
     if (n === null || n === undefined) return '—';
-    if (n >= 1e9) return '$' + (n/1e9).toFixed(2) + 'B';
-    if (n >= 1e6) return '$' + (n/1e6).toFixed(2) + 'M';
+    if (n >= 1e9)  return '$' + (n/1e9).toFixed(2) + 'B';
+    if (n >= 1e6)  return '$' + (n/1e6).toFixed(2) + 'M';
     if (n >= 1000) return '$' + n.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
-    if (n >= 1) return '$' + n.toFixed(2);
+    if (n >= 1)    return '$' + n.toFixed(2);
     if (n >= 0.01) return '$' + n.toFixed(4);
     return '$' + n.toFixed(8);
 }
 function fmtChange(n) {
     if (n === null || n === undefined) return '—';
-    const sign = n >= 0 ? '+' : '';
-    return sign + n.toFixed(2) + '%';
+    return (n >= 0 ? '+' : '') + n.toFixed(2) + '%';
 }
 
-// ── Load prices ──
-async function loadPrices() {
+// ── Live price fetch from CoinGecko ───────────────────────────────────────────
+async function fetchLivePrices() {
+    const dot  = document.getElementById('status-dot');
+    const text = document.getElementById('status-text');
+    dot.className = 'status-dot';
+    text.textContent = 'Fetching live prices…';
+    clearTimeout(refreshTimer);
+
     try {
-        const base = window.location.href.replace(/\/[^\/]*$/, '');
-        const res = await fetch(base + '/prices.json?t=' + Date.now());
-        if (!res.ok) throw new Error();
+        const url = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${COIN_IDS}&price_change_percentage=24h`;
+        const res = await fetch(url, { signal: AbortSignal.timeout(15000) });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
-        const allCoins = [...(data.main_coins || []), ...(data.meme_coins || [])];
-        allCoins.forEach(c => {
-            priceData[c.id] = { price: c.price, name: c.name, symbol: c.symbol, emoji: c.emoji || '🪙' };
+        data.forEach(c => {
+            const meta = COIN_META[c.id] || {};
+            priceData[c.id] = {
+                price:     c.current_price,
+                name:      c.name  || meta.name   || c.id,
+                symbol:    (c.symbol || meta.symbol || c.id).toUpperCase(),
+                emoji:     meta.emoji || '🪙',
+                change24h: c.price_change_percentage_24h_in_currency ?? c.price_change_percentage_24h ?? 0
+            };
         });
-        populateCoinSelect(allCoins);
-    } catch(e) {
-        console.warn('Could not load prices.json', e);
+        // Fallback: fill any missing with static meta (price=0)
+        Object.entries(COIN_META).forEach(([id, m]) => {
+            if (!priceData[id]) priceData[id] = { ...m, price: 0, change24h: 0 };
+        });
+        populateCoinSelect();
+        const now = new Date().toLocaleTimeString();
+        dot.className  = 'status-dot live';
+        text.textContent = `Live · Updated ${now}`;
+        render();
+    } catch (e) {
+        // Try prices.json fallback
+        try {
+            const base = window.location.href.replace(/\/[^\/]*$/, '');
+            const res2 = await fetch(base + '/prices.json?t=' + Date.now());
+            const data2 = await res2.json();
+            [...(data2.main_coins||[]), ...(data2.meme_coins||[])].forEach(c => {
+                const meta = COIN_META[c.id] || {};
+                priceData[c.id] = { price: c.price, name: c.name, symbol: c.symbol, emoji: c.emoji||meta.emoji||'🪙', change24h: c.change_24h ?? 0 };
+            });
+            populateCoinSelect();
+            dot.className  = 'status-dot';
+            text.textContent = `Cached prices (live fetch failed)`;
+            render();
+        } catch {
+            dot.className = 'status-dot err';
+            text.textContent = `Price fetch failed — showing last known data`;
+        }
     }
+    refreshTimer = setTimeout(fetchLivePrices, REFRESH_MS);
 }
 
-function populateCoinSelect(coins) {
+// ── Coin select ───────────────────────────────────────────────────────────────
+function populateCoinSelect() {
     const sel = document.getElementById('coin-select');
+    const prev = sel.value;
     sel.innerHTML = '<option value="">Select coin…</option>';
-    coins.forEach(c => {
+    Object.entries(COIN_META).forEach(([id, m]) => {
         const opt = document.createElement('option');
-        opt.value = c.id;
-        opt.textContent = `${c.emoji || '🪙'} ${c.name.charAt(0).toUpperCase()+c.name.slice(1)} (${c.symbol})`;
+        opt.value = id;
+        opt.textContent = `${m.emoji} ${m.name} (${m.symbol})`;
         sel.appendChild(opt);
     });
+    if (prev) sel.value = prev;
 }
 
-// ── Add / remove ──
+// ── Add / remove ──────────────────────────────────────────────────────────────
 function addHolding() {
-    const id = document.getElementById('coin-select').value;
+    if (isReadOnly) { showToast('⚠️ Viewing a shared portfolio — click Import to edit.', 'warn'); return; }
+    const id     = document.getElementById('coin-select').value;
     const amount = parseFloat(document.getElementById('amount-input').value);
     const avgBuy = parseFloat(document.getElementById('cost-input').value);
+    if (!id)                   { showToast('⚠️ Select a coin first.', 'warn'); return; }
+    if (!amount || amount <= 0){ showToast('⚠️ Enter a valid amount.', 'warn'); return; }
+    if (!avgBuy || avgBuy <= 0){ showToast('⚠️ Enter your average buy price.', 'warn'); return; }
 
-    if (!id) { alert('Please select a coin.'); return; }
-    if (!amount || amount <= 0) { alert('Please enter a valid amount.'); return; }
-    if (!avgBuy || avgBuy <= 0) { alert('Please enter your average buy price.'); return; }
-
-    // Merge with existing if same coin
     const existing = holdings.find(h => h.id === id);
     if (existing) {
         const totalCost = existing.amount * existing.avgBuy + amount * avgBuy;
@@ -347,62 +516,139 @@ function addHolding() {
     } else {
         holdings.push({ id, amount, avgBuy });
     }
-
     saveHoldings();
     document.getElementById('amount-input').value = '';
-    document.getElementById('cost-input').value = '';
-    document.getElementById('coin-select').value = '';
+    document.getElementById('cost-input').value   = '';
+    document.getElementById('coin-select').value  = '';
     render();
+    const meta = COIN_META[id];
+    showToast(`✅ ${meta ? meta.emoji + ' ' + meta.symbol : id} added!`, 'ok');
 }
 
 function removeHolding(id) {
+    if (isReadOnly) return;
     holdings = holdings.filter(h => h.id !== id);
     saveHoldings();
     render();
 }
 
-// ── Render ──
+// ── Share / import ────────────────────────────────────────────────────────────
+function sharePortfolio() {
+    if (holdings.length === 0) { showToast('⚠️ No holdings to share.', 'warn'); return; }
+    try {
+        const encoded = btoa(JSON.stringify(holdings));
+        const url     = `${location.origin}${location.pathname}?p=${encoded}`;
+        navigator.clipboard.writeText(url).then(() => {
+            showToast('🔗 Share link copied to clipboard!', 'ok');
+        }).catch(() => {
+            prompt('Copy this link:', url);
+        });
+    } catch(e) {
+        showToast('⚠️ Could not generate share link.', 'warn');
+    }
+}
+
+function importShared() {
+    if (!sharedHoldings) return;
+    // Merge into local holdings
+    sharedHoldings.forEach(sh => {
+        const existing = holdings.find(h => h.id === sh.id);
+        if (existing) {
+            const tc = existing.amount * existing.avgBuy + sh.amount * sh.avgBuy;
+            const ta = existing.amount + sh.amount;
+            existing.avgBuy = tc / ta;
+            existing.amount = ta;
+        } else {
+            holdings.push({ ...sh });
+        }
+    });
+    saveHoldings();
+    // Remove ?p= from URL without reload
+    history.replaceState(null, '', location.pathname);
+    isReadOnly = false;
+    sharedHoldings = null;
+    document.getElementById('readonly-banner').style.display = 'none';
+    document.getElementById('share-btn').style.display = '';
+    // Re-show add form
+    document.querySelector('.add-form').style.display = '';
+    render();
+    showToast('✅ Portfolio imported!', 'ok');
+}
+
+// ── Detect shared URL ─────────────────────────────────────────────────────────
+function checkSharedURL() {
+    const param = new URLSearchParams(location.search).get('p');
+    if (!param) return false;
+    try {
+        const decoded = JSON.parse(atob(param));
+        if (!Array.isArray(decoded) || decoded.length === 0) return false;
+        sharedHoldings = decoded;
+        holdings       = decoded;  // display shared data
+        isReadOnly     = true;
+        document.getElementById('readonly-banner').style.display = '';
+        document.getElementById('share-btn').style.display = 'none';
+        document.querySelector('.add-form').style.display = 'none';
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+// ── Render ────────────────────────────────────────────────────────────────────
 function render() {
-    if (holdings.length === 0) {
+    const viewHoldings = holdings;
+
+    if (viewHoldings.length === 0) {
         document.getElementById('holdings-container').innerHTML = `
             <div class="empty-state"><div class="empty-icon">💼</div>No holdings yet.<br>Add a coin above to get started.</div>`;
-        document.getElementById('total-value').textContent = '—';
-        document.getElementById('total-cost').textContent = '—';
-        const pnlEl = document.getElementById('total-pnl');
-        pnlEl.textContent = '—'; pnlEl.className = 'card-value gray';
-        const pctEl = document.getElementById('total-pct');
-        pctEl.textContent = '—'; pctEl.className = 'card-value gray';
+        ['total-value','total-cost','total-pnl','total-pct'].forEach(id => {
+            const el = document.getElementById(id);
+            el.textContent = '—'; el.className = 'card-value gray';
+        });
         document.getElementById('chart-card').style.display = 'none';
         if (pieChart) { pieChart.destroy(); pieChart = null; }
         return;
     }
 
     let totalValue = 0, totalCost = 0;
-    const rows = holdings.map((h, idx) => {
-        const info = priceData[h.id] || {};
-        const price = info.price || 0;
-        const value = price * h.amount;
-        const cost  = h.avgBuy * h.amount;
-        const pnl   = value - cost;
-        const pct   = cost > 0 ? (pnl / cost) * 100 : 0;
+    const rows = viewHoldings.map((h) => {
+        const info     = priceData[h.id] || COIN_META[h.id] || {};
+        const price    = info.price || 0;
+        const chg24    = info.change24h ?? null;
+        const value    = price * h.amount;
+        const cost     = h.avgBuy * h.amount;
+        const pnl      = value - cost;
+        const pct      = cost > 0 ? (pnl / cost) * 100 : 0;
         totalValue += value;
         totalCost  += cost;
         const pnlClass = pnl > 0 ? 'pnl-pos' : pnl < 0 ? 'pnl-neg' : 'pnl-neu';
+        const chgCls   = chg24 === null ? 'chg-nu' : chg24 >= 0 ? 'chg-up' : 'chg-dn';
+        const chgStr   = chg24 === null ? '—' : (chg24 >= 0 ? '+' : '') + chg24.toFixed(2) + '%';
+        const removeBtn = isReadOnly ? '' : `<button class="remove-btn" onclick="removeHolding('${h.id}')" title="Remove">✕</button>`;
+        const name = (info.name || h.id);
+        const nameCap = name.charAt(0).toUpperCase() + name.slice(1);
         return `<tr>
-            <td><div class="coin-cell"><span class="coin-em">${info.emoji||'🪙'}</span><div><div class="coin-nm">${(info.name||h.id).charAt(0).toUpperCase()+(info.name||h.id).slice(1)}</div><div class="coin-tk">${info.symbol||''}</div></div></div></td>
+            <td><div class="coin-cell"><span class="coin-em">${info.emoji||'🪙'}</span><div>
+                <div class="coin-nm">${nameCap}</div>
+                <div class="coin-tk">${info.symbol||''}</div>
+            </div></div></td>
             <td>${h.amount.toLocaleString('en-US', {maximumFractionDigits:8})}</td>
             <td>${fmt$(price)}</td>
+            <td class="${chgCls}">${chgStr}</td>
             <td>${fmt$(value)}</td>
             <td>${fmt$(h.avgBuy)}</td>
             <td class="${pnlClass}">${pnl >= 0 ? '+' : ''}${fmt$(pnl).replace('$','')} USD</td>
             <td class="${pnlClass}">${fmtChange(pct)}</td>
-            <td><button class="remove-btn" onclick="removeHolding('${h.id}')" title="Remove">✕</button></td>
+            <td>${removeBtn}</td>
         </tr>`;
     }).join('');
 
     document.getElementById('holdings-container').innerHTML = `
         <table class="holdings-table">
-            <thead><tr><th>Coin</th><th>Amount</th><th>Price</th><th>Value</th><th>Avg Buy</th><th>P&amp;L</th><th>Return</th><th></th></tr></thead>
+            <thead><tr>
+                <th>Coin</th><th>Amount</th><th>Price</th><th>24h</th>
+                <th>Value</th><th>Avg Buy</th><th>P&amp;L</th><th>Return</th><th></th>
+            </tr></thead>
             <tbody>${rows}</tbody>
         </table>`;
 
@@ -410,20 +656,20 @@ function render() {
     const totalPnl = totalValue - totalCost;
     const totalPct = totalCost > 0 ? (totalPnl / totalCost) * 100 : 0;
     document.getElementById('total-value').textContent = fmt$(totalValue);
-    document.getElementById('total-cost').textContent = fmt$(totalCost);
+    document.getElementById('total-cost').textContent  = fmt$(totalCost);
 
     const pnlEl = document.getElementById('total-pnl');
     pnlEl.textContent = (totalPnl >= 0 ? '+' : '') + fmt$(Math.abs(totalPnl)).replace('$','') + ' USD';
-    pnlEl.className = 'card-value ' + (totalPnl > 0 ? 'green' : totalPnl < 0 ? 'red' : 'gray');
+    pnlEl.className   = 'card-value ' + (totalPnl > 0 ? 'green' : totalPnl < 0 ? 'red' : 'gray');
 
     const pctEl = document.getElementById('total-pct');
     pctEl.textContent = fmtChange(totalPct);
-    pctEl.className = 'card-value ' + (totalPct > 0 ? 'green' : totalPct < 0 ? 'red' : 'gray');
+    pctEl.className   = 'card-value ' + (totalPct > 0 ? 'green' : totalPct < 0 ? 'red' : 'gray');
 
-    // Pie chart
     renderPie(totalValue);
 }
 
+// ── Pie chart ─────────────────────────────────────────────────────────────────
 function renderPie(totalValue) {
     const chartCard = document.getElementById('chart-card');
     if (totalValue === 0) { chartCard.style.display = 'none'; return; }
@@ -431,7 +677,7 @@ function renderPie(totalValue) {
 
     const labels = [], values = [], colors = [];
     holdings.forEach((h, i) => {
-        const info = priceData[h.id] || {};
+        const info  = priceData[h.id] || COIN_META[h.id] || {};
         const value = (info.price || 0) * h.amount;
         if (value > 0) {
             labels.push((info.symbol || h.id).toUpperCase());
@@ -440,7 +686,6 @@ function renderPie(totalValue) {
         }
     });
 
-    // Update center total
     document.getElementById('chart-total').textContent = fmt$(totalValue);
 
     if (pieChart) pieChart.destroy();
@@ -454,21 +699,14 @@ function renderPie(totalValue) {
             plugins: {
                 legend: { display: false },
                 tooltip: {
-                    backgroundColor: 'var(--bg)',
-                    borderColor: 'var(--border)',
-                    borderWidth: 1,
-                    titleColor: 'var(--text)',
-                    bodyColor: 'var(--text-muted)',
-                    padding: 10,
-                    callbacks: {
-                        label: ctx => ` ${fmt$(ctx.raw)}  (${((ctx.raw/totalValue)*100).toFixed(1)}%)`
-                    }
+                    backgroundColor: 'var(--bg)', borderColor: 'var(--border)', borderWidth: 1,
+                    titleColor: 'var(--text)', bodyColor: 'var(--text-muted)', padding: 10,
+                    callbacks: { label: ctx => ` ${fmt$(ctx.raw)}  (${((ctx.raw/totalValue)*100).toFixed(1)}%)` }
                 }
             }
         }
     });
 
-    // Legend — symbol | value | pct
     document.getElementById('chart-legend').innerHTML = labels.map((lbl, i) => `
         <div class="legend-item">
             <div class="legend-dot" style="background:${colors[i]}"></div>
@@ -478,9 +716,12 @@ function renderPie(totalValue) {
         </div>`).join('');
 }
 
-// ── Init ──
-loadHoldings();
-loadPrices().then(() => render());
+// ── Init ──────────────────────────────────────────────────────────────────────
+const isShared = checkSharedURL();
+if (!isShared) loadHoldings();
+populateCoinSelect();
+render();          // instant render with stale/no prices while fetching
+fetchLivePrices(); // then fetch live, re-render on completion
 </script>
 
 <script>
