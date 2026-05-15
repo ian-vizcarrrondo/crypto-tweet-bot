@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Price Alerts — CryptoDoggy</title>
+<style>
+        /* ── DESIGN TOKENS ─────────────────────────────────────── */
+        :root {
+            --bg:          #0d1117;
+            --bg-card:     #161b22;
+            --bg-nav:      #0d1117;
+            --border:      #21262d;
+            --text:        #e6edf3;
+            --text-muted:  #7d8590;
+            --accent:      #3b82f6;
+            --accent-sub:  rgba(59,130,246,0.10);
+            --accent-brd:  rgba(59,130,246,0.25);
+            --c-green:     #3fb950;
+            --c-red:       #f85149;
+        }
+        @media (prefers-color-scheme: light) {
+            :root {
+                --bg:          #ffffff;
+                --bg-card:     #f6f8fa;
+                --bg-nav:      #ffffff;
+                --border:      #d0d7de;
+                --text:        #1f2328;
+                --text-muted:  #656d76;
+                --accent:      #0969da;
+                --accent-sub:  rgba(9,105,218,0.08);
+                --accent-brd:  rgba(9,105,218,0.25);
+                --c-green:     #1a7f37;
+                --c-red:       #cf222e;
+            }
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; min-height: 100vh; }
+
+        /* ── NAV ─────────────────────────────────────────────── */
+        .site-nav {
+            background: var(--bg-nav);
+            border-bottom: 1px solid var(--border);
+            padding: 10px 24px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .site-nav::-webkit-scrollbar { display: none; }
+        .nav-brand { font-size: 22px; margin-right: 12px; }
+        .nav-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            white-space: nowrap;
+            border: 1px solid transparent;
+            transition: color .15s, background .15s, border-color .15s;
+        }
+        .nav-link:hover { color: var(--text); background: var(--bg-card); border-color: var(--border); }
+        .nav-hamburger {
+            display: none; margin-left: auto; background: none;
+            border: 1px solid var(--border); border-radius: 8px; padding: 7px 10px;
+            cursor: pointer; color: var(--text-muted); font-size: 18px;
+            align-items: center; justify-content: center;
+        }
+        .nav-hamburger:hover { color: var(--text); border-color: var(--accent-brd); }
+        .nav-links-wrap { display: flex; align-items: center; gap: 6px; flex-wrap: nowrap; }
+        @media (max-width: 860px) {
+            .nav-hamburger { display: flex; }
+            .nav-links-wrap {
+                display: none; position: absolute; top: 100%; left: 0; right: 0;
+                background: var(--bg-nav); border-bottom: 1px solid var(--border);
+                flex-direction: column; padding: 8px 16px 12px; z-index: 999;
+            }
+            .nav-links-wrap.open { display: flex; }
+            .nav-links-wrap .nav-link {
+                width: 100%; padding: 11px 14px;
+                border-bottom: 1px solid var(--border); border-radius: 0;
+                border-left: none; border-right: none; border-top: none;
+            }
+            .nav-links-wrap .nav-link:last-child { border-bottom: none; }
+            .site-nav { position: relative; flex-wrap: nowrap; }
+        }
+        .nav-link.active             { color: var(--accent); background: var(--accent-sub); border-color: var(--accent-brd); }
+        .nav-link:not(.active):hover { color: var(--accent); }
+
+        /* ── LAYOUT ─────────────────────────────────────────── */
+        .page-wrap { max-width: 900px; margin: 0 auto; padding: 32px 20px 60px; }
+
+        .page-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 28px; flex-wrap: wrap; }
+        .page-title { font-size: 22px; font-weight: 700; }
+        .page-title span { color: var(--text-muted); font-weight: 400; font-size: 15px; margin-left: 10px; }
+
+        /* ── PERMISSION BANNER ──────────────────────────────── */
+        .perm-banner {
+            background: var(--bg-card);
+            border: 1px solid var(--accent-brd);
+            border-radius: 12px;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 24px;
+        }
+        .perm-banner.granted { border-color: rgba(63,185,80,0.35); background: rgba(63,185,80,0.06); }
+        .perm-banner.denied  { border-color: rgba(248,81,73,0.35); background: rgba(248,81,73,0.06); }
+        .perm-icon { font-size: 24px; flex-shrink: 0; }
+        .perm-text { flex: 1; }
+        .perm-text strong { display: block; font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+        .perm-text p { font-size: 13px; color: var(--text-muted); }
+        .btn-perm { padding: 9px 18px; border-radius: 8px; border: none; background: var(--accent); color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: opacity .15s; }
+        .btn-perm:hover { opacity: .85; }
+
+        /* ── STATUS BAR ──────────────────────────────────────── */
+        .status-bar {
+            display: flex; align-items: center; gap: 12px; margin-bottom: 28px;
+            font-size: 13px; color: var(--text-muted);
+        }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-muted); }
+        .status-dot.live { background: var(--c-green); box-shadow: 0 0 6px var(--c-green); animation: pulse 2s infinite; }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+        .status-bar .count { margin-left: auto; }
+        .refresh-btn { background: none; border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px; color: var(--text-muted); cursor: pointer; font-size: 12px; transition: all .15s; }
+        .refresh-btn:hover { border-color: var(--accent-brd); color: var(--accent); }
+
+        /* ── COINS GRID ──────────────────────────────────────── */
+        .coins-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        @media (max-width: 640px) { .coins-grid { grid-template-columns: 1fr; } }
+
+        .coin-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 16px 18px;
+            transition: border-color .15s;
+        }
+        .coin-card.has-alert { border-color: var(--accent-brd); }
+        .coin-card.triggered { border-color: var(--c-green); animation: cardpop .4s ease; }
+        @keyframes cardpop { 0%{transform:scale(1)} 50%{transform:scale(1.02)} 100%{transform:scale(1)} }
+
+        .coin-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+        .coin-emoji { font-size: 20px; flex-shrink: 0; }
+        .coin-name-wrap { flex: 1; min-width: 0; }
+        .coin-sym { font-size: 15px; font-weight: 700; }
+        .coin-price { font-size: 13px; color: var(--text-muted); margin-top: 1px; }
+        .coin-price .price-val { color: var(--text); font-weight: 500; }
+        .coin-change { font-size: 12px; font-weight: 600; margin-left: 4px; }
+        .coin-change.up { color: var(--c-green); }
+        .coin-change.dn { color: var(--c-red); }
+
+        .alert-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .alert-field label { font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; display: block; margin-bottom: 4px; }
+        .alert-field label .dir { font-size: 13px; }
+        .alert-field input {
+            width: 100%;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 8px 10px;
+            color: var(--text);
+            font-size: 14px;
+            transition: border-color .15s;
+        }
+        .alert-field input:focus { outline: none; border-color: var(--accent); }
+        .alert-field input::placeholder { color: var(--text-muted); }
+        .alert-field input.set { border-color: var(--accent-brd); background: var(--accent-sub); }
+
+        .coin-actions { display: flex; gap: 6px; margin-top: 10px; }
+        .btn-set { flex: 1; padding: 8px; border-radius: 8px; border: none; background: var(--accent); color: #fff; font-size: 13px; font-weight: 600; cursor: pointer; transition: opacity .15s; }
+        .btn-set:hover { opacity: .85; }
+        .btn-clear { padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); background: none; color: var(--text-muted); font-size: 13px; cursor: pointer; transition: all .15s; }
+        .btn-clear:hover { border-color: var(--c-red); color: var(--c-red); }
+        .btn-clear:disabled { opacity: .35; cursor: not-allowed; }
+
+        /* ── ACTIVE ALERTS LOG ───────────────────────────────── */
+        .section-title { font-size: 14px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; margin: 32px 0 14px; }
+        .log-empty { font-size: 14px; color: var(--text-muted); padding: 20px 0; text-align: center; }
+        .log-list { display: flex; flex-direction: column; gap: 8px; }
+        .log-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+            animation: fadein .3s ease;
+        }
+        @keyframes fadein { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+        .log-item .log-icon { font-size: 18px; }
+        .log-item .log-text { flex: 1; }
+        .log-item .log-text strong { font-weight: 600; }
+        .log-item .log-time { font-size: 12px; color: var(--text-muted); white-space: nowrap; }
+        .log-item.fired { border-color: rgba(63,185,80,0.4); background: rgba(63,185,80,0.06); }
+
+        /* ── TOAST ───────────────────────────────────────────── */
+        .toast-wrap { position: fixed; bottom: 24px; right: 24px; display: flex; flex-direction: column-reverse; gap: 8px; z-index: 9999; }
+        .toast {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 13px 18px;
+            font-size: 14px;
+            box-shadow: 0 4px 20px rgba(0,0,0,.4);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: toastin .25s ease;
+        }
+        @keyframes toastin { from{opacity:0;transform:translateX(20px)} to{opacity:1;transform:translateX(0)} }
+        .toast.success { border-color: rgba(63,185,80,.4); }
+        .toast.warn    { border-color: rgba(248,81,73,.4); }
+</style>
+</head>
+<body>
+
+<nav class="site-nav">
+    <span class="nav-brand">🐕</span>
+    <button class="nav-hamburger" id="nav-hamburger" aria-label="Menu" aria-expanded="false">☰</button>
+    <div class="nav-links-wrap" id="nav-links-wrap">
+    <a href="index.html" class="nav-link">Dashboard</a>
+    <a href="game.html" class="nav-link">Predict</a>
+    <a href="meme.html" class="nav-link">🐸 Meme</a>
+    <a href="portfolio.html" class="nav-link">Portfolio</a>
+    <a href="news.html" class="nav-link">News</a>
+    <a href="stocks.html" class="nav-link">Stocks</a>
+    <a href="signals.html" class="nav-link">Signals</a>
+    <a href="whales.html" class="nav-link">🐋 Whales</a>
+    <a href="defi.html" class="nav-link">🌊 DeFi</a>
+    <a href="calendar.html" class="nav-link">📅 Calendar</a>
+    <a href="funding.html" class="nav-link">📈 Funding</a>
+    <a href="pulse.html" class="nav-link">Pulse</a>
+    <a href="alerts.html" class="nav-link active">🔔 Alerts</a>
+    </div>
+</nav>
+
+<div class="page-wrap">
+    <div class="page-header">
+        <div class="page-title">🔔 Price Alerts <span>Get notified when any coin hits your target</span></div>
+    </div>
+
+    <!-- Permission banner -->
+    <div class="perm-banner" id="perm-banner">
+        <div class="perm-icon">🔔</div>
+        <div class="perm-text">
+            <strong id="perm-title">Enable browser notifications</strong>
+            <p id="perm-desc">Allow notifications so CryptoDoggy can alert you even when you switch tabs.</p>
+        </div>
+        <button class="btn-perm" id="btn-perm">Allow</button>
+    </div>
+
+    <!-- Status bar -->
+    <div class="status-bar">
+        <div class="status-dot" id="status-dot"></div>
+        <span id="status-text">Loading prices…</span>
+        <button class="refresh-btn" id="refresh-btn" onclick="fetchPrices()">↻ Refresh</button>
+        <span class="count" id="alert-count"></span>
+    </div>
+
+    <!-- Coins -->
+    <div class="coins-grid" id="coins-grid"></div>
+
+    <!-- Fired log -->
+    <div class="section-title">Alert History</div>
+    <div id="log-container"><div class="log-empty">No alerts fired yet this session.</div></div>
+</div>
+
+<!-- Toast container -->
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<script>
+// ── Constants ────────────────────────────────────────────────────────────────
+const COINS = [
+    { id: 'bitcoin',        sym: 'BTC',  emoji: '₿',  name: 'Bitcoin' },
+    { id: 'ethereum',       sym: 'ETH',  emoji: 'Ξ',  name: 'Ethereum' },
+    { id: 'solana',         sym: 'SOL',  emoji: '◎',  name: 'Solana' },
+    { id: 'binancecoin',    sym: 'BNB',  emoji: '🔶', name: 'BNB' },
+    { id: 'ripple',         sym: 'XRP',  emoji: '💧', name: 'XRP' },
+    { id: 'dogecoin',       sym: 'DOGE', emoji: '🐶', name: 'Dogecoin' },
+    { id: 'avalanche-2',    sym: 'AVAX', emoji: '🔺', name: 'Avalanche' },
+    { id: 'chainlink',      sym: 'LINK', emoji: '🔗', name: 'Chainlink' },
+    { id: 'polkadot',       sym: 'DOT',  emoji: '⚫', name: 'Polkadot' },
+    { id: 'render-token',   sym: 'RNDR', emoji: '🎨', name: 'Render' },
+    { id: 'sui',            sym: 'SUI',  emoji: '💧', name: 'Sui' },
+    { id: 'the-open-network',sym:'TON',  emoji: '💎', name: 'Toncoin' },
+    { id: 'near',           sym: 'NEAR', emoji: '🌐', name: 'NEAR' },
+    { id: 'shiba-inu',      sym: 'SHIB', emoji: '🐕', name: 'Shiba Inu' },
+    { id: 'pepe',           sym: 'PEPE', emoji: '🐸', name: 'Pepe' },
+    { id: 'dogwifcoin',     sym: 'WIF',  emoji: '🎩', name: 'dogwifhat' },
+];
+const STORAGE_KEY   = 'cryptodoggy_alerts_v2';
+const HISTORY_KEY   = 'cryptodoggy_alert_log';
+const REFRESH_MS    = 30_000;
+const IDS           = COINS.map(c => c.id).join(',');
+
+// ── State ────────────────────────────────────────────────────────────────────
+let prices     = {};          // { coinId: { price, change24h } }
+let alerts     = load();      // { coinId: { above: number|null, below: number|null } }
+let history    = loadLog();   // [{ coinId, dir, target, price, ts }]
+let firedSet   = new Set();   // debounce: "coinId-above" / "coinId-below"
+let refreshTimer;
+
+// ── Storage helpers ───────────────────────────────────────────────────────────
+function load()    { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch { return {}; } }
+function save()    { localStorage.setItem(STORAGE_KEY, JSON.stringify(alerts)); }
+function loadLog() { try { return JSON.parse(localStorage.getItem(HISTORY_KEY)) || []; } catch { return []; } }
+function saveLog() { localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(-50))); }
+
+// ── Price formatting ──────────────────────────────────────────────────────────
+function fmtPrice(n) {
+    if (n === null || n === undefined) return '—';
+    if (n >= 1)    return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    if (n >= 0.01) return '$' + n.toFixed(4);
+    return '$' + n.toFixed(8);
+}
+
+// ── Notification permission ───────────────────────────────────────────────────
+function updatePermBanner() {
+    const banner = document.getElementById('perm-banner');
+    const status = Notification.permission;
+    if (status === 'granted') {
+        banner.className = 'perm-banner granted';
+        document.getElementById('perm-icon') && (banner.querySelector('.perm-icon').textContent = '✅');
+        document.getElementById('perm-title').textContent = 'Notifications enabled';
+        document.getElementById('perm-desc').textContent  = 'You\'ll receive alerts even when this tab is in the background.';
+        document.getElementById('btn-perm').style.display = 'none';
+    } else if (status === 'denied') {
+        banner.className = 'perm-banner denied';
+        banner.querySelector('.perm-icon').textContent = '🚫';
+        document.getElementById('perm-title').textContent = 'Notifications blocked';
+        document.getElementById('perm-desc').textContent  = 'To re-enable: click the lock icon in your browser address bar → Notifications → Allow.';
+        document.getElementById('btn-perm').style.display = 'none';
+    }
+}
+
+document.getElementById('btn-perm').addEventListener('click', async () => {
+    const result = await Notification.requestPermission();
+    updatePermBanner();
+    if (result === 'granted') showToast('✅ Notifications enabled!', 'success');
+});
+
+// ── Fetch prices ──────────────────────────────────────────────────────────────
+async function fetchPrices() {
+    const dot  = document.getElementById('status-dot');
+    const text = document.getElementById('status-text');
+    dot.className = 'status-dot';
+    text.textContent = 'Refreshing…';
+    clearTimeout(refreshTimer);
+
+    try {
+        const url = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${IDS}&price_change_percentage=24h`;
+        const res = await fetch(url, { signal: AbortSignal.timeout(15000) });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        data.forEach(c => {
+            prices[c.id] = {
+                price:     c.current_price,
+                change24h: c.price_change_percentage_24h_in_currency ?? c.price_change_percentage_24h ?? 0
+            };
+        });
+        const now = new Date().toLocaleTimeString();
+        dot.className  = 'status-dot live';
+        text.textContent = `Live · Updated ${now}`;
+        renderCards();
+        checkAlerts();
+    } catch (e) {
+        dot.className = 'status-dot';
+        text.textContent = `Failed to fetch (${e.message}) — retrying…`;
+    }
+    refreshTimer = setTimeout(fetchPrices, REFRESH_MS);
+}
+
+// ── Build cards ───────────────────────────────────────────────────────────────
+function renderCards() {
+    const grid    = document.getElementById('coins-grid');
+    const alertMap = alerts;
+    let count = 0;
+
+    grid.innerHTML = COINS.map(coin => {
+        const p   = prices[coin.id];
+        const al  = alertMap[coin.id] || {};
+        const hasAlert = al.above != null || al.below != null;
+        if (hasAlert) count++;
+        const priceStr  = p ? fmtPrice(p.price)   : '—';
+        const chg       = p ? p.change24h          : null;
+        const chgCls    = chg === null ? '' : (chg >= 0 ? 'up' : 'dn');
+        const chgStr    = chg === null ? '' : `${chg >= 0 ? '+' : ''}${chg.toFixed(2)}%`;
+
+        const aboveVal  = al.above != null ? al.above  : '';
+        const belowVal  = al.below != null ? al.below  : '';
+        const aboveCls  = al.above != null ? ' set'    : '';
+        const belowCls  = al.below != null ? ' set'    : '';
+
+        return `
+        <div class="coin-card${hasAlert ? ' has-alert' : ''}" id="card-${coin.id}">
+            <div class="coin-head">
+                <div class="coin-emoji">${coin.emoji}</div>
+                <div class="coin-name-wrap">
+                    <div class="coin-sym">${coin.sym} <small style="font-weight:400;color:var(--text-muted)">${coin.name}</small></div>
+                    <div class="coin-price">
+                        <span class="price-val" id="price-${coin.id}">${priceStr}</span>
+                        <span class="coin-change ${chgCls}" id="chg-${coin.id}">${chgStr}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="alert-inputs">
+                <div class="alert-field">
+                    <label><span class="dir">🔴</span> Alert Above ($)</label>
+                    <input type="number" step="any" id="above-${coin.id}" value="${aboveVal}"
+                        placeholder="${p ? suggestAbove(p.price) : 'e.g. 70000'}" class="${aboveCls}"
+                        oninput="markDirty('${coin.id}')">
+                </div>
+                <div class="alert-field">
+                    <label><span class="dir">🟢</span> Alert Below ($)</label>
+                    <input type="number" step="any" id="below-${coin.id}" value="${belowVal}"
+                        placeholder="${p ? suggestBelow(p.price) : 'e.g. 60000'}" class="${belowCls}"
+                        oninput="markDirty('${coin.id}')">
+                </div>
+            </div>
+            <div class="coin-actions">
+                <button class="btn-set" onclick="setAlert('${coin.id}')">Set Alert</button>
+                <button class="btn-clear" id="clear-${coin.id}" onclick="clearAlert('${coin.id}')"
+                    ${!hasAlert ? 'disabled' : ''}>Clear</button>
+            </div>
+        </div>`;
+    }).join('');
+
+    updateAlertCount(count);
+}
+
+function suggestAbove(p) {
+    const mult = p >= 100 ? 1.05 : p >= 1 ? 1.10 : 1.20;
+    const v    = p * mult;
+    return p >= 1 ? Math.round(v).toLocaleString() : v.toPrecision(4);
+}
+function suggestBelow(p) {
+    const mult = p >= 100 ? 0.95 : p >= 1 ? 0.90 : 0.80;
+    const v    = p * mult;
+    return p >= 1 ? Math.round(v).toLocaleString() : v.toPrecision(4);
+}
+
+function markDirty(id) {
+    // visual cue that values have changed
+    const aboveEl = document.getElementById(`above-${id}`);
+    const belowEl = document.getElementById(`below-${id}`);
+    [aboveEl, belowEl].forEach(el => { if (el) el.classList.remove('set'); });
+}
+
+function updateAlertCount(n) {
+    const el = document.getElementById('alert-count');
+    el.textContent = n > 0 ? `${n} alert${n === 1 ? '' : 's'} active` : '';
+}
+
+// ── Set / clear ───────────────────────────────────────────────────────────────
+function setAlert(id) {
+    const aboveEl = document.getElementById(`above-${id}`);
+    const belowEl = document.getElementById(`below-${id}`);
+    const above   = aboveEl.value !== '' ? parseFloat(aboveEl.value) : null;
+    const below   = belowEl.value !== '' ? parseFloat(belowEl.value) : null;
+
+    if (above !== null && below !== null && above <= below) {
+        showToast('⚠️ "Above" must be greater than "Below"', 'warn');
+        return;
+    }
+    const p = prices[id];
+    if (above !== null && p && above <= p.price) {
+        showToast('⚠️ "Above" target is already below the current price — alert would never fire.', 'warn');
+    }
+    if (below !== null && p && below >= p.price) {
+        showToast('⚠️ "Below" target is above the current price — alert would never fire.', 'warn');
+    }
+
+    if (above === null && below === null) {
+        clearAlert(id);
+        return;
+    }
+    alerts[id] = { above, below };
+    // Clear fired-set so re-set alerts can re-trigger
+    firedSet.delete(`${id}-above`);
+    firedSet.delete(`${id}-below`);
+    save();
+    renderCards();
+    const coin = COINS.find(c => c.id === id);
+    showToast(`🔔 Alert set for ${coin.sym}`, 'success');
+}
+
+function clearAlert(id) {
+    delete alerts[id];
+    firedSet.delete(`${id}-above`);
+    firedSet.delete(`${id}-below`);
+    save();
+    renderCards();
+    const coin = COINS.find(c => c.id === id);
+    showToast(`🗑 Alert cleared for ${coin.sym}`);
+}
+
+// ── Check alerts against live prices ─────────────────────────────────────────
+function checkAlerts() {
+    const now = Date.now();
+    Object.entries(alerts).forEach(([id, al]) => {
+        const p = prices[id];
+        if (!p) return;
+        const coin = COINS.find(c => c.id === id);
+
+        if (al.above != null && p.price >= al.above && !firedSet.has(`${id}-above`)) {
+            firedSet.add(`${id}-above`);
+            fire(coin, 'above', al.above, p.price, now);
+        }
+        if (al.below != null && p.price <= al.below && !firedSet.has(`${id}-below`)) {
+            firedSet.add(`${id}-below`);
+            fire(coin, 'below', al.below, p.price, now);
+        }
+    });
+    renderLog();
+}
+
+function fire(coin, dir, target, price, ts) {
+    const dirLabel = dir === 'above' ? '🔴 Crossed Above' : '🟢 Dropped Below';
+    const msg      = `${coin.emoji} ${coin.sym} ${dirLabel} ${fmtPrice(target)} → now ${fmtPrice(price)}`;
+
+    // Push notification
+    if (Notification.permission === 'granted') {
+        new Notification(`CryptoDoggy Alert 🐕`, { body: msg, icon: 'favicon.ico' });
+    }
+
+    // In-page toast
+    showToast(msg, dir === 'above' ? 'warn' : 'success');
+
+    // Flash card
+    const card = document.getElementById(`card-${coin.id}`);
+    if (card) { card.classList.add('triggered'); setTimeout(() => card.classList.remove('triggered'), 600); }
+
+    // Log
+    history.unshift({ coinId: coin.id, sym: coin.sym, emoji: coin.emoji, dir, target, price, ts });
+    saveLog();
+}
+
+// ── Log render ────────────────────────────────────────────────────────────────
+function renderLog() {
+    const container = document.getElementById('log-container');
+    if (history.length === 0) {
+        container.innerHTML = '<div class="log-empty">No alerts fired yet this session.</div>';
+        return;
+    }
+    container.innerHTML = `<div class="log-list">${history.slice(0, 20).map(entry => {
+        const time  = new Date(entry.ts).toLocaleTimeString();
+        const icon  = entry.dir === 'above' ? '🔴' : '🟢';
+        const label = entry.dir === 'above' ? 'crossed above' : 'dropped below';
+        return `<div class="log-item fired">
+            <span class="log-icon">${icon}</span>
+            <span class="log-text"><strong>${entry.emoji} ${entry.sym}</strong> ${label} ${fmtPrice(entry.target)} — was ${fmtPrice(entry.price)}</span>
+            <span class="log-time">${time}</span>
+        </div>`;
+    }).join('')}</div>`;
+}
+
+// ── Toast ──────────────────────────────────────────────────────────────────────
+function showToast(msg, type = '') {
+    const wrap  = document.getElementById('toast-wrap');
+    const toast = document.createElement('div');
+    toast.className = `toast${type ? ' ' + type : ''}`;
+    toast.textContent = msg;
+    wrap.appendChild(toast);
+    setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity .3s'; setTimeout(() => toast.remove(), 350); }, 3500);
+}
+
+// ── Init ───────────────────────────────────────────────────────────────────────
+updatePermBanner();
+renderCards();   // render skeleton immediately with saved alert values
+renderLog();
+fetchPrices();
+
+// ── Hamburger nav ─────────────────────────────────────────────────────────────
+(function() {
+    const btn  = document.getElementById('nav-hamburger');
+    const wrap = document.getElementById('nav-links-wrap');
+    btn.addEventListener('click', function() {
+        const open = wrap.classList.toggle('open');
+        btn.setAttribute('aria-expanded', open);
+        btn.textContent = open ? '✕' : '☰';
+    });
+    wrap.querySelectorAll('.nav-link').forEach(a => a.addEventListener('click', () => {
+        wrap.classList.remove('open'); btn.textContent = '☰';
+    }));
+    document.addEventListener('click', e => {
+        if (!btn.contains(e.target) && !wrap.contains(e.target)) {
+            wrap.classList.remove('open'); btn.textContent = '☰';
+        }
+    });
+})();
+</script>
+</body>
+</html>
