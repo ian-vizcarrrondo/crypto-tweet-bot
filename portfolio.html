@@ -154,6 +154,7 @@
 
         /* ── SHARE BUTTON ── */
         .share-btn {
+            display: inline-flex !important; align-items: center; gap: 6px;
             padding: 8px 16px; border-radius: 8px; border: none;
             background: var(--accent); color: #fff; font-size: 13px; font-weight: 700;
             cursor: pointer; transition: opacity .15s; white-space: nowrap;
@@ -331,7 +332,7 @@
         <div>
             <div class="holdings-header" id="holdings-header">
                 <div class="section-title">Holdings</div>
-                <button class="share-btn" id="share-btn" onclick="sharePortfolio()">🔗 Share Portfolio</button>
+                <button class="share-btn" id="share-btn" onclick="sharePortfolio()" style="display:inline-flex">🔗 Share Portfolio</button>
             </div>
             <div id="holdings-container">
                 <div class="empty-state"><div class="empty-icon">💼</div>No holdings yet.<br>Add a coin above to get started.</div>
