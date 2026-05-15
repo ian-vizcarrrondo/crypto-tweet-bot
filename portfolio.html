@@ -153,19 +153,14 @@
         .refresh-btn:hover { border-color: var(--accent-brd); color: var(--accent); }
 
         /* ── SHARE BUTTON ── */
-        .share-strip {
-            padding: 14px 24px;
-            border-bottom: 1px solid var(--border);
-            background: var(--bg-card);
-            display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
-        }
-        .share-strip p { font-size: 13px; color: var(--text-muted); flex: 1; }
         .share-btn {
-            padding: 11px 22px; border-radius: 10px; border: none;
-            background: var(--accent); color: #fff; font-size: 14px; font-weight: 700;
-            cursor: pointer; transition: opacity .15s; white-space: nowrap; display: flex; align-items: center; gap: 7px;
+            padding: 8px 16px; border-radius: 8px; border: none;
+            background: var(--accent); color: #fff; font-size: 13px; font-weight: 700;
+            cursor: pointer; transition: opacity .15s; white-space: nowrap;
         }
         .share-btn:hover { opacity: .85; }
+        .holdings-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+        .holdings-header .section-title { margin-bottom: 0; }
 
         /* ── READ-ONLY BANNER ── */
         .readonly-banner {
@@ -299,11 +294,6 @@
     <button class="refresh-btn" onclick="fetchLivePrices()">↻ Refresh</button>
 </div>
 
-<!-- Share strip -->
-<div class="share-strip" id="share-strip">
-    <p>📤 Share your portfolio with a friend — generates a read-only link with your holdings encoded in the URL.</p>
-    <button class="share-btn" id="share-btn" onclick="sharePortfolio()">🔗 Share Portfolio</button>
-</div>
 
 <div class="page-body">
     <!-- Left: summary + holdings table -->
@@ -339,7 +329,10 @@
 
         <!-- Holdings table -->
         <div>
-            <div class="section-title">Holdings</div>
+            <div class="holdings-header" id="holdings-header">
+                <div class="section-title">Holdings</div>
+                <button class="share-btn" id="share-btn" onclick="sharePortfolio()">🔗 Share Portfolio</button>
+            </div>
             <div id="holdings-container">
                 <div class="empty-state"><div class="empty-icon">💼</div>No holdings yet.<br>Add a coin above to get started.</div>
             </div>
@@ -579,7 +572,7 @@ function importShared() {
     isReadOnly = false;
     sharedHoldings = null;
     document.getElementById('readonly-banner').style.display = 'none';
-    document.getElementById('share-strip').style.display = '';
+    document.getElementById('share-btn').style.display = '';
     // Re-show add form
     document.querySelector('.add-form').style.display = '';
     render();
@@ -597,7 +590,7 @@ function checkSharedURL() {
         holdings       = decoded;  // display shared data
         isReadOnly     = true;
         document.getElementById('readonly-banner').style.display = '';
-        document.getElementById('share-strip').style.display = 'none';
+        document.getElementById('share-btn').style.display = 'none';
         document.querySelector('.add-form').style.display = 'none';
         return true;
     } catch {
