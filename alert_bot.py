@@ -2,14 +2,13 @@ import os
 import json
 import time
 import requests
-from datetime import datetime, timezone
 
 TELEGRAM_TOKEN = os.environ['TELEGRAM_TOKEN']
 MAIN_CHAT_ID = os.environ['TELEGRAM_CHAT_ID']
 MEME_CHAT_ID = os.environ['TELEGRAM_MEMECOIN_CHAT_ID']
-THRESHOLD = 5.0
-COOLDOWN_FILE = 'cooldown.json'
-COOLDOWN_SECONDS = 3600  # 1 hour per coin
+TRIGGER_THRESHOLD = 5.0
+RESET_THRESHOLD = 4.0
+STATE_FILE = 'cooldown.json'
 
 MAIN_COINS = [
     'bitcoin', 'ethereum', 'solana', 'binancecoin', 'ripple',
@@ -28,37 +27,38 @@ LABELS = {
     'floki': '⚡ #FLOKI', 'dogwifcoin': '🎩 #WIF', 'bonk': '🔨 #BONK'
 }
 
+
 def format_price(price):
-    """Smart price formatting based on magnitude."""
     if price >= 1000:
         return f'${price:,.2f}'
-    elif price >= 1:
+    if price >= 1:
         return f'${price:.4f}'
-    elif price >= 0.01:
+    if price >= 0.01:
         return f'${price:.5f}'
-    elif price >= 0.0001:
+    if price >= 0.0001:
         return f'${price:.7f}'
-    else:
-        return f'${price:.10f}'
+    return f'${price:.10f}'
+
 
 def get_with_retry(url, params, retries=4, backoff=5):
     for attempt in range(retries):
         try:
-            r = requests.get(url, params=params, timeout=15)
-            if r.status_code == 429:
+            response = requests.get(url, params=params, timeout=15)
+            if response.status_code == 429:
                 wait = backoff * (2 ** attempt)
                 print(f"Rate limited. Retrying in {wait}s...")
                 time.sleep(wait)
                 continue
-            r.raise_for_status()
-            return r.json()
-        except requests.RequestException as e:
+            response.raise_for_status()
+            return response.json()
+        except requests.RequestException as exc:
             if attempt == retries - 1:
                 raise
             wait = backoff * (2 ** attempt)
-            print(f"Request failed ({e}). Retrying in {wait}s...")
+            print(f"Request failed ({exc}). Retrying in {wait}s...")
             time.sleep(wait)
     raise RuntimeError(f"All {retries} retries failed for {url}")
+
 
 def get_prices(coin_ids):
     return get_with_retry('https://api.coingecko.com/api/v3/coins/markets', {
@@ -67,70 +67,92 @@ def get_prices(coin_ids):
         'price_change_percentage': '1h,24h'
     })
 
-def load_cooldown():
+
+def load_state():
     try:
-        with open(COOLDOWN_FILE) as f:
-            return json.load(f)
+        with open(STATE_FILE) as state_file:
+            state = json.load(state_file)
+            return state if isinstance(state, dict) else {}
     except (FileNotFoundError, json.JSONDecodeError):
         return {}
 
-def save_cooldown(cooldown):
-    with open(COOLDOWN_FILE, 'w') as f:
-        json.dump(cooldown, f)
 
-def is_on_cooldown(coin_id, cooldown):
-    last_fired = cooldown.get(coin_id, 0)
-    return (time.time() - last_fired) < COOLDOWN_SECONDS
+def save_state(state):
+    with open(STATE_FILE, 'w') as state_file:
+        json.dump(state, state_file, indent=2, sort_keys=True)
+        state_file.write('\n')
+
 
 def send_message(chat_id, text):
     url = f'https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage'
-    requests.post(url, data={
+    response = requests.post(url, data={
         'chat_id': chat_id,
         'text': text,
         'disable_web_page_preview': True
-    })
+    }, timeout=15)
+    response.raise_for_status()
+    print(f"Telegram accepted alert: {response.status_code}")
 
-def check_and_alert(coin_ids, chat_id, header, cooldown):
+
+def check_and_alert(coin_ids, chat_id, header, state, channel_key):
     data = get_prices(coin_ids)
     alerts = []
-    fired_ids = []
+    pending_state = {}
 
     for coin in data:
-        cid = coin['id']
-        change_1h = coin.get('price_change_percentage_1h_in_currency') or 0
-        change_24h = coin.get('price_change_percentage_24h_in_currency') or 0
+        coin_id = coin['id']
+        state_key = f'{channel_key}:{coin_id}'
+        change_1h = float(coin.get('price_change_percentage_1h_in_currency') or 0)
+        change_24h = float(coin.get('price_change_percentage_24h_in_currency') or 0)
 
-        if abs(change_1h) >= THRESHOLD:
-            if is_on_cooldown(cid, cooldown):
-                print(f"Skipping {cid} — on cooldown.")
-                continue
+        # Re-arm only after the move settles below the reset threshold.
+        if abs(change_1h) < RESET_THRESHOLD:
+            state.pop(state_key, None)
+            continue
 
-            label = LABELS.get(cid, cid)
-            price = coin['current_price'] or 0
-            arrow = '🚨🟢' if change_1h >= 0 else '🚨🔴'
-            sign_1h = '+' if change_1h >= 0 else ''
-            sign_24h = '+' if change_24h >= 0 else ''
-            alerts.append(
-                f"{arrow} {label} — {format_price(price)}\n"
-                f"1h: {sign_1h}{change_1h:.1f}%  |  24h: {sign_24h}{change_24h:.1f}%"
-            )
-            fired_ids.append(cid)
+        if abs(change_1h) < TRIGGER_THRESHOLD:
+            continue
 
-    if alerts:
-        message = f"{header}\n\n" + '\n\n'.join(alerts)
-        send_message(chat_id, message)
-        print(f"Alert sent to {chat_id} for: {', '.join(fired_ids)}")
-        now = time.time()
-        for cid in fired_ids:
-            cooldown[cid] = now
-    else:
-        print("No alerts triggered (or all on cooldown).")
+        direction = 'up' if change_1h > 0 else 'down'
+        previous = state.get(state_key)
+        if isinstance(previous, dict) and previous.get('direction') == direction:
+            print(f"Skipping {coin_id} — continuous {direction} move already alerted.")
+            continue
+
+        label = LABELS.get(coin_id, coin_id)
+        price = coin['current_price'] or 0
+        arrow = '🚨🟢' if change_1h >= 0 else '🚨🔴'
+        sign_1h = '+' if change_1h >= 0 else ''
+        sign_24h = '+' if change_24h >= 0 else ''
+        alerts.append(
+            f"{arrow} {label} — {format_price(price)}\n"
+            f"1h: {sign_1h}{change_1h:.1f}%  |  24h: {sign_24h}{change_24h:.1f}%"
+        )
+        pending_state[state_key] = {
+            'direction': direction,
+            'triggered_at': int(time.time())
+        }
+
+    if not alerts:
+        print(f"No new {channel_key} alerts triggered.")
+        return
+
+    send_message(chat_id, f"{header}\n\n" + '\n\n'.join(alerts))
+    state.update(pending_state)
+    print(f"Alert sent for {len(alerts)} coin(s).")
+
 
 def main():
-    cooldown = load_cooldown()
-    check_and_alert(MAIN_COINS, MAIN_CHAT_ID, "⚡ PRICE ALERT ⚡", cooldown)
-    check_and_alert(MEME_COINS, MEME_CHAT_ID, "🚀 MEME ALERT 🚀", cooldown)
-    save_cooldown(cooldown)
+    state = load_state()
+    check_and_alert(MAIN_COINS, MAIN_CHAT_ID, "⚡ PRICE ALERT ⚡", state, 'main')
+
+    meme_coins = MEME_COINS
+    if MEME_CHAT_ID == MAIN_CHAT_ID:
+        meme_coins = [coin for coin in MEME_COINS if coin not in MAIN_COINS]
+    check_and_alert(meme_coins, MEME_CHAT_ID, "🚀 MEME ALERT 🚀", state, 'meme')
+
+    save_state(state)
+
 
 if __name__ == '__main__':
     main()
