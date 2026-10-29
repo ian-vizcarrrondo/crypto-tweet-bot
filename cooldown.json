@@ -6,9 +6,49 @@
   "dogwifcoin": 1787627413.0376518,
   "ethereum": 1787173392.960767,
   "floki": 1787379589.4208484,
+  "main:avalanche-2": {
+    "direction": "down",
+    "triggered_at": 1793307845
+  },
+  "main:binancecoin": {
+    "direction": "down",
+    "triggered_at": 1793307845
+  },
+  "main:chainlink": {
+    "direction": "down",
+    "triggered_at": 1793307845
+  },
+  "main:dogecoin": {
+    "direction": "down",
+    "triggered_at": 1793307845
+  },
+  "main:polkadot": {
+    "direction": "down",
+    "triggered_at": 1793307845
+  },
+  "meme:bonk": {
+    "direction": "down",
+    "triggered_at": 1793307846
+  },
+  "meme:dogecoin": {
+    "direction": "down",
+    "triggered_at": 1793307846
+  },
+  "meme:dogwifcoin": {
+    "direction": "down",
+    "triggered_at": 1793307846
+  },
+  "meme:floki": {
+    "direction": "down",
+    "triggered_at": 1793307846
+  },
   "meme:pepe": {
-    "direction": "up",
-    "triggered_at": 1793289784
+    "direction": "down",
+    "triggered_at": 1793307846
+  },
+  "meme:shiba-inu": {
+    "direction": "down",
+    "triggered_at": 1793307846
   },
   "pepe": 1788136393.6407504,
   "polkadot": 1787379588.6702785,
