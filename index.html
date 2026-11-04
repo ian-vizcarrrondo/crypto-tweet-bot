@@ -355,6 +355,7 @@
         .nav-link:not(.active):hover { color: var(--accent); }
 
 </style>
+    <link rel="stylesheet" href="crypto-ui.css">
 </head>
 <body>
 
@@ -407,10 +408,10 @@
 </div>
 
 <div class="tg-banner">
-    <p>📱 <strong>Get free crypto alerts sent straight to your phone.</strong> Join our Telegram channels — no spam, just signals.</p>
+    <p>Free alerts on Telegram — no spam, just signals.</p>
     <div class="tg-banner-btns">
-        <a href="https://t.me/CryptoDoggyAlerts" target="_blank" class="tg-btn main">📈 Major Coins Alerts</a>
-        <a href="https://t.me/CryptoDoggyMemes" target="_blank" class="tg-btn meme">🐸 Memecoin Alerts</a>
+        <a href="https://t.me/CryptoDoggyAlerts" target="_blank" class="tg-btn main">Major Coins</a>
+        <a href="https://t.me/CryptoDoggyMemes" target="_blank" class="tg-btn meme">Memecoins</a>
     </div>
 </div>
 
@@ -422,14 +423,14 @@
 
 <!-- View toggle -->
 <div class="view-toggle" id="view-toggle" style="display:none">
-    <button class="view-btn active" onclick="setView('table')" id="btn-table">📋 Table</button>
-    <button class="view-btn" onclick="setView('heatmap')" id="btn-heatmap">🔥 Heatmap</button>
+    <button class="view-btn active" onclick="setView('table')" id="btn-table">Table</button>
+    <button class="view-btn" onclick="setView('heatmap')" id="btn-heatmap">Heatmap</button>
 </div>
 
 <!-- Table view -->
 <div id="table-view">
     <div id="main-section" style="display:none">
-        <div class="section-header">📊 Major Coins</div>
+        <div class="section-header">Major Coins</div>
         <div class="table-wrapper">
             <table class="coin-table">
                 <thead><tr><th>#</th><th>Coin</th><th>Price</th><th>1h %</th><th>24h %</th><th>7d %</th><th>ATH</th><th>Mkt Cap</th><th>7d Chart</th></tr></thead>
@@ -438,7 +439,7 @@
         </div>
     </div>
     <div id="meme-section" style="display:none">
-        <div class="section-header purple">🐸 Memecoins</div>
+        <div class="section-header purple">Memecoins</div>
         <div class="table-wrapper">
             <table class="coin-table">
                 <thead><tr><th>#</th><th>Coin</th><th>Price</th><th>1h %</th><th>24h %</th><th>7d %</th><th>ATH</th><th>Mkt Cap</th><th>7d Chart</th></tr></thead>
@@ -450,7 +451,7 @@
 
 <!-- Heatmap view -->
 <div id="heatmap-view" style="display:none">
-    <div class="section-header">🔥 Market Heatmap — 24h Performance</div>
+    <div class="section-header">Market Heatmap — 24h</div>
     <div class="heatmap-wrap">
         <div class="heatmap-grid" id="heatmap-grid"></div>
     </div>
@@ -458,14 +459,14 @@
 
 <!-- Volume chart -->
 <div id="volume-section" class="volume-section" style="display:none">
-    <div class="section-header blue">📊 24h Trading Volume</div>
+    <div class="section-header blue">24h Trading Volume</div>
     <div class="volume-chart-wrap">
         <canvas id="volume-chart" height="200"></canvas>
     </div>
 </div>
 
 <div id="news-section" style="display:none">
-    <div class="section-header blue">📰 Latest Crypto News</div>
+    <div class="section-header blue">Latest News</div>
     <div class="news-grid" id="news-grid"></div>
 </div>
 
